@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="Bed">
+    <link name="link">
+      <inertial>
+        <mass>22.6</mass>
+      </inertial>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://bed/meshes/bed_collision.DAE</uri>
+            <scale>0.5 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+      </collision>
+      <visual name="visual">
+	    <geometry>
+          <mesh>
+            <uri>model://bed/meshes/bed_visual.DAE</uri>
+            <scale>0.75 1.0 0.8</scale>
+          </mesh>
+        </geometry>
+      <meta> <layer> 1 </layer></meta>
+</visual>
+    </link>
+  <static>1</static>
+  </model>
+</sdf>

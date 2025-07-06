@@ -1,0 +1,212 @@
+<?xml version="1.0" ?>
+<sdf version="1.8" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- TODO: allow xacro -->
+  <xacro:arg name="fast_physics" default="true" />
+  <xacro:arg name="trofast_knob" default="true" />
+  <xacro:arg name="highrtf" default="false" />
+
+  <world name='rcjo2025_arena'>
+    <plugin
+        filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-sensors-system"
+        name="gz::sim::systems::Sensors">
+    </plugin>
+
+    <!-- <plugin
+        filename="EntityTree"
+        name="Entity tree">
+    </plugin> -->
+
+    <!-- Scene Manager -->
+    <!-- <plugin filename="GzSceneManager" name="Scene Manager">
+      <gz-gui>
+        <property key="resizable" type="bool">false</property>
+        <property key="width" type="double">5</property>
+        <property key="height" type="double">5</property>
+        <property key="state" type="string">floating</property>
+        <property key="showTitleBar" type="bool">false</property>
+      </gz-gui>
+    </plugin> -->
+
+    <!-- World control -->
+    <!-- <plugin filename="WorldControl" name="World control">
+      <gz-gui>
+        <title>World control</title>
+        <property type="bool" key="showTitleBar">false</property>
+        <property type="bool" key="resizable">false</property>
+        <property type="double" key="height">72</property>
+        <property type="double" key="width">121</property>
+        <property type="double" key="z">1</property>
+
+        <property type="string" key="state">floating</property>
+        <anchors target="3D View">
+        <line own="left" target="left"/>
+        <line own="bottom" target="bottom"/>
+        </anchors>
+      </gz-gui>
+
+      <play_pause>true</play_pause>
+      <step>true</step>
+      <start_paused>true</start_paused>
+      <service>/world/world_demo/control</service>
+      <stats_topic>/world/world_demo/stats</stats_topic>
+    </plugin> -->
+
+    <physics name="1ms" type="ignored">
+        <max_step_size>0.001</max_step_size>
+        <real_time_factor>1.0</real_time_factor>
+    </physics>
+    
+    <!--light-->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose relative_to=''>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+          <range>1000</range>
+          <constant>0.9</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!--gravity-->
+    <gravity>0 0 -9.8</gravity>
+
+    <!-- Import models -->
+    <!-- Global Models -->
+    <include>
+      <name>floor_plane</name>
+      <static>1</static>
+      <uri>model://floor_plane</uri>
+      <pose relative_to=''>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>rcjo2025_frame</name>
+      <static>1</static>
+      <uri>model://rcjo2025_frame</uri>
+      <pose relative_to=''>0 0 0 0 0 0</pose>
+    </include>
+    <!-- Global Models -->
+
+
+    <!-- Living Room -->
+    <include>
+      <name>long_table</name>
+      <uri>model://long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>2.0 -0.5 0 0 0 1.57</pose>
+    </include>
+
+    <include>
+      <name>counter</name>
+      <uri>model://long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>3.25 -3.5 0 0 0 1.57</pose>
+    </include>
+
+    <include>
+      <name>tall_table</name>
+      <uri>model://tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.75 -0.5 0 0 0 1.57</pose>
+    </include>
+
+    <include>
+      <name>trash_box</name>
+      <uri>model://trash_box</uri>
+      <static>1</static>
+      <pose relative_to=''>4.5 -3.5 0 0 0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>kachaka_shelf_left</name>
+      <uri>model://kachaka_shelf</uri>
+      <static>1</static>
+      <pose relative_to=''>1.75 -3.5 0.0 0.0 0.0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>kachaka_shelf_right</name>
+      <uri>model://kachaka_shelf</uri>
+      <static>1</static>
+      <pose relative_to=''>1.0 -3.5 0.0 0.0 0.0 -1.57</pose>
+    </include>
+    <!-- Living Room -->
+
+
+    <!-- Study Room -->
+    <include>
+      <name>chair_left</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.75 3.5 0.0 0.0 0.0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>chair_right</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>0.75 3.5 0.0 0.0 0.0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>shelf</name>
+      <uri>model://shelf</uri>
+      <static>1</static>
+      <pose relative_to=''>3.2 3.5 0.0 0.0 0.0 1.57</pose>
+    </include>
+    <!-- Study Room -->
+
+
+    <!-- Dining Room -->
+    <include>
+      <name>dining_table</name>
+      <uri>model://dining_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-2.0 -2.25 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <include>
+      <name>couch_left</name>
+      <uri>model://sofa</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.35 -2.75 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <include>
+      <name>couch_right</name>
+      <uri>model://sofa</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.35 -1.75 0.0 0.0 0.0 0.0</pose>
+    </include>
+    <!-- Dining Room -->
+
+
+    <!-- Bed Room -->
+    <include>
+      <name>bed</name>
+      <uri>model://bed</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
+    </include>
+    <!-- Bed Room -->
+  </world>
+</sdf>

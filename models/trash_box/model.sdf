@@ -1,0 +1,325 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="chair">
+    <!-- <static>true</static> -->
+    <link name="link">
+      <inertial>
+        <mass>1.0</mass>
+      </inertial>
+
+      <collision name="top">
+        <pose>0.0 0.0 0.725 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.35 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="top_v">
+        <pose>0.0 0.0 0.725 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.35 0.05</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>1.0 1.0 1.0 1</ambient>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="cover">
+        <pose>-0.01 0.0 0.68 0.0 -1.3 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.005 0.25 0.15</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="cover_v">
+        <pose>-0.01 0.0 0.68 0.0 -1.3 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.005 0.25 0.15</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.4 0.4 0.4 1</ambient>
+          <diffuse>0.4 0.4 0.4 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="left_side_low">
+        <pose>0.0 0.135 0.245 -0.05 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.52</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="left_side_low_v">
+        <pose>0.0 0.135 0.245 -0.05 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.52</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>1.0 1.0 1.0 1</ambient>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="left_side_upper">
+        <pose>0.0 0.15 0.6 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.2</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="left_side_upper_v">
+        <pose>0.0 0.15 0.6 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.2</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>1.0 1.0 1.0 1</ambient>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="right_side_low">
+        <pose>0.0 -0.135 0.245 0.05 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.52</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="right_side_low_v">
+        <pose>0.0 -0.135 0.245 0.05 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.52</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>1.0 1.0 1.0 1</ambient>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="right_side_upper">
+        <pose>0.0 -0.15 0.6 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.2</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="right_side_upper_v">
+        <pose>0.0 -0.15 0.6 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.2 0.05 0.2</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>1.0 1.0 1.0 1</ambient>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="back_plate">
+        <pose>0.09 0.0 0.35 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.25 0.7</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="back_plate_v">
+        <pose>0.09 0.0 0.35 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.25 0.7</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>1.0 1.0 1.0 1</ambient>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="front_plate">
+        <pose>-0.09 0.0 0.275 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.25 0.55</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="front_plate_v">
+        <pose>-0.09 0.0 0.275 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.02 0.25 0.55</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>1.0 1.0 1.0 1</ambient>
+          <diffuse>1.0 1.0 1.0 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_1">
+        <pose>0.0 -0.175 0.5 0.0 1.57 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.01</radius>
+            <length>0.19</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.7 0.7 0.7 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_2">
+        <pose>0.0 0.175 0.5 0.0 1.57 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.01</radius>
+            <length>0.19</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.7 0.7 0.7 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_3">
+        <pose>-0.095 0.0 0.5 0.0 1.57 1.57</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.01</radius>
+            <length>0.34</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.7 0.7 0.7 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_4">
+        <pose>0.095 0.0 0.5 0.0 1.57 1.57</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.01</radius>
+            <length>0.34</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.7 0.7 0.7 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_5">
+        <pose>0.08 0.0 0.37 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.005 0.292 0.72</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.8 0.8 0.8 1</ambient>
+          <diffuse>0.8 0.8 0.8 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_6">
+        <pose>0.0 0.124 0.37 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.19 0.005 0.72</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.8 0.8 0.8 1</ambient>
+          <diffuse>0.8 0.8 0.8 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_7">
+        <pose>0.0 -0.124 0.37 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.19 0.005 0.72</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.8 0.8 0.8 1</ambient>
+          <diffuse>0.8 0.8 0.8 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_8">
+        <pose>0.0 0.1 0.3 -0.12 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.19 0.005 0.52</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.8 0.8 0.8 1</ambient>
+          <diffuse>0.8 0.8 0.8 1</diffuse>
+        </material>
+      </visual>
+
+      <visual name="dummy_9">
+        <pose>0.0 -0.1 0.3 0.12 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.19 0.005 0.52</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.8 0.8 0.8 1</ambient>
+          <diffuse>0.8 0.8 0.8 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

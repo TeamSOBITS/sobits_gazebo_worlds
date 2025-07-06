@@ -1,0 +1,157 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="chair">
+    <!-- <static>true</static> -->
+    <link name="link">
+      <inertial>
+        <mass>1.0</mass>
+      </inertial>
+
+      <collision name="top">
+        <pose>0.0 0.0 0.5 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.5 0.45 0.05</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="top_v">
+        <pose>0.0 0.0 0.5 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.5 0.45 0.05</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.4 0.4 0.4 1</ambient>
+          <diffuse>0.4 0.4 0.4 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="leg_left_back">
+        <pose>-0.26 0.235 0.25 0.15 0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="leg_left_back_v">
+        <pose>-0.26 0.235 0.25 0.15 0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.63 0.49 0.07 1</ambient>
+          <diffuse>0.63 0.49 0.07 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="leg_left_front">
+        <pose>0.26 0.235 0.25 0.15 -0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="leg_left_front_v">
+        <pose>0.26 0.235 0.25 0.15 -0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.63 0.49 0.07 1</ambient>
+          <diffuse>0.63 0.49 0.07 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="leg_right_back">
+        <pose>-0.26 -0.235 0.25 -0.15 0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="leg_right_back_v">
+        <pose>-0.26 -0.235 0.25 -0.15 0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.63 0.49 0.07 1</ambient>
+          <diffuse>0.63 0.49 0.07 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="leg_right_front">
+        <pose>0.26 -0.235 0.25 -0.15 -0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="leg_right_front_v">
+        <pose>0.26 -0.235 0.25 -0.15 -0.15 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.025</radius>
+            <length>0.53</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.63 0.49 0.07 1</ambient>
+          <diffuse>0.63 0.49 0.07 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="chair_back">
+        <pose>-0.27 0.0 0.75 0.0 -0.15 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.45 0.55</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="chair_back_v">
+        <pose>-0.27 0.0 0.75 0.0 -0.15 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.45 0.55</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.4 0.4 0.4 1</ambient>
+          <diffuse>0.4 0.4 0.4 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
