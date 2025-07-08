@@ -8,21 +8,21 @@
       </inertial>
 
       <collision name="pole1">
-        <pose>-0.11 0.019 -0.025 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02112 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
       </collision>
 
       <visual name="pole1_v">
-        <pose>-0.11 0.019 -0.025 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02112 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
 
@@ -33,21 +33,21 @@
       </visual>
 
       <collision name="pole2">
-        <pose>-0.11 0.41 -0.025 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.41212 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
       </collision>
 
       <visual name="pole2_v">
-        <pose>-0.11 0.41 -0.025 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.41212 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
 
@@ -58,21 +58,21 @@
       </visual>
 
       <collision name="pole3">
-        <pose>0.12 0.41 -0.025 0.0 0.0 1.57</pose>
+        <pose>0.1017 0.41212 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
       </collision>
 
       <visual name="pole3_v">
-        <pose>0.12 0.41 -0.025 0.0 0.0 1.57</pose>
+        <pose>0.1017 0.41212 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
 
@@ -83,21 +83,21 @@
       </visual>
 
       <collision name="pole4">
-        <pose>0.12 0.019 -0.025 0.0 0.0 1.57</pose>
+        <pose>0.1017 0.02112 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
       </collision>
 
       <visual name="pole4_v">
-        <pose>0.12 0.019 -0.025 0.0 0.0 1.57</pose>
+        <pose>0.1017 0.02112 -0.036899 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_pole.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
+            <scale>0.001 0.001 0.001275818</scale>
           </mesh>
         </geometry>
 
@@ -108,7 +108,7 @@
       </visual>
 
       <collision name="shelf_base_plate">
-        <pose>-0.11 0.02 -0.15 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02212 -0.211 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_plate.stl</uri>
@@ -118,7 +118,7 @@
       </collision>
 
       <visual name="shelf_base_plate_v">
-        <pose>-0.11 0.02 -0.15 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02212 -0.211 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_plate.stl</uri>
@@ -133,7 +133,7 @@
       </visual>
 
       <collision name="shelf_middle_plate">
-        <pose>-0.11 0.02 0.0 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02212 0.12 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_plate.stl</uri>
@@ -143,7 +143,7 @@
       </collision>
 
       <visual name="shelf_middle_plate_v">
-        <pose>-0.11 0.02 0.0 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02212 0.12 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_plate.stl</uri>
@@ -158,7 +158,7 @@
       </visual>
 
       <collision name="shelf_top_plate">
-        <pose>-0.11 0.02 0.2 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02212 0.351 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_plate.stl</uri>
@@ -168,7 +168,7 @@
       </collision>
 
       <visual name="shelf_top_plate_v">
-        <pose>-0.11 0.02 0.2 0.0 0.0 1.57</pose>
+        <pose>-0.1283 0.02212 0.351 0.0 0.0 1.57</pose>
         <geometry>
           <mesh>
             <uri>model://kachaka_shelf/meshes/kachaka_shelf_plate.stl</uri>
@@ -181,56 +181,6 @@
           <diffuse>0.05 0.05 0.05 1</diffuse>
         </material>
       </visual>
-
-      <!-- <collision name="shelf_middle_plate_link">
-        <pose>-0.11 0.02 0.34 0.0 0.0 1.57</pose>
-        <geometry>
-          <mesh>
-            <uri>model://kachaka_shelf/meshes/kachaka_shelf_plate.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
-          </mesh>
-        </geometry>
-      </collision>
-
-      <visual name="shelf_middle_plate_link_v">
-        <pose>-0.11 0.02 0.34 0.0 0.0 1.57</pose>
-        <geometry>
-          <mesh>
-            <uri>model://kachaka_shelf/meshes/kachaka_shelf.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
-          </mesh>
-        </geometry>
-
-        <material>
-          <ambient>0.05 0.05 0.05 1</ambient>
-          <diffuse>0.05 0.05 0.05 1</diffuse>
-        </material>
-      </visual> -->
-
-      <!-- <collision name="shelf_top_plate_link">
-        <pose>-0.11 0.02 0.52 0.0 0.0 1.57</pose>
-        <geometry>
-          <mesh>
-            <uri>model://kachaka_shelf/meshes/kachaka_shelf.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
-          </mesh>
-        </geometry>
-      </collision>
-
-      <visual name="shelf_top_plate_link_v">
-        <pose>-0.11 0.02 0.52 0.0 0.0 1.57</pose>
-        <geometry>
-          <mesh>
-            <uri>model://kachaka_shelf/meshes/kachaka_shelf.stl</uri>
-            <scale>0.001 0.001 0.001</scale>
-          </mesh>
-        </geometry>
-
-        <material>
-          <ambient>0.05 0.05 0.05 1</ambient>
-          <diffuse>0.05 0.05 0.05 1</diffuse>
-        </material>
-      </visual> -->
     </link>
   </model>
 </sdf>
