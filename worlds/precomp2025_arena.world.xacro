@@ -112,7 +112,7 @@
       <name>long_table</name>
       <uri>model://long_table</uri>
       <static>1</static>
-      <pose relative_to=''>1.3 0.4 0 0 0 1.57</pose>
+      <pose relative_to=''>-4.02 0.4 0 0 0 1.57</pose>
     </include>
 
     <include>
@@ -171,7 +171,7 @@
       <name>shelf</name>
       <uri>model://shelf</uri>
       <static>1</static>
-      <pose relative_to=''>3.2 3.5 0.0 0.0 0.0 1.57</pose>
+      <pose relative_to=''>-1.61 3.5 0.0 0.0 0.0 1.57</pose>
     </include>
     <!-- Study Room -->
 
@@ -213,42 +213,42 @@
       <name>cheez-it</name>
       <uri>model://ycb/food/cheez-it</uri>
       <static>0</static>
-      <pose relative_to=''>1.3 0.28 0.4 0 0 1.57</pose>
+      <pose relative_to=''>-4.02 0.28 0.4 0 0 1.57</pose>
     </include>
 
     <include>
       <name>spam</name>
       <uri>model://ycb/food/spam</uri>
       <static>0</static>
-      <pose relative_to=''>3.27 3.52 0.31 0 0 1.57</pose>
+      <pose relative_to=''>-1.54 3.52 0.31 0 0 1.57</pose>
     </include>
 
     <include>
       <name>apple</name>
       <uri>model://ycb/fruit/apple</uri>
       <static>0</static>
-      <pose relative_to=''>1.61 0.39 0.40 0 0 1.57</pose>
+      <pose relative_to=''>-3.71 0.39 0.40 0 0 1.57</pose>
     </include>
 
     <include>
       <name>banana</name>
       <uri>model://ycb/fruit/banana</uri>
       <static>0</static>
-      <pose relative_to=''>3.11 3.52 0.61 0 0 1.57</pose>
+      <pose relative_to=''>-1.69 3.52 0.61 0 0 1.57</pose>
     </include>
   
     <include>
       <name>bowl</name>
       <uri>model://ycb/kitchen_item/bowl</uri>
       <static>0</static>
-      <pose relative_to=''>3.28 3.40 0.91 0 0 1.57</pose>
+      <pose relative_to=''>-1.53 3.40 0.91 0 0 1.57</pose>
     </include>
 
     <include>
       <name>mug</name>
       <uri>model://ycb/kitchen_item/mug</uri>
       <static>0</static>
-      <pose relative_to=''>0.88 0.52 0.40 0 0 1.57</pose>
+      <pose relative_to=''>-4.44 0.52 0.40 0 0 1.57</pose>
     </include>
 
   </world>
