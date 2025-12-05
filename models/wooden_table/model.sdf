@@ -1,0 +1,84 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="wooden_table">
+    <!-- <static>true</static> -->
+    <link name="link">
+      <inertial>
+        <mass>1.0</mass>
+      </inertial>
+
+      <collision name="top">
+        <pose>0.0 0.0 0.7 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.7 1.4 0.04</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="top_v">
+        <pose>0.0 0.0 0.7 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.7 1.4 0.04</size>
+          </box>
+        </geometry>
+
+        <material>
+          <ambient>0.63 0.49 0.07 1</ambient>
+          <diffuse>0.63 0.49 0.07 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="leg_left">
+        <pose>0.0 0.55 0.34 0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.06</radius>
+            <length>0.68</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="leg_left_v">
+        <pose>0.0 0.55 0.34 0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.06</radius>
+            <length>0.68</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.5 0.5 0.5 1</diffuse>
+        </material>
+      </visual>
+
+      <collision name="leg_right">
+        <pose>0.0 -0.55 0.34 0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.06</radius>
+            <length>0.68</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <visual name="leg_right_v">
+        <pose>0.0 -0.55 0.34 0.0 0.0 0.0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.06</radius>
+            <length>0.68</length>
+          </cylinder>
+        </geometry>
+
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.5 0.5 0.5 1</diffuse>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
