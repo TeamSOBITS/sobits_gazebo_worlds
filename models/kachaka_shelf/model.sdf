@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.8">
-  <model name="chair">
+  <model name="kachaka_shelf">
     <!-- <static>true</static> -->
     <link name="link">
       <inertial>

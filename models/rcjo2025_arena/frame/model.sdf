@@ -1,0 +1,310 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="rcjo2025_arena_frame">
+    <static>true</static>
+    <link name="link">
+      <inertial>
+        <mass>1.0</mass>
+      </inertial>
+
+      <collision name="wall_front_left">
+        <pose>-5.0 3.0 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="wall_front_left_v">
+        <pose>-5.0 3.0 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="wall_front_center">
+        <pose>-5.0 -0.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 3.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="wall_front_center_v">
+        <pose>-5.0 -0.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 3.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="wall_front_right">
+        <pose>-5.0 -3.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 1.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="wall_front_right_v">
+        <pose>-5.0 -3.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 1.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="wall_side_right">
+        <pose>0.0 -4.05 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 10.1 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="wall_side_right_v">
+        <pose>0.0 -4.05 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 10.1 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="wall_side_left">
+        <pose>0.0 4.05 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 10.1 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="wall_side_left_v">
+        <pose>0.0 4.05 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 10.1 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="wall_back">
+        <pose>5.0 0.0 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 8.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="wall_back_v">
+        <pose>5.0 0.0 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 8.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="inside_wall_side_left">
+        <pose>0.0 3.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 1.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="inside_wall_side_left_v">
+        <pose>0.0 3.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 1.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="inside_wall_side_right">
+        <pose>0.0 -3.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 1.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="inside_wall_side_right_v">
+        <pose>0.0 -3.5 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 1.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="inside_wall_front">
+        <pose>-4.0 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="inside_wall_front_v">
+        <pose>-4.0 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="inside_wall_back">
+        <pose>-4.0 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="inside_wall_back_v">
+        <pose>-4.0 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="inside_wall_center_horizontal">
+        <pose>0.0 0.0 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="inside_wall_center_horizontal_v">
+        <pose>0.0 0.0 0.4 0.0 0.0 0.0</pose>
+        <geometry>
+          <box>
+            <size>0.1 2.0 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="inside_wall_center_vertical_front">
+        <pose>-0.525 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 0.95 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="inside_wall_center_vertical_front_v">
+        <pose>-0.525 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 0.95 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+
+      <collision name="inside_wall_center_vertical_back">
+        <pose>2.025 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 3.95 0.8</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <visual name="inside_wall_center_vertical_back_v">
+        <pose>2.025 0.0 0.4 0.0 0.0 1.57</pose>
+        <geometry>
+          <box>
+            <size>0.1 3.95 0.8</size>
+          </box>
+        </geometry>
+
+        <material>
+          <diffuse>1.0 1.0 1.0 1.0</diffuse>
+          <specular>1.0 1.0 1.0 1.0</specular>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

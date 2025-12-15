@@ -1,7 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.8">
   <model name="wooden_table">
-    <!-- <static>true</static> -->
     <link name="link">
       <inertial>
         <mass>1.0</mass>
