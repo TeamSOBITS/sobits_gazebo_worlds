@@ -46,7 +46,7 @@
 <!--レポジトリの概要-->
 ## 概要
 
-ignition Gazeboのファイルを複数含んだリポジトリ．
+Gazeboのファイルを複数含んだリポジトリ．
 特に，家具を自由にカスタマイズできるような構成となっている．
 
 > [!TODO]
@@ -67,15 +67,12 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 
 | System  | Version |
 | ------------- | ------------- |
-| Ubuntu | 22.04 (Focal Fossa) |
+| Ubuntu | 22.04 (Jammy Jellyfish) |
 | ROS | Humble |
 | Gazebo | ignition |
 
-> [!NOTE]
-> `Ubuntu`や`ROS`のインストール方法に関しては，[SOBIT Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)に参照してください．
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-<!-- - OS: Ubuntu 20.04 
-- ROS distribution: noetic Kame -->
 
 ### インストール方法
 
@@ -108,9 +105,9 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 <!-- 実行・操作方法 -->
 ## 実行・操作方法
 
-1. worldファイルを指定\
-   [world.launch.py](launch/world.launch.py)の`world_file_path`を指定する．\
-   worldファイルは[このフォルダ](worlds/)に存在する．
+1. worldファイルを指定 \
+   [sobits_gazebo_worlds/launch/world.launch.py](launch/world.launch.py)の`world_file_path`を指定する．\
+   worldファイルは何でもいいが，例えばこのリポジトリ内であれば，[このフォルダ(sobits_gazebo_worlds/worlds/)](worlds/)に存在する．
 
 2. [world.launch.py](launch/world.launch.py)というlaunchファイルを起動
    ```sh
@@ -160,8 +157,8 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 ## 参考文献
 
 * [ROS Humble](http://wiki.ros.org/humble)
-* [WRS Gazebo](---)
-* [AWS Gazebo](---)
+* [WRS Gazebo](https://github.com/TeamSOBITS/tmc_wrs_gz.git)
+* [AWS Gazebo](https://github.com/TeamSOBITS/aws_small_house_world.git)
 
 
 [contributors-shield]: https://img.shields.io/github/contributors/TeamSOBITS/sobits_gazebo_worlds.svg?style=for-the-badge
