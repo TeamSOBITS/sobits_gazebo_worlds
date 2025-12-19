@@ -33,4 +33,3 @@ export "GZ_SIM_RESOURCE_PATH="${GZ_SIM_RESOURCE_PATH}":~/colcon_ws/install/aws_s
 
 
 echo "╚══╣ Setup: SOBITS Gazebo Worlds (FINISHED) ╠══╝"
-exec bash
