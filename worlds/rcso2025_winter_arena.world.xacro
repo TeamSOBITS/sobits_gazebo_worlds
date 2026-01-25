@@ -1,0 +1,223 @@
+<?xml version="1.0" ?>
+<sdf version="1.8" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- TODO: allow xacro -->
+  <xacro:arg name="fast_physics" default="true" />
+  <xacro:arg name="trofast_knob" default="true" />
+  <xacro:arg name="highrtf" default="false" />
+
+  <world name='rcso2025_winter_arena'>
+    <plugin
+        filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-sensors-system"
+        name="gz::sim::systems::Sensors">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-imu-system"
+        name="gz::sim::systems::Imu">
+    </plugin>
+
+    <physics name="1ms" type="ignored">
+        <max_step_size>0.001</max_step_size>
+        <real_time_factor>1.0</real_time_factor>
+    </physics>
+    
+    <!--light-->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose relative_to=''>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+          <range>1000</range>
+          <constant>0.9</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!--gravity-->
+    <gravity>0 0 -9.8</gravity>
+
+    <!-- Import models -->
+    <!-- Global Models -->
+    <include>
+      <name>rcso2025_winter_arena_floor</name>
+      <static>1</static>
+      <uri>model://rcso2025_winter_arena/floor</uri>
+      <pose relative_to=''>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>rcso2025_winter_arena_frame</name>
+      <static>1</static>
+      <uri>model://rcso2025_winter_arena/frame</uri>
+      <pose relative_to=''>0 0 0 0 0 0</pose>
+    </include>
+    <!-- Global Models -->
+
+
+    <!-- Living Room -->
+    <include>
+      <name>counter_left</name>
+      <uri>model://wooden_law_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-0.4 1.7 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <include>
+      <name>counter_right</name>
+      <uri>model://wooden_law_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-0.4 -1.7 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <include>
+      <name>bar_man_left</name>
+      <uri>model://person_standing</uri>
+      <static>1</static>
+      <pose relative_to=''>-1.0 1.7 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+    <include>
+      <name>bar_man_rightt</name>
+      <uri>model://person_standing</uri>
+      <static>1</static>
+      <pose relative_to=''>-1.0 -1.7 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+    <include>
+      <name>table_1</name>
+      <uri>model://personal_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.7 2.1 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>chair_1</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.5 2.1 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>table_2</name>
+      <uri>model://personal_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.7 0.7 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>chair_2</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.5 0.7 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>table_3</name>
+      <uri>model://personal_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.7 -0.7 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>chair_3</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.5 -0.7 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>table_4</name>
+      <uri>model://personal_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.7 -2.1 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>chair_4</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.5 -2.1 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <!-- <include>
+      <name>counter</name>
+      <uri>model://wrc_long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>3.25 -3.5 0 0 0 0.0</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>tall_table</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.75 -0.5 0 0 0 1.57</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>chair_left</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.75 3.5 0.0 0.0 0.0 -1.57</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>chair_right</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>0.75 3.5 0.0 0.0 0.0 -1.57</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>shelf</name>
+      <uri>model://shelf</uri>
+      <static>1</static>
+      <pose relative_to=''>3.2 3.5 0.0 0.0 0.0 1.57</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>dining_table</name>
+      <uri>model://dining_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-2.0 -2.25 0.0 0.0 0.0 0.0</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>couch_left</name>
+      <uri>model://aws_robomaker_residential_SofaB_01</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.35 -2.75 0.0 0.0 0.0 0.0</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>couch_right</name>
+      <uri>model://aws_robomaker_residential_SofaB_01</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.35 -1.75 0.0 0.0 0.0 0.0</pose>
+    </include> -->
+
+    <!-- <include>
+      <name>bed</name>
+      <uri>model://aws_robomaker_residential_Bed_01</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
+    </include> -->
+  </world>
+</sdf>
