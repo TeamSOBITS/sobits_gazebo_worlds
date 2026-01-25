@@ -107,7 +107,7 @@
       <name>table1</name>
       <uri>model://wooden_table</uri>
       <static>1</static>
-      <pose relative_to=''>-1.8 -3.5 0.0 0.0 0.0 -1.57</pose>
+      <pose relative_to=''>-1.8 0.3 0.0 0.0 0.0 -1.57</pose>
     </include>
 
     <include>
@@ -121,7 +121,7 @@
       <name>table3</name>
       <uri>model://wooden_table</uri>
       <static>1</static>
-      <pose relative_to=''>-1.8 0.3 0.0 0.0 0.0 -1.57</pose>
+      <pose relative_to=''>-1.8 -3.5 0.0 0.0 0.0 -1.57</pose>
     </include>
 
     <include>
@@ -164,6 +164,21 @@
       <uri>model://chair</uri>
       <static>1</static>
       <pose relative_to=''>-0.8 0.3 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <!-- Robot Rest Area -->
+    <include>
+      <name>owner_table</name>
+      <uri>model://personal_table</uri>
+      <static>1</static>
+      <pose relative_to=''>3.6 -0.35 0 0 0 1.57</pose>
+    </include>
+
+    <include>
+      <name>owner_chair</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>3.6 -0.95 0.0 0.0 0.0 1.57</pose>
     </include>
   </world>
 </sdf>
