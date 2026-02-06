@@ -52,19 +52,90 @@
     <!-- Import models -->
     <!-- Global Models -->
     <include>
-      <name>rcjo2025_arena_floor</name>
+      <name>rcso2025_arena_floor</name>
       <static>1</static>
-      <uri>model://rcjo2025_arena/floor</uri>
+      <uri>model://rcso2025_rrl_arena/floor</uri>
       <pose relative_to=''>0 0 0 0 0 0</pose>
     </include>
 
     <include>
-      <name>rcjo2025_arena_frame</name>
+      <name>rcso2025_arena_frame</name>
       <static>1</static>
-      <uri>model://rcjo2025_arena/frame</uri>
+      <uri>model://rcso2025_rrl_arena/frame</uri>
       <pose relative_to=''>0 0 0 0 0 0</pose>
     </include>
     <!-- Global Models -->
+
+    <!-- Clerk's room -->
+    <include>
+      <name>long_table_left</name>
+      <uri>model://wrc_long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-0.6 3.4 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+    <include>
+      <name>long_table_right</name>
+      <uri>model://wrc_long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-0.6 -3.4 0.0 0.0 0.0 1.57</pose>
+    </include>
+    
+    <include>
+      <name>tall_table_1</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>1.0 2.8 0 0 0 0.0</pose>
+    </include>
+
+    <include>
+      <name>chair_1</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.8 2.8 0 0 0 3.14</pose>
+    </include>
+
+    <include>
+      <name>tall_table_2</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>1.0 1.0 0 0 0 0.0</pose>
+    </include>
+
+    <include>
+      <name>chair_2</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.8 1.0 0 0 0 3.14</pose>
+    </include>
+
+    <include>
+      <name>tall_table_3</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>1.0 -1.0 0 0 0 0.0</pose>
+    </include>
+
+    <include>
+      <name>chair_3</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.8 -1.0 0 0 0 3.14</pose>
+    </include>
+
+    <include>
+      <name>tall_table_4</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>1.0 -2.8 0 0 0 0.0</pose>
+    </include>
+
+    <include>
+      <name>chair_4</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.8 -2.8 0 0 0 3.14</pose>
+    </include>
 
   </world>
 </sdf>
