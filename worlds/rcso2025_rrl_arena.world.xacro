@@ -71,70 +71,99 @@
       <name>long_table_left</name>
       <uri>model://wrc_long_table</uri>
       <static>1</static>
-      <pose relative_to=''>-0.6 3.4 0.0 0.0 0.0 1.57</pose>
+      <!-- <pose relative_to=''>-0.6 3.4 0.0 0.0 0.0 1.57</pose> -->
+      <pose relative_to=''>-0.6 2.4 0.0 0.0 0.0 1.57</pose>
     </include>
 
     <include>
       <name>long_table_right</name>
       <uri>model://wrc_long_table</uri>
       <static>1</static>
-      <pose relative_to=''>-0.6 -3.4 0.0 0.0 0.0 1.57</pose>
+      <!-- <pose relative_to=''>-0.6 -3.4 0.0 0.0 0.0 1.57</pose> -->
+      <pose relative_to=''>-0.6 -2.4 0.0 0.0 0.0 1.57</pose>
     </include>
     
     <include>
       <name>tall_table_1</name>
-      <uri>model://wrc_tall_table</uri>
+      <!-- <uri>model://wrc_tall_table</uri> -->
+      <uri>model://personal_table</uri>
       <static>1</static>
-      <pose relative_to=''>1.0 2.8 0 0 0 0.0</pose>
+      <!-- <pose relative_to=''>1.0 2.8 0 0 0 0.0</pose> -->
+      <pose relative_to=''>1.28 2.55 0 0 0 0.0</pose>
     </include>
 
     <include>
       <name>chair_1</name>
       <uri>model://chair</uri>
       <static>1</static>
-      <pose relative_to=''>1.8 2.8 0 0 0 3.14</pose>
+      <!-- <pose relative_to=''>1.8 2.8 0 0 0 3.14</pose> -->
+      <pose relative_to=''>1.8 2.55 0 0 0 3.14</pose>
     </include>
 
     <include>
       <name>tall_table_2</name>
-      <uri>model://wrc_tall_table</uri>
+      <!-- <uri>model://wrc_tall_table</uri> -->
+      <uri>model://personal_table</uri>
       <static>1</static>
-      <pose relative_to=''>1.0 1.0 0 0 0 0.0</pose>
+      <!-- <pose relative_to=''>1.0 1.0 0 0 0 0.0</pose> -->
+      <pose relative_to=''>1.28 0.85 0 0 0 0.0</pose>
     </include>
 
     <include>
       <name>chair_2</name>
       <uri>model://chair</uri>
       <static>1</static>
-      <pose relative_to=''>1.8 1.0 0 0 0 3.14</pose>
+      <!-- <pose relative_to=''>1.8 1.0 0 0 0 3.14</pose> -->
+      <pose relative_to=''>1.8 0.85 0 0 0 3.14</pose>
     </include>
 
     <include>
       <name>tall_table_3</name>
-      <uri>model://wrc_tall_table</uri>
+      <!-- <uri>model://wrc_tall_table</uri> -->
+      <uri>model://personal_table</uri>
       <static>1</static>
-      <pose relative_to=''>1.0 -1.0 0 0 0 0.0</pose>
+      <!-- <pose relative_to=''>1.0 -1.0 0 0 0 0.0</pose> -->
+      <pose relative_to=''>1.28 -0.85 0 0 0 0.0</pose>
     </include>
 
     <include>
       <name>chair_3</name>
       <uri>model://chair</uri>
       <static>1</static>
-      <pose relative_to=''>1.8 -1.0 0 0 0 3.14</pose>
+      <!-- <pose relative_to=''>1.8 -1.0 0 0 0 3.14</pose> -->
+      <pose relative_to=''>1.8 -0.85 0 0 0 3.14</pose>
     </include>
 
     <include>
       <name>tall_table_4</name>
-      <uri>model://wrc_tall_table</uri>
+      <!-- <uri>model://wrc_tall_table</uri> -->
+      <uri>model://personal_table</uri>
       <static>1</static>
-      <pose relative_to=''>1.0 -2.8 0 0 0 0.0</pose>
+      <!-- <pose relative_to=''>1.0 -2.8 0 0 0 0.0</pose> -->
+      <pose relative_to=''>1.28 -2.55 0 0 0 0.0</pose>
     </include>
 
     <include>
       <name>chair_4</name>
       <uri>model://chair</uri>
       <static>1</static>
-      <pose relative_to=''>1.8 -2.8 0 0 0 3.14</pose>
+      <!-- <pose relative_to=''>1.8 -2.8 0 0 0 3.14</pose> -->
+      <pose relative_to=''>1.8 -2.55 0 0 0 3.14</pose>
+    </include>
+
+    <!-- Human -->
+    <include>
+      <name>bar_man_left</name>
+      <uri>model://person_standing</uri>
+      <static>1</static>
+      <pose relative_to=''>-1.0 2.4 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+    <include>
+      <name>bar_man_right</name>
+      <uri>model://person_standing</uri>
+      <static>1</static>
+      <pose relative_to=''>-1.0 -2.4 0.0 0.0 0.0 1.57</pose>
     </include>
 
   </world>
