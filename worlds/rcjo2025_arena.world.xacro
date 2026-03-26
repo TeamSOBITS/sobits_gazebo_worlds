@@ -208,5 +208,8 @@
       <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
     </include>
     <!-- Bedroom -->
+
+    <!-- RANDOM_YCB_OBJECTS -->
+
   </world>
 </sdf>
