@@ -200,13 +200,13 @@
     <!-- Dining Room -->
 
 
-    <!-- Bed Room -->
+    <!-- Bedroom -->
     <include>
       <name>bedroom#bed</name>
       <uri>model://bed</uri>
       <static>1</static>
       <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
     </include>
-    <!-- Bed Room -->
+    <!-- Bedroom -->
   </world>
 </sdf>
