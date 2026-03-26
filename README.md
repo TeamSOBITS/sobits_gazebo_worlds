@@ -28,12 +28,16 @@
     </li>
     <li>
     <a href="#実行・操作方法">実行・操作方法</a>
+      <ul>
+        <li><a href="#固定worldを起動">固定Worldを起動</a></li>
+        <li><a href="#ランダムworldを起動">ランダムWorldを起動</a></li>
+      </ul>
     </li>
     <li>
-      <a href="#新しいWorld作成">新しいWorld作成</a>
+    <a href="#新しいWorld作成">新しいWorld作成</a>
       <ul>
-        <li><a href="#１">１</a></li>
-        <li><a href="#２">２</a></li>
+        <li><a href="#配置エリアyamlを作成">配置エリアYAMLを作成</a></li>
+        <li><a href="#ランダム生成launchを使う">ランダム生成launchを使う</a></li>
       </ul>
     </li>
     <li><a href="#対応家具リスト">対応家具リスト</a></li>
@@ -48,6 +52,17 @@
 
 ignition Gazeboのファイルを複数含んだリポジトリ．
 特に，家具を自由にカスタマイズできるような構成となっている．
+
+現在は以下の機能に対応している．
+
+- 固定の家具レイアウトを持つWorldの起動
+- YCB物体のランダム配置
+- YAMLによる配置面設定
+- 家具モデルの`model.sdf`からの配置面サイズ・高さ推定
+- 棚の`plate1` / `plate2` / `plate3`のような複数面指定
+- `allowed_categories`による物体カテゴリ制限
+- `human_count`による`gz_human_sim`人モデルの自動スポーン
+- 生成したWorldの保存
 
 > [!TODO]
 > GUIで家具を配置したり色を着せ替えたりしながら家具を配置できるようにする予定．
@@ -67,8 +82,8 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 
 | System  | Version |
 | ------------- | ------------- |
-| Ubuntu | 22.04 (Focal Fossa) |
-| ROS | Humble |
+| Ubuntu | 24.04 (Focal Fossa) |
+| ROS | Jazzy |
 | Gazebo | ignition |
 
 > [!NOTE]
@@ -108,6 +123,8 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 <!-- 実行・操作方法 -->
 ## 実行・操作方法
 
+### 固定Worldを起動
+
 1. worldファイルを指定\
    [world.launch.py](launch/world.launch.py)の`world_file_path`を指定する．\
    worldファイルは[このフォルダ](worlds/)に存在する．
@@ -122,6 +139,47 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
    Gazebo対応しているロボットのリポジトリから，Gazeboのworldファイルを指定．\
    また，ロボットの初期位置も設定することもできるので注意．
 
+### ランダムWorldを起動
+
+[random_world.launch.py](launch/random_world.launch.py)を用いることで，固定家具をベースにYCB物体と人をランダム配置したWorldを生成して起動できる．
+
+```sh
+$ ros2 launch sobits_gazebo_worlds random_world.launch.py
+```
+
+主な引数は以下の通り．
+
+| Argument | Description |
+| --- | --- |
+| `base_world` | ベースとなるworldファイル |
+| `placement_config` | 配置面YAML |
+| `models_root` | YCBモデルのルートディレクトリ |
+| `seed` | ランダムシード |
+| `object_count` | ランダム配置するYCB物体数 |
+| `human_count` | 生成する人モデル数 |
+| `human_model` | `person_standing` などの人モデル名 |
+| `save_world` | 生成worldを保存するかどうか |
+| `output_world_name` | 保存するworld名．拡張子省略時は`.world.xacro`が自動付与される |
+
+例:
+
+```sh
+$ ros2 launch sobits_gazebo_worlds random_world.launch.py \
+    object_count:=15 \
+    human_count:=3 \
+    seed:=42
+```
+
+生成worldを保存する例:
+
+```sh
+$ ros2 launch sobits_gazebo_worlds random_world.launch.py \
+    save_world:=true \
+    output_world_name:=rcjo2025_version_1
+```
+
+この場合，`worlds/rcjo2025_version_1.world.xacro`に保存される．
+
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 
@@ -133,8 +191,53 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 
 [TODO] GUIによって簡単に家具を配置できるようにする．
 
-### １
-### ２
+### 配置エリアYAMLを作成
+
+配置エリアは[config/placement](config/placement/)以下のYAMLで指定する．
+
+例:
+
+```yaml
+placement_areas:
+  - name: living_room#long_table
+    edge_margin: 0.08
+    min_object_spacing: 0.13
+
+  - name: study_room#shelf
+    surface_name: plate1
+    # allowed_categories: [kitchen_item]
+    edge_margin: 0.05
+    min_object_spacing: 0.10
+```
+
+主なキーは以下の通り．
+
+| Key | Description |
+| --- | --- |
+| `name` | world内の家具include名 |
+| `surface_name` | 棚などで使用する面名．未指定時は`top` |
+| `edge_margin` | 家具の端から除外する安全マージン[m] |
+| `min_object_spacing` | 同一面上の物体間最小距離[m] |
+| `allowed_categories` | 許可するYCBカテゴリ．未指定時は全カテゴリ |
+| `selection_weight` | その面が選ばれやすくなる重み |
+| `max_objects` | その面に置ける最大物体数 |
+
+`size`や`z`は通常書く必要がない．\
+家具の`model.sdf`とworld中のposeから自動で推定される．
+
+### ランダム生成launchを使う
+
+作成したYAMLを指定して起動する．
+
+```sh
+$ ros2 launch sobits_gazebo_worlds random_world.launch.py \
+    base_world:=/home/rg-station-03/colcon_ws/src/sobits_gazebo_worlds/worlds/rcjo2025_arena.world.xacro \
+    placement_config:=/home/rg-station-03/colcon_ws/src/sobits_gazebo_worlds/config/placement/rcjo2025_arena.yaml \
+    object_count:=20 \
+    human_count:=2
+```
+
+人モデルは`floor_plane`上の空き領域から自動サンプリングされ，家具と重ならないように配置される．
 
 
 <!-- 対応家具リスト -->
@@ -142,13 +245,29 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 
 このリポジトリが保有する家具のリスト．
 
-[TODO] 未対応
+主な対応家具・面:
+
+- `long_table`
+- `tall_table`
+- `dining_table`
+- `counter`
+- `shelf`
+  - `top`
+  - `plate1`
+  - `plate2`
+  - `plate3`
+
+補足:
+
+- 家具面が`box`形状として定義されている場合は，自動でサイズ推定される
+- `sofa` / `bed` / `kachaka_shelf`のような一部mesh家具は，人スポーン用に保守的なfootprintを内部で使用している
 
 <!-- マイルストーン -->
 ## マイルストーン
 
-- [ ] TODO
-- [x] TODO
+- [x] 固定家具をベースにしたランダムYCB配置
+- [x] `gz_human_sim`による人モデルスポーン
+- [ ] GUIベースの家具配置編集
 
 現時点のバッグや新規機能の依頼を確認するために[Issueページ][issues-url] をご覧ください．
 
@@ -159,7 +278,7 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 <!-- 参考文献 -->
 ## 参考文献
 
-* [ROS Humble](http://wiki.ros.org/humble)
+* [ROS Jazzy](http://wiki.ros.org/jazzy)
 * [WRS Gazebo](---)
 * [AWS Gazebo](---)
 

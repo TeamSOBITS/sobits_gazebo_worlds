@@ -1,0 +1,42 @@
+placement_areas:
+
+  ## template for placement area configuration
+  # - name: furniture_a
+    # edge_margin: 0.15
+    # min_object_spacing: 0.20
+    # allowed_categories: [food]    # Optional: if not specified, all categories are allowed
+    # selection_weight: 2.0         # Optional: higher values make this area more likely to be chosen
+    # max_objects: 4                # Optional: cap the number of objects on this area
+    # surface_name: plate1          # Optional: specify a particular surface on the furniture (e.g., a specific shelf or tabletop)
+
+  - name: living_room#long_table
+    edge_margin: 0.08
+    min_object_spacing: 0.13
+    allowed_categories: [food, kitchen_item]
+
+  - name: living_room#tall_table
+    edge_margin: 0.05
+    min_object_spacing: 0.13
+
+  - name: dining_room#dining_table
+    edge_margin: 0.12
+    min_object_spacing: 0.15
+
+  - name: living_room#counter
+    edge_margin: 0.12
+    min_object_spacing: 0.15
+
+  - name: study_room#shelf
+    surface_name: plate1
+    edge_margin: 0.05
+    min_object_spacing: 0.10
+
+  - name: study_room#shelf
+    surface_name: plate2
+    edge_margin: 0.05
+    min_object_spacing: 0.10
+
+  - name: study_room#shelf
+    surface_name: plate3
+    edge_margin: 0.05
+    min_object_spacing: 0.10
