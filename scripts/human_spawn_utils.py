@@ -228,3 +228,52 @@ def generate_human_spawn_poses(world_file_path, models_root, human_count, seed_t
         poses.append(pose)
 
     return poses
+
+
+def generate_human_spawn_poses_near_room(world_file_path, models_root, room_name, human_count, seed_text):
+    if human_count <= 0:
+        return []
+
+    includes = load_world_includes(world_file_path)
+    room_centers = []
+    for include in includes:
+        name = include.get('name') or ''
+        if name.startswith(f'{room_name}#') and include['pose'][2] <= FLOOR_OBJECT_Z_THRESHOLD:
+            room_centers.append((include['pose'][0], include['pose'][1]))
+
+    if not room_centers:
+        raise RuntimeError(f'Could not find floor-level furniture in room {room_name!r}.')
+
+    center_x = sum(x for x, _ in room_centers) / len(room_centers)
+    center_y = sum(y for _, y in room_centers) / len(room_centers)
+
+    floor_bounds, obstacles = build_obstacles_and_bounds(world_file_path, models_root)
+    rng = random.Random()
+    if seed_text:
+        rng.seed(f'human-room::{room_name}::{seed_text}')
+
+    poses = []
+    for _ in range(human_count):
+        pose = None
+        for _trial in range(2000):
+            radius = rng.uniform(0.3, 1.8)
+            angle = rng.uniform(-math.pi, math.pi)
+            x = center_x + radius * math.cos(angle)
+            y = center_y + radius * math.sin(angle)
+            yaw = rng.uniform(-math.pi, math.pi)
+
+            if not (floor_bounds[0] <= x <= floor_bounds[1] and floor_bounds[2] <= y <= floor_bounds[3]):
+                continue
+            if point_collides(x, y, obstacles, HUMAN_RADIUS):
+                continue
+            if any(math.dist((x, y), (px, py)) < HUMAN_HUMAN_CLEARANCE for px, py, _pz, _pyaw in poses):
+                continue
+
+            pose = (x, y, 0.0, yaw)
+            break
+
+        if pose is None:
+            raise RuntimeError(f'Could not find enough free floor positions near room {room_name!r}.')
+        poses.append(pose)
+
+    return poses
