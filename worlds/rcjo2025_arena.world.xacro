@@ -109,42 +109,42 @@
 
     <!-- Living Room -->
     <include>
-      <name>long_table</name>
+      <name>living_room#long_table</name>
       <uri>model://long_table</uri>
       <static>1</static>
       <pose relative_to=''>2.0 -0.5 0 0 0 1.57</pose>
     </include>
 
     <include>
-      <name>counter</name>
+      <name>living_room#counter</name>
       <uri>model://long_table</uri>
       <static>1</static>
       <pose relative_to=''>3.25 -3.5 0 0 0 1.57</pose>
     </include>
 
     <include>
-      <name>tall_table</name>
+      <name>living_room#tall_table</name>
       <uri>model://tall_table</uri>
       <static>1</static>
       <pose relative_to=''>0.75 -0.5 0 0 0 1.57</pose>
     </include>
 
     <include>
-      <name>trash_box</name>
+      <name>living_room#trash_box</name>
       <uri>model://trash_box</uri>
       <static>1</static>
       <pose relative_to=''>4.5 -3.5 0 0 0 -1.57</pose>
     </include>
 
     <include>
-      <name>kachaka_shelf_left</name>
+      <name>living_room#kachaka_shelf_left</name>
       <uri>model://kachaka_shelf</uri>
       <static>1</static>
       <pose relative_to=''>1.75 -3.5 0.0 0.0 0.0 -1.57</pose>
     </include>
 
     <include>
-      <name>kachaka_shelf_right</name>
+      <name>living_room#kachaka_shelf_right</name>
       <uri>model://kachaka_shelf</uri>
       <static>1</static>
       <pose relative_to=''>1.0 -3.5 0.0 0.0 0.0 -1.57</pose>
@@ -154,21 +154,21 @@
 
     <!-- Study Room -->
     <include>
-      <name>chair_left</name>
+      <name>study_room#chair_left</name>
       <uri>model://chair</uri>
       <static>1</static>
       <pose relative_to=''>1.75 3.5 0.0 0.0 0.0 -1.57</pose>
     </include>
 
     <include>
-      <name>chair_right</name>
+      <name>study_room#chair_right</name>
       <uri>model://chair</uri>
       <static>1</static>
       <pose relative_to=''>0.75 3.5 0.0 0.0 0.0 -1.57</pose>
     </include>
 
     <include>
-      <name>shelf</name>
+      <name>study_room#shelf</name>
       <uri>model://shelf</uri>
       <static>1</static>
       <pose relative_to=''>3.2 3.5 0.0 0.0 0.0 1.57</pose>
@@ -178,21 +178,21 @@
 
     <!-- Dining Room -->
     <include>
-      <name>dining_table</name>
+      <name>dining_room#dining_table</name>
       <uri>model://dining_table</uri>
       <static>1</static>
       <pose relative_to=''>-2.0 -2.25 0.0 0.0 0.0 0.0</pose>
     </include>
 
     <include>
-      <name>couch_left</name>
+      <name>dining_room#couch_left</name>
       <uri>model://sofa</uri>
       <static>1</static>
       <pose relative_to=''>-3.35 -2.75 0.0 0.0 0.0 0.0</pose>
     </include>
 
     <include>
-      <name>couch_right</name>
+      <name>dining_room#couch_right</name>
       <uri>model://sofa</uri>
       <static>1</static>
       <pose relative_to=''>-3.35 -1.75 0.0 0.0 0.0 0.0</pose>
@@ -202,7 +202,7 @@
 
     <!-- Bed Room -->
     <include>
-      <name>bed</name>
+      <name>bedroom#bed</name>
       <uri>model://bed</uri>
       <static>1</static>
       <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
