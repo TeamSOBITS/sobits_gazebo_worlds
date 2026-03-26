@@ -62,6 +62,8 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 - 棚の`plate1` / `plate2` / `plate3`のような複数面指定
 - `allowed_categories`による物体カテゴリ制限
 - `human_count`による`gz_human_sim`人モデルの自動スポーン
+- GPSRコマンドに応じた物体・人の追加スポーン
+- follow系GPSRタスクに応じた人テレオペ起動
 - 生成したWorldの保存
 
 > [!TODO]
@@ -155,6 +157,8 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py
 | `object_count` | ランダム配置するYCB物体数 |
 | `human_count` | 生成する人モデル数 |
 | `human_model` | `person_standing` などの人モデル名 |
+| `task_command` | GPSRタスク文に基づいて追加スポーンを行うコマンド文字列 |
+| `gpsr_groq_model` | `groq_ros`経由で使用するモデル名 |
 | `save_world` | 生成worldを保存するかどうか |
 | `output_world_name` | 保存するworld名．拡張子省略時は`.world.xacro`が自動付与される |
 
@@ -176,6 +180,28 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
 ```
 
 この場合，`worlds/rcjo2025_version_1.world.xacro`に保存される．
+
+GPSRコマンドに基づいて追加スポーンする例:
+
+```sh
+$ ros2 launch sobits_gazebo_worlds random_world.launch.py \
+    task_command:="Grasp an apple on the tall table in the living room and place it on the shelf in study_room." \
+    object_count:=15 \
+    human_count:=2
+```
+
+この機能を使うときは，事前に`groq_ros`の`groq_action`サーバを起動しておく必要がある．
+物体は配置エリアYAMLに定義された`room_name#furniture_name`に従って追加され，人は対象の部屋の家具近傍に`gz_human_sim`で追加される．
+
+follow系タスクの例:
+
+```sh
+$ ros2 launch sobits_gazebo_worlds random_world.launch.py \
+    task_command:="Follow Alex in the bedroom." \
+    object_count:=15
+```
+
+この場合，対象の人は`enable_teleop:=true`で起動され，`sobits_teleop`経由で操作できる．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
@@ -235,6 +261,7 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
 ```
 
 人モデルは`floor_plane`上の空き領域から自動サンプリングされ，家具と重ならないように配置される．
+GPSRタスクで追加される人モデルも，同様に対象の部屋の周辺で衝突回避しながら配置される．
 
 
 <!-- 対応家具リスト -->
