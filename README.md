@@ -89,9 +89,6 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 > [!NOTE]
 > `Ubuntu`や`ROS`のインストール方法に関しては，[SOBIT Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)に参照してください．
 
-<!-- - OS: Ubuntu 20.04 
-- ROS distribution: noetic Kame -->
-
 ### インストール方法
 
 1. ROSの`src`フォルダに移動します．
