@@ -291,11 +291,16 @@ def _launch_setup(context, *args, **kwargs):
 
     if temp_world_path:
         def _cleanup_temp_world(context):
-            if os.path.exists(temp_world_path):
-                os.unlink(temp_world_path)
+            try:
+                if os.path.exists(temp_world_path):
+                    os.unlink(temp_world_path)
+            except OSError as exc:
+                launch.logging.get_logger('launch').warning(
+                    f'Failed to remove temporary world file {temp_world_path!r}: {exc}'
+                )
             return []
 
-        actions.insert(0, RegisterEventHandler(
+        actions.append(RegisterEventHandler(
             event_handler=OnShutdown(
                 on_shutdown=[OpaqueFunction(function=_cleanup_temp_world)],
             )
