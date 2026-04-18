@@ -40,6 +40,7 @@ class RandomWorldManager(Node):
         self.declare_parameter('object_count', 15)
         self.declare_parameter('object_prefix', 'random_ycb')
         self.declare_parameter('pause_physics_during_reconfigure', True)
+        self.declare_parameter('spawn_on_start', False)
 
         self._world_name = self.get_parameter('world_name').value
         self._base_world = self.get_parameter('base_world').value
@@ -48,10 +49,12 @@ class RandomWorldManager(Node):
         self._initial_layout_world_path = self.get_parameter('initial_layout_world_path').value
         self._object_prefix = self.get_parameter('object_prefix').value
         self._pause_physics = bool(self.get_parameter('pause_physics_during_reconfigure').value)
+        self._spawn_on_start = bool(self.get_parameter('spawn_on_start').value)
         self._seed_text = str(self.get_parameter('seed').value or '').strip()
         self._object_count = int(self.get_parameter('object_count').value)
         self._current_layout = load_initial_layout_specs(self._initial_layout_world_path, self._object_prefix)
         self.add_on_set_parameters_callback(self._on_parameter_update)
+        self._startup_timer = None
 
         create_service_name = f'/world/{self._world_name}/create'
         remove_service_name = f'/world/{self._world_name}/remove'
@@ -96,10 +99,14 @@ class RandomWorldManager(Node):
             f'tracking {len(self._current_layout)} random entities.'
         )
 
+        if self._spawn_on_start and not self._current_layout:
+            self._startup_timer = self.create_timer(1.0, self._handle_startup_spawn)
+
     def _on_parameter_update(self, params):
         updated_seed = self._seed_text
         updated_object_count = self._object_count
         updated_pause = self._pause_physics
+        updated_spawn_on_start = self._spawn_on_start
 
         for param in params:
             if param.name == 'seed':
@@ -127,11 +134,30 @@ class RandomWorldManager(Node):
                     )
             elif param.name == 'pause_physics_during_reconfigure':
                 updated_pause = bool(param.value)
+            elif param.name == 'spawn_on_start':
+                updated_spawn_on_start = bool(param.value)
 
         self._seed_text = updated_seed
         self._object_count = updated_object_count
         self._pause_physics = updated_pause
+        self._spawn_on_start = updated_spawn_on_start
         return SetParametersResult(successful=True)
+
+    def _handle_startup_spawn(self):
+        if self._startup_timer is not None:
+            self._startup_timer.cancel()
+            self._startup_timer = None
+        try:
+            new_layout = self._regenerate_impl(
+                seed=self._current_seed_value(),
+                object_count=self._object_count,
+                pause_physics=self._pause_physics,
+            )
+            self.get_logger().info(
+                f'Spawned {len(new_layout)} random entities during startup attach mode.'
+            )
+        except Exception as exc:
+            self.get_logger().error(f'Failed startup random world spawn: {exc}')
 
     def _current_seed_value(self):
         if self._seed_text == '':
