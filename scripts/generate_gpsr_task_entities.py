@@ -183,7 +183,17 @@ def request_spawn_plan(task_command, placement_areas, ycb_uris, model_name, base
         node.destroy_node()
         rclpy.shutdown()
 
-    payload = json.loads(strip_json_fence(response_text))
+    stripped_response = strip_json_fence(response_text)
+    try:
+        payload = json.loads(stripped_response)
+    except json.JSONDecodeError as exc:
+        response_preview = stripped_response[:500]
+        if len(stripped_response) > 500:
+            response_preview += '...'
+        raise RuntimeError(
+            f'Failed to parse JSON response from model "{model_name}". '
+            f'Cleaned response preview: {response_preview!r}'
+        ) from exc
     payload.setdefault('object_spawns', [])
     payload.setdefault('human_spawns', [])
     return payload
