@@ -44,7 +44,8 @@ FOLLOW_TASK_KEYWORDS = (
 
 
 def normalize_name(text):
-    return text.lower().translate(str.maketrans({'-': '_', ' ': '_'})) # Normalize by lowercasing and replacing spaces and hyphens with underscores
+    # Normalize by lowercasing and replacing spaces and hyphens with underscores
+    return text.lower().translate(str.maketrans({'-': '_', ' ': '_'}))
 
 
 def strip_json_fence(text):
@@ -273,6 +274,33 @@ def append_include(world, name, uri, pose_xyz_yaw, is_static=True):
     ET.SubElement(include, 'pose', {'relative_to': ''}).text = f'{x:.3f} {y:.3f} {z:.3f} 0 0 {yaw:.3f}'
 
 
+OBJECT_SPAWN_REQUIRED_FIELDS = {
+    'object_name': str,
+    'target_location': str,
+}
+
+HUMAN_SPAWN_REQUIRED_FIELDS = {
+    'target_room': str,
+}
+
+
+def _validate_spawn_entry(entry, required_fields, entry_label):
+    if not isinstance(entry, dict):
+        raise RuntimeError(
+            f'Invalid {entry_label} entry: expected a dict, got {type(entry).__name__!r}. Entry: {entry!r}'
+        )
+    for field, expected_type in required_fields.items():
+        if field not in entry:
+            raise RuntimeError(
+                f'Invalid {entry_label} entry: missing required field {field!r}. Entry: {entry!r}'
+            )
+        if not isinstance(entry[field], expected_type):
+            raise RuntimeError(
+                f'Invalid {entry_label} entry: field {field!r} must be {expected_type.__name__}, '
+                f'got {type(entry[field]).__name__!r}. Entry: {entry!r}'
+            )
+
+
 def apply_object_spawns(world, includes, placement_areas, object_spawns, ycb_uris):
     aliases = build_object_aliases(ycb_uris)
     area_lookup = {}
@@ -280,6 +308,7 @@ def apply_object_spawns(world, includes, placement_areas, object_spawns, ycb_uri
         area_lookup.setdefault(area['name'], []).append(area)
 
     for index, spawn in enumerate(object_spawns, start=1):
+        _validate_spawn_entry(spawn, OBJECT_SPAWN_REQUIRED_FIELDS, 'object_spawn')
         target_location = spawn['target_location']
         object_uri = resolve_object_uri(spawn['object_name'], aliases)
         if target_location not in area_lookup:
@@ -297,6 +326,7 @@ def build_human_spawn_specs(world_path, models_root, human_spawns, seed_text, ta
     enable_teleop = is_follow_task(task_command)
 
     for spawn in human_spawns:
+        _validate_spawn_entry(spawn, HUMAN_SPAWN_REQUIRED_FIELDS, 'human_spawn')
         target_room = spawn['target_room']
         count = int(spawn.get('count', 1))
         poses = generate_human_spawn_poses_near_room(world_path, models_root, target_room, count, seed_text)

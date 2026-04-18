@@ -217,7 +217,12 @@ def _launch_setup(context, *args, **kwargs):
             os.unlink(task_human_specs_path)
 
     world_name = get_world_name(generated_world)
-    human_spawn_poses = generate_human_spawn_poses(generated_world, models_package_root, human_count, seed)
+    reserved_human_poses = [
+        (spec['x'], spec['y'], spec['z'], spec['yaw']) for spec in task_human_spawn_specs
+    ]
+    human_spawn_poses = generate_human_spawn_poses(
+        generated_world, models_package_root, human_count, seed, reserved_human_poses
+    )
 
     actions = [
         IncludeLaunchDescription(

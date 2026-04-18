@@ -198,7 +198,7 @@ def point_collides(x, y, obstacles, radius):
     return False
 
 
-def generate_human_spawn_poses(world_file_path, models_root, human_count, seed_text):
+def generate_human_spawn_poses(world_file_path, models_root, human_count, seed_text, reserved_poses=None):
     if human_count <= 0:
         return []
 
@@ -207,6 +207,7 @@ def generate_human_spawn_poses(world_file_path, models_root, human_count, seed_t
     if seed_text:
         rng.seed(f'human::{seed_text}')
 
+    all_poses = list(reserved_poses) if reserved_poses else []
     poses = []
     for _ in range(human_count):
         pose = None
@@ -217,7 +218,7 @@ def generate_human_spawn_poses(world_file_path, models_root, human_count, seed_t
 
             if point_collides(x, y, obstacles, HUMAN_RADIUS):
                 continue
-            if any(math.dist((x, y), (px, py)) < HUMAN_HUMAN_CLEARANCE for px, py, _pz, _pyaw in poses):
+            if any(math.dist((x, y), (px, py)) < HUMAN_HUMAN_CLEARANCE for px, py, _pz, _pyaw in all_poses):
                 continue
 
             pose = (x, y, 0.0, yaw)
@@ -226,6 +227,7 @@ def generate_human_spawn_poses(world_file_path, models_root, human_count, seed_t
         if pose is None:
             raise RuntimeError('Could not find enough free floor positions for the requested humans.')
         poses.append(pose)
+        all_poses.append(pose)
 
     return poses
 
