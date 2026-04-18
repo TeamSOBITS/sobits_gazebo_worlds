@@ -84,7 +84,7 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 
 | System  | Version |
 | ------------- | ------------- |
-| Ubuntu | 24.04 (Focal Fossa) |
+| Ubuntu | 24.04 (Noble Numbat) |
 | ROS | Jazzy |
 | Gazebo | ignition |
 

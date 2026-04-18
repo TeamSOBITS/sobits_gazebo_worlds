@@ -1,6 +1,7 @@
 import launch.logging
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler
+from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
@@ -159,11 +160,11 @@ def _launch_setup(context, *args, **kwargs):
         if not output_world_name:
             raise RuntimeError('save_world was enabled, but output_world_name was not provided.')
         generated_world = os.path.join(worlds_dir, normalized_output_world_name)
-    elif output_world_name:
-        generated_world = os.path.join(worlds_dir, normalized_output_world_name)
+        temp_world_path = None
     else:
         fd, generated_world = tempfile.mkstemp(prefix='generated_random_', suffix='.world')
         os.close(fd)
+        temp_world_path = generated_world
 
     command = [
         sys.executable,
@@ -287,5 +288,17 @@ def _launch_setup(context, *args, **kwargs):
     )
     launch.logging.get_logger('launch').info(f"GPSR task command: {task_command}")
     launch.logging.get_logger('launch').info(f"Generated world: {generated_world}")
+
+    if temp_world_path:
+        def _cleanup_temp_world(context):
+            if os.path.exists(temp_world_path):
+                os.unlink(temp_world_path)
+            return []
+
+        actions.insert(0, RegisterEventHandler(
+            event_handler=OnShutdown(
+                on_shutdown=[OpaqueFunction(function=_cleanup_temp_world)],
+            )
+        ))
 
     return actions
