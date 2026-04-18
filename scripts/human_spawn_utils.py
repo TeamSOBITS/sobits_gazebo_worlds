@@ -2,6 +2,7 @@ import math
 import os
 import random
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
 HUMAN_RADIUS = 0.35
@@ -21,7 +22,7 @@ MODEL_FOOTPRINT_OVERRIDES = {
 
 
 def get_world_name(world_file_path):
-    root = ET.fromstring(open(world_file_path).read())
+    root = ET.fromstring(Path(world_file_path).read_text(encoding='utf-8'))
     world = root.find('world')
     if world is None:
         raise RuntimeError(f'World tag was not found in: {world_file_path}')
@@ -39,7 +40,7 @@ def parse_pose(pose_text):
 
 
 def load_world_includes(world_file_path):
-    root = ET.fromstring(open(world_file_path).read())
+    root = ET.fromstring(Path(world_file_path).read_text(encoding='utf-8'))
     world = root.find('world')
     if world is None:
         raise RuntimeError(f'World tag was not found in: {world_file_path}')
@@ -137,7 +138,7 @@ def model_collision_rects(models_root, model_uri):
     if not os.path.isdir(model_dir):
         return []
 
-    model_root = ET.fromstring(open(find_model_sdf(model_dir)).read())
+    model_root = ET.fromstring(Path(find_model_sdf(model_dir)).read_text(encoding='utf-8'))
     rects = []
     for collision in model_root.findall('.//collision'):
         pose = parse_pose(collision.findtext('pose', default='0 0 0 0 0 0'))
