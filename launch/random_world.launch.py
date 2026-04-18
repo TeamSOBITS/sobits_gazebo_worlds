@@ -1,3 +1,4 @@
+import launch.logging
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -267,9 +268,14 @@ def _launch_setup(context, *args, **kwargs):
             )
         )
 
-        print(f"Added GPSR task human spawn: {spawn_spec}")
-        print(f"Total task human spawns added: {len(task_human_spawn_specs)}")
-        print(f"GPSR task command: {task_command}")
-        print(f"Generated world: {spawn_spec.get('enable_teleop')}")
+        launch.logging.get_logger('launch').info(
+            f"Added GPSR task human spawn: {spawn_spec}"
+        )
+
+    launch.logging.get_logger('launch').info(
+        f"Total task human spawns added: {len(task_human_spawn_specs)}"
+    )
+    launch.logging.get_logger('launch').info(f"GPSR task command: {task_command}")
+    launch.logging.get_logger('launch').info(f"Generated world: {generated_world}")
 
     return actions
