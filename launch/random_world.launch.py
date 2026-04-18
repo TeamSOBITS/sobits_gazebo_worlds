@@ -1,9 +1,11 @@
+import launch.logging
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from ament_index_python.packages import get_package_share_directory
 
+import json
 import os
 import subprocess
 import sys
@@ -71,6 +73,18 @@ def generate_launch_description():
         default_value='person_standing',
         description='Human model preset passed to gz_human_sim.',
     )
+
+    task_command_arg = DeclareLaunchArgument(
+        'task_command',
+        default_value='',
+        description='Optional GPSR task command used to add task-specific object/human spawns.',
+    )
+
+    gpsr_groq_model_arg = DeclareLaunchArgument(
+        'gpsr_groq_model',
+        default_value='openai/gpt-oss-120b',
+        description='Groq model name used via groq_ros for task spawn planning.',
+    )
     
     save_world_arg = DeclareLaunchArgument(
         'save_world',
@@ -93,6 +107,8 @@ def generate_launch_description():
             object_count_arg,
             human_count_arg,
             human_model_arg,
+            task_command_arg,
+            gpsr_groq_model_arg,
             save_world_arg,
             output_world_name_arg,
             OpaqueFunction(function=_launch_setup),
@@ -110,6 +126,14 @@ def _resolve_worlds_output_dir(package_share):
         return source_worlds_dir
     return os.path.join(package_share, 'worlds')
 
+
+def _normalize_world_filename(output_world_name):
+    if not output_world_name:
+        return ''
+    if output_world_name.endswith('.world.xacro') or output_world_name.endswith('.world'):
+        return output_world_name
+    return output_world_name + '.world.xacro'
+
 def _launch_setup(context, *args, **kwargs):
     package_share = get_package_share_directory('sobits_gazebo_worlds')
     models_package_root = os.path.join(package_share, 'models')
@@ -122,17 +146,21 @@ def _launch_setup(context, *args, **kwargs):
     object_count = LaunchConfiguration('object_count').perform(context)
     human_count = int(LaunchConfiguration('human_count').perform(context))
     human_model = LaunchConfiguration('human_model').perform(context)
+    task_command = LaunchConfiguration('task_command').perform(context)
+    gpsr_groq_model = LaunchConfiguration('gpsr_groq_model').perform(context)
     save_world = LaunchConfiguration('save_world').perform(context)
     output_world_name = LaunchConfiguration('output_world_name').perform(context)
 
     worlds_dir = _resolve_worlds_output_dir(package_share)
 
+    normalized_output_world_name = _normalize_world_filename(output_world_name)
+
     if save_world.lower() == 'true':
         if not output_world_name:
             raise RuntimeError('save_world was enabled, but output_world_name was not provided.')
-        generated_world = os.path.join(worlds_dir, output_world_name + '.world.xacro')
+        generated_world = os.path.join(worlds_dir, normalized_output_world_name)
     elif output_world_name:
-        generated_world = os.path.join(worlds_dir, output_world_name + '.world.xacro')
+        generated_world = os.path.join(worlds_dir, normalized_output_world_name)
     else:
         fd, generated_world = tempfile.mkstemp(prefix='generated_random_', suffix='.world')
         os.close(fd)
@@ -157,8 +185,49 @@ def _launch_setup(context, *args, **kwargs):
 
     subprocess.check_call(command)
 
+    task_human_spawn_specs = []
+    if task_command:
+        gpsr_spawner = os.path.join(package_share, 'scripts', 'generate_gpsr_task_entities.py')
+        task_human_specs_fd, task_human_specs_path = tempfile.mkstemp(prefix='gpsr_task_humans_', suffix='.json')
+        os.close(task_human_specs_fd)
+        gpsr_command = [
+            sys.executable,
+            gpsr_spawner,
+            '--world',
+            generated_world,
+            '--base-world',
+            base_world,
+            '--placement-config',
+            placement_config,
+            '--models-root',
+            models_root,
+            '--task-command',
+            task_command,
+            '--groq-model-name',
+            gpsr_groq_model,
+            '--seed',
+            seed,
+            '--human-spawns-output',
+            task_human_specs_path,
+        ]
+        subprocess.check_call(gpsr_command)
+        if os.path.exists(task_human_specs_path):
+            with open(task_human_specs_path, 'r', encoding='utf-8') as file_obj:
+                task_human_spawn_specs = json.load(file_obj) or []
+            os.unlink(task_human_specs_path)
+
     world_name = get_world_name(generated_world)
-    human_spawn_poses = generate_human_spawn_poses(generated_world, models_package_root, human_count, seed)
+    reserved_human_poses = []
+    for spec in task_human_spawn_specs:
+        missing = [field for field in ('x', 'y', 'z', 'yaw') if field not in spec]
+        if missing:
+            raise RuntimeError(
+                f'task_human_spawn_spec is missing required field(s) {missing}. Entry: {spec!r}'
+            )
+        reserved_human_poses.append((spec['x'], spec['y'], spec['z'], spec['yaw']))
+    human_spawn_poses = generate_human_spawn_poses(
+        generated_world, models_package_root, human_count, seed, reserved_human_poses
+    )
 
     actions = [
         IncludeLaunchDescription(
@@ -188,5 +257,35 @@ def _launch_setup(context, *args, **kwargs):
                 }.items(),
             )
         )
+
+    for index, spawn_spec in enumerate(task_human_spawn_specs, start=1):
+        actions.append(
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    [os.path.join(get_package_share_directory('gz_human_sim'), 'launch', 'spawn_human.launch.py')]
+                ),
+                launch_arguments={
+                    'namespace': f'gpsr_human_{index}',
+                    'world_name': world_name,
+                    'enable_teleop': 'true' if spawn_spec.get('enable_teleop', False) else 'false',
+                    'model_name': f'gpsr_human_{index}',
+                    'human_model': human_model,
+                    'x': str(spawn_spec['x']),
+                    'y': str(spawn_spec['y']),
+                    'z': str(spawn_spec['z']),
+                    'yaw': str(spawn_spec['yaw']),
+                }.items(),
+            )
+        )
+
+        launch.logging.get_logger('launch').info(
+            f"Added GPSR task human spawn: {spawn_spec}"
+        )
+
+    launch.logging.get_logger('launch').info(
+        f"Total task human spawns added: {len(task_human_spawn_specs)}"
+    )
+    launch.logging.get_logger('launch').info(f"GPSR task command: {task_command}")
+    launch.logging.get_logger('launch').info(f"Generated world: {generated_world}")
 
     return actions
