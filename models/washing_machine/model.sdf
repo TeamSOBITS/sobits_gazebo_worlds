@@ -122,10 +122,45 @@
           <spring_reference>0</spring_reference>
           <spring_stiffness>0</spring_stiffness>
         </dynamics>
-        <!-- Challenge starts with door already open (staff pre-opens it).
-             Set to 0 if you want to practise the door-opening action instead. -->
-        <initial_position>1.7453</initial_position>
       </axis>
+    </joint>
+
+    <!-- Tray mesh imported from ROS1 asset set -->
+    <link name="tray">
+      <!-- Place near front top-left of the body; tune after visual check -->
+      <pose>0.0 -0.190 0.956 0 0 0</pose>
+
+      <inertial>
+        <mass>0.6</mass>
+        <inertia>
+          <ixx>0.001</ixx> <ixy>0</ixy> <ixz>0</ixz>
+          <iyy>0.001</iyy> <iyz>0</iyz>
+          <izz>0.001</izz>
+        </inertia>
+      </inertial>
+
+      <collision name="tray_collision">
+        <geometry>
+          <mesh>
+            <uri>model://washing_machine/meshes/tray.stl</uri>
+            <scale>0.001 0.001 0.001</scale>
+          </mesh>
+        </geometry>
+      </collision>
+
+      <visual name="tray_visual">
+        <geometry>
+          <mesh>
+            <uri>model://washing_machine/meshes/tray.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <joint name="tray_fixed" type="fixed">
+      <parent>body</parent>
+      <child>tray</child>
     </joint>
 
     <!-- Prevent the whole model from sliding on the floor -->
