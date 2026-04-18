@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<!--
+  Pile of Clothes (T-shirts) — Gazebo Harmonic (SDF 1.8)
+
+  Visual-only GLB mesh — no collision, static.
+  Purpose: represent the clothing items inside the laundry basket for camera-based
+  perception testing. The robot uses YOLO/SAM3 to detect T-shirts from camera feed.
+
+  Scale: assumed metres (scale=1.0). Adjust if the mesh appears too large.
+  Spawn this model slightly above basket interior (z offset ≈ 0.05m) when placing
+  inside the laundry_basket model.
+-->
+<sdf version="1.8">
+  <model name="pile_of_clothes">
+    <static>true</static>
+
+    <link name="link">
+      <!-- Rotated 90° around X so the pile lies flat (GLB is likely Z-up standing). -->
+      <pose>0 0 0 1.5708 0 0</pose>
+
+      <!-- No inertial — static model -->
+      <!-- No collision — visual indicator only -->
+
+      <visual name="clothes_visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://pile_of_clothes/meshes/pile_of_clothes.glb</uri>
+            <!-- Scaled to ~40 % to fit inside the IKEA TORKIS basket interior -->
+            <scale>0.4 0.4 0.4</scale>
+          </mesh>
+        </geometry>
+        <!-- Cast shadows for better depth-camera realism -->
+        <cast_shadows>true</cast_shadows>
+      </visual>
+    </link>
+
+  </model>
+</sdf>
