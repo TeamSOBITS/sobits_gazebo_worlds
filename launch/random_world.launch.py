@@ -217,9 +217,14 @@ def _launch_setup(context, *args, **kwargs):
             os.unlink(task_human_specs_path)
 
     world_name = get_world_name(generated_world)
-    reserved_human_poses = [
-        (spec['x'], spec['y'], spec['z'], spec['yaw']) for spec in task_human_spawn_specs
-    ]
+    reserved_human_poses = []
+    for spec in task_human_spawn_specs:
+        missing = [field for field in ('x', 'y', 'z', 'yaw') if field not in spec]
+        if missing:
+            raise RuntimeError(
+                f'task_human_spawn_spec is missing required field(s) {missing}. Entry: {spec!r}'
+            )
+        reserved_human_poses.append((spec['x'], spec['y'], spec['z'], spec['yaw']))
     human_spawn_poses = generate_human_spawn_poses(
         generated_world, models_package_root, human_count, seed, reserved_human_poses
     )

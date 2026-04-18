@@ -328,7 +328,13 @@ def build_human_spawn_specs(world_path, models_root, human_spawns, seed_text, ta
     for spawn in human_spawns:
         _validate_spawn_entry(spawn, HUMAN_SPAWN_REQUIRED_FIELDS, 'human_spawn')
         target_room = spawn['target_room']
-        count = int(spawn.get('count', 1))
+        raw_count = spawn.get('count', 1)
+        if not isinstance(raw_count, int):
+            raise RuntimeError(
+                f"Invalid human_spawn entry: field 'count' must be int, "
+                f"got {type(raw_count).__name__!r}. Entry: {spawn!r}"
+            )
+        count = raw_count
         poses = generate_human_spawn_poses_near_room(world_path, models_root, target_room, count, seed_text)
         for x, y, z, yaw in poses:
             specs.append(
