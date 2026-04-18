@@ -4,6 +4,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Opaq
 from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 import json
@@ -236,7 +237,35 @@ def _launch_setup(context, *args, **kwargs):
                 [os.path.join(get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]
             ),
             launch_arguments=[('gz_args', generated_world)],
-        )
+        ),
+        Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            output='screen',
+            arguments=[
+                f'/world/{world_name}/create@ros_gz_interfaces/srv/SpawnEntity',
+                f'/world/{world_name}/remove@ros_gz_interfaces/srv/DeleteEntity',
+                f'/world/{world_name}/control@ros_gz_interfaces/srv/ControlWorld',
+            ],
+        ),
+        Node(
+            package='sobits_gazebo_worlds',
+            executable='random_world_manager.py',
+            output='screen',
+            parameters=[
+                {
+                    'world_name': world_name,
+                    'base_world': base_world,
+                    'placement_config': placement_config,
+                    'models_root': models_root,
+                    'initial_layout_world_path': generated_world,
+                    'seed': seed,
+                    'object_count': int(object_count),
+                    'object_prefix': 'random_ycb',
+                    'pause_physics_during_reconfigure': True,
+                }
+            ],
+        ),
     ]
 
     for index, (x, y, z, yaw) in enumerate(human_spawn_poses):

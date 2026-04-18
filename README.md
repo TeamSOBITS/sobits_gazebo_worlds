@@ -31,6 +31,7 @@
       <ul>
         <li><a href="#固定worldを起動">固定Worldを起動</a></li>
         <li><a href="#ランダムworldを起動">ランダムWorldを起動</a></li>
+        <li><a href="#ランタイムでランダムworldを再生成">ランタイムでランダムWorldを再生成</a></li>
       </ul>
     </li>
     <li>
@@ -65,6 +66,7 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 - GPSRコマンドに応じた物体・人の追加スポーン
 - follow系GPSRタスクに応じた人テレオペ起動
 - 生成したWorldの保存
+- ROS 2サービスによるランダム物体のランタイム再生成
 
 > [!TODO]
 > GUIで家具を配置したり色を着せ替えたりしながら家具を配置できるようにする予定．
@@ -202,6 +204,71 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
 ```
 
 この場合，対象の人は`enable_teleop:=true`で起動され，`sobits_teleop`経由で操作できる．
+
+### ランタイムでランダムWorldを再生成
+
+`random_world.launch.py`では，起動後にランダム配置されたYCB物体だけを削除・再生成するROS 2サービスが利用できる．
+Gazeboやロボットを再起動せずに，ランダムレイアウトを更新できる．
+
+利用可能なサービス:
+
+| Service | Type | Description |
+| --- | --- | --- |
+| `/random_world/regenerate` | `std_srvs/srv/Trigger` | 現在のランダム物体を削除して再生成する |
+| `/sobits_gazebo_worlds/change_world` | `std_srvs/srv/Trigger` | `/random_world/regenerate`と同じ動作 |
+| `/random_world/clear` | `std_srvs/srv/Trigger` | 現在のランダム物体だけを削除する |
+
+基本的な使い方:
+
+1. まずランダムWorldを起動する．
+
+   ```sh
+   $ ros2 launch sobits_gazebo_worlds random_world.launch.py
+   ```
+
+2. ランダム物体をすべて削除する．
+
+   ```sh
+   $ ros2 service call /random_world/clear std_srvs/srv/Trigger {}
+   ```
+
+3. 新しいランダム配置を生成する．
+
+   ```sh
+   $ ros2 service call /random_world/regenerate std_srvs/srv/Trigger {}
+   ```
+
+`/random_world/regenerate`は，ランダム配置されたYCB物体のみを対象とする．
+ロボット本体や固定家具，ベースWorldは削除されない．
+
+決定的に再生成したい場合は，サービス呼び出し前に`random_world_manager`のパラメータを変更する．
+
+```sh
+$ ros2 param set /random_world_manager seed 123
+$ ros2 param set /random_world_manager object_count 20
+$ ros2 service call /random_world/regenerate std_srvs/srv/Trigger {}
+```
+
+非決定的な再生成に戻す場合:
+
+```sh
+$ ros2 param set /random_world_manager seed ""
+```
+
+主なランタイムパラメータ:
+
+| Parameter | Description |
+| --- | --- |
+| `seed` | 空文字なら非決定的，再現したいときは整数文字列を指定 |
+| `object_count` | 再生成時に配置するYCB物体数 |
+| `pause_physics_during_reconfigure` | 削除・再スポーン中に物理演算を停止するか |
+
+> [!IMPORTANT]
+> このランタイム再生成機能は`random_world.launch.py`の起動を前提としている．
+> `ros2 launch sobit_home_bringup gz_minimal.launch.py`と`ros2 launch sobits_gazebo_worlds random_world.launch.py`は，どちらもGazeboを起動するため，同じシミュレーションに対して同時に使わないこと．
+
+> [!NOTE]
+> `gz_minimal.launch.py`側で同じ機能を使いたい場合は，既存のGazeboに対して`/world/<world_name>/create`，`/remove`，`/control`のbridgeと`random_world_manager.py`を追加する構成にする必要がある．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
