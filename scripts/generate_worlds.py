@@ -224,10 +224,14 @@ def compute_ranges_from_geometry(area):
 
 
 def sample_pose(area, existing_poses):
+    return sample_pose_with_rng(area, existing_poses, random)
+
+
+def sample_pose_with_rng(area, existing_poses, rng):
     for _ in range(200):
-        x = random.uniform(*area["x_range"])
-        y = random.uniform(*area["y_range"])
-        yaw = random.uniform(-math.pi, math.pi)
+        x = rng.uniform(*area["x_range"])
+        y = rng.uniform(*area["y_range"])
+        yaw = rng.uniform(-math.pi, math.pi)
 
         if all(math.dist((x, y), (px, py)) >= area["min_distance"] for px, py, _pz in existing_poses):
             return x, y, area["z"], yaw
@@ -236,16 +240,56 @@ def sample_pose(area, existing_poses):
 
 
 def build_random_includes(object_count, placement_areas, ycb_uris, object_prefix):
+    specs = generate_random_object_specs_from_data(
+        object_count,
+        placement_areas,
+        ycb_uris,
+        object_prefix,
+    )
+    return render_random_includes(specs)
+
+
+def render_random_includes(object_specs):
+    if not object_specs:
+        return MARKER
+
+    blocks = []
+    for spec in object_specs:
+        x, y, z, yaw = spec["pose"]
+        blocks.append(
+            "\n".join(
+                [
+                    "    <include>",
+                    f"      <name>{spec['name']}</name>",
+                    f"      <uri>{spec['uri']}</uri>",
+                    f"      <static>{1 if spec.get('static', True) else 0}</static>",
+                    f"      <pose relative_to=''>{x:.3f} {y:.3f} {z:.3f} 0 0 {yaw:.3f}</pose>",
+                    "    </include>",
+                ]
+            )
+        )
+
+    return "\n\n".join(blocks)
+
+
+def generate_random_object_specs_from_data(
+    object_count,
+    placement_areas,
+    ycb_uris,
+    object_prefix=DEFAULT_OBJECT_PREFIX,
+    rng=None,
+):
     if object_count < 0:
         raise ValueError("--object-count must be >= 0")
 
     if object_count == 0:
-        return MARKER
+        return []
 
     available_categories = sorted({get_ycb_category(uri) for uri in ycb_uris})
+    rng = rng or random
 
     placements = {area["area_key"]: [] for area in placement_areas}
-    blocks = []
+    specs = []
 
     for index in range(1, object_count + 1):
         selectable_areas = []
@@ -260,7 +304,7 @@ def build_random_includes(object_count, placement_areas, ycb_uris, object_prefix
         if not selectable_areas:
             raise RuntimeError("No placement areas are available anymore. Increase max_objects or reduce object_count.")
 
-        area = random.choices(selectable_areas, weights=selectable_weights, k=1)[0]
+        area = rng.choices(selectable_areas, weights=selectable_weights, k=1)[0]
         allowed_categories = area.get("allowed_categories")
         if allowed_categories:
             allowed_categories = set(allowed_categories)
@@ -273,24 +317,74 @@ def build_random_includes(object_count, placement_areas, ycb_uris, object_prefix
         else:
             eligible_uris = ycb_uris
 
-        uri = random.choice(eligible_uris)
-        x, y, z, yaw = sample_pose(area, placements[area["area_key"]])
+        uri = rng.choice(eligible_uris)
+        x, y, z, yaw = sample_pose_with_rng(area, placements[area["area_key"]], rng)
         placements[area["area_key"]].append((x, y, z))
 
-        blocks.append(
-            "\n".join(
-                [
-                    "    <include>",
-                    f"      <name>{object_prefix}_{index:02d}</name>",
-                    f"      <uri>{uri}</uri>",
-                    "      <static>1</static>",
-                    f"      <pose relative_to=''>{x:.3f} {y:.3f} {z:.3f} 0 0 {yaw:.3f}</pose>",
-                    "    </include>",
-                ]
-            )
+        specs.append(
+            {
+                "name": f"{object_prefix}_{index:02d}",
+                "uri": uri,
+                "pose": (x, y, z, yaw),
+                "static": True,
+                "area_key": area["area_key"],
+                "placement_name": area["name"],
+            }
         )
 
-    return "\n\n".join(blocks)
+    return specs
+
+
+def generate_random_object_specs(
+    base_world_path,
+    placement_config,
+    models_root,
+    object_count,
+    object_prefix=DEFAULT_OBJECT_PREFIX,
+    seed=None,
+):
+    rng = random.Random(seed) if seed is not None else random.Random()
+    placement_areas = load_placement_areas(placement_config, base_world_path)
+    ycb_uris = discover_ycb_uris(models_root)
+    return generate_random_object_specs_from_data(
+        object_count,
+        placement_areas,
+        ycb_uris,
+        object_prefix=object_prefix,
+        rng=rng,
+    )
+
+
+def extract_random_object_specs_from_world(world_path, object_prefix=DEFAULT_OBJECT_PREFIX):
+    root = ET.fromstring(Path(world_path).read_text(encoding="utf-8"))
+    world = root.find("world")
+    if world is None:
+        raise RuntimeError(f"World tag was not found in: {world_path}")
+
+    specs = []
+    prefix = f"{object_prefix}_"
+    for include in world.findall("include"):
+        name = include.findtext("name")
+        if not name or not name.startswith(prefix):
+            continue
+
+        uri = include.findtext("uri")
+        pose_text = include.findtext("pose", default="0 0 0 0 0 0")
+        pose = [float(value) for value in pose_text.split()]
+        while len(pose) < 6:
+            pose.append(0.0)
+
+        specs.append(
+            {
+                "name": name,
+                "uri": uri,
+                "pose": (pose[0], pose[1], pose[2], pose[5]),
+                "static": include.findtext("static", default="1").strip() != "0",
+            }
+        )
+
+    specs.sort(key=lambda spec: spec["name"])
+    return specs
 
 
 def main():
@@ -304,18 +398,16 @@ def main():
     parser.add_argument("--object-prefix", default=DEFAULT_OBJECT_PREFIX, help="Prefix for generated object names.")
     args = parser.parse_args()
 
-    if args.seed is not None:
-        random.seed(args.seed)
-
     base_world = Path(args.base_world).read_text()
-    placement_areas = load_placement_areas(args.placement_config, args.base_world)
-    ycb_uris = discover_ycb_uris(args.models_root)
-    random_objects_xml = build_random_includes(
+    random_object_specs = generate_random_object_specs(
+        args.base_world,
+        args.placement_config,
+        args.models_root,
         args.object_count,
-        placement_areas,
-        ycb_uris,
-        args.object_prefix,
+        object_prefix=args.object_prefix,
+        seed=args.seed,
     )
+    random_objects_xml = render_random_includes(random_object_specs)
 
     if MARKER not in base_world:
         raise RuntimeError(f"Marker {MARKER!r} was not found in {args.base_world}")
