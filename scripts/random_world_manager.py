@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+import threading
 from copy import deepcopy
 
 import rclpy
@@ -53,6 +54,7 @@ class RandomWorldManager(Node):
         self._seed_text = str(self.get_parameter('seed').value or '').strip()
         self._object_count = int(self.get_parameter('object_count').value)
         self._current_layout = load_initial_layout_specs(self._initial_layout_world_path, self._object_prefix)
+        self._reconfigure_lock = threading.Lock()
         self.add_on_set_parameters_callback(self._on_parameter_update)
         self._startup_timer = None
 
@@ -176,9 +178,15 @@ class RandomWorldManager(Node):
                     f'Gazebo {label} service is not available for world {self._world_name!r}.'
                 )
 
-    def _call_client(self, client, request, service_label):
+    def _call_client(self, client, request, service_label, timeout_sec=10.0):
         future = client.call_async(request)
+        deadline = time.monotonic() + timeout_sec
         while rclpy.ok() and not future.done():
+            if time.monotonic() > deadline:
+                raise RuntimeError(
+                    f'Timed out waiting for Gazebo {service_label} service '
+                    f'after {timeout_sec:.1f}s.'
+                )
             time.sleep(0.01)
         if not future.done() or future.result() is None:
             raise RuntimeError(f'Call to Gazebo {service_label} service failed.')
@@ -234,63 +242,66 @@ class RandomWorldManager(Node):
     def _regenerate_impl(self, seed, object_count, pause_physics):
         self._wait_for_gazebo_services()
 
-        previous_layout = deepcopy(self._current_layout)
-        if pause_physics:
-            self._set_paused(True)
-
-        spawned_new_layout = []
-        try:
-            self._delete_layout(previous_layout, ignore_missing=True)
-            new_layout = generate_layout_specs(
-                self._base_world,
-                self._placement_config,
-                self._models_root,
-                object_count,
-                self._object_prefix,
-                seed,
-            )
-            spawned_new_layout = self._spawn_layout(new_layout)
-            self._current_layout = new_layout
-            self._object_count = object_count
-            self._seed_text = '' if seed is None else str(seed)
-            return new_layout
-        except Exception as exc:
-            self.get_logger().error(f'Regeneration failed, attempting rollback: {exc}')
-            try:
-                if spawned_new_layout:
-                    partial_specs = [
-                        spec for spec in new_layout
-                        if spec['name'] in set(spawned_new_layout)
-                    ]
-                    self._delete_layout(partial_specs, ignore_missing=True)
-                if previous_layout:
-                    self._spawn_layout(previous_layout)
-                    self._current_layout = previous_layout
-            except Exception as rollback_exc:
-                self.get_logger().error(f'Rollback failed: {rollback_exc}')
-            raise
-        finally:
+        with self._reconfigure_lock:
+            previous_layout = deepcopy(self._current_layout)
             if pause_physics:
+                self._set_paused(True)
+
+            new_layout = []
+            spawned_new_layout = []
+            try:
+                self._delete_layout(previous_layout, ignore_missing=True)
+                new_layout = generate_layout_specs(
+                    self._base_world,
+                    self._placement_config,
+                    self._models_root,
+                    object_count,
+                    self._object_prefix,
+                    seed,
+                )
+                spawned_new_layout = self._spawn_layout(new_layout)
+                self._current_layout = new_layout
+                self._object_count = object_count
+                self._seed_text = '' if seed is None else str(seed)
+                return new_layout
+            except Exception as exc:
+                self.get_logger().error(f'Regeneration failed, attempting rollback: {exc}')
                 try:
-                    self._set_paused(False)
-                except Exception as exc:
-                    self.get_logger().warning(f'Failed to resume physics after reconfigure: {exc}')
+                    if spawned_new_layout:
+                        partial_specs = [
+                            spec for spec in new_layout
+                            if spec['name'] in set(spawned_new_layout)
+                        ]
+                        self._delete_layout(partial_specs, ignore_missing=True)
+                    if previous_layout:
+                        self._spawn_layout(previous_layout)
+                        self._current_layout = previous_layout
+                except Exception as rollback_exc:
+                    self.get_logger().error(f'Rollback failed: {rollback_exc}')
+                raise
+            finally:
+                if pause_physics:
+                    try:
+                        self._set_paused(False)
+                    except Exception as exc:
+                        self.get_logger().warning(f'Failed to resume physics after reconfigure: {exc}')
 
     def _clear_impl(self, pause_physics):
         self._wait_for_gazebo_services()
-        previous_layout = deepcopy(self._current_layout)
-        if pause_physics:
-            self._set_paused(True)
-        try:
-            deleted_names, failures = self._delete_layout(previous_layout, ignore_missing=True)
-            self._current_layout = []
-            return deleted_names, failures
-        finally:
+        with self._reconfigure_lock:
+            previous_layout = deepcopy(self._current_layout)
             if pause_physics:
-                try:
-                    self._set_paused(False)
-                except Exception as exc:
-                    self.get_logger().warning(f'Failed to resume physics after clear: {exc}')
+                self._set_paused(True)
+            try:
+                deleted_names, failures = self._delete_layout(previous_layout, ignore_missing=True)
+                self._current_layout = []
+                return deleted_names, failures
+            finally:
+                if pause_physics:
+                    try:
+                        self._set_paused(False)
+                    except Exception as exc:
+                        self.get_logger().warning(f'Failed to resume physics after clear: {exc}')
 
     def _handle_regenerate_trigger(self, _request, response):
         try:

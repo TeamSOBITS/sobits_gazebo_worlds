@@ -244,7 +244,7 @@ Gazeboやロボットを再起動せずに，ランダムレイアウトを更�
 決定的に再生成したい場合は，サービス呼び出し前に`random_world_manager`のパラメータを変更する．
 
 ```sh
-$ ros2 param set /random_world_manager seed 123
+$ ros2 param set /random_world_manager seed "123"
 $ ros2 param set /random_world_manager object_count 20
 $ ros2 service call /random_world/regenerate std_srvs/srv/Trigger {}
 ```
