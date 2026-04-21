@@ -4,6 +4,7 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Opaq
 from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
 
 import json
@@ -19,6 +20,17 @@ from human_spawn_utils import generate_human_spawn_poses, get_world_name
 
 
 def generate_launch_description():
+    launch_gazebo_arg = DeclareLaunchArgument(
+        'launch_gazebo',
+        default_value='true',
+        description='If false, attach runtime random world services to an already running Gazebo.',
+    )
+
+    spawn_on_start_arg = DeclareLaunchArgument(
+        'spawn_on_start',
+        default_value='false',
+        description='If true, spawn a random layout on manager startup when attaching to an existing Gazebo.',
+    )
 
     base_world_arg = DeclareLaunchArgument(
         'base_world',
@@ -101,11 +113,13 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            launch_gazebo_arg,
             base_world_arg,
             placement_config_arg,
             models_root_arg,
             seed_arg,
             object_count_arg,
+            spawn_on_start_arg,
             human_count_arg,
             human_model_arg,
             task_command_arg,
@@ -139,6 +153,8 @@ def _launch_setup(context, *args, **kwargs):
     package_share = get_package_share_directory('sobits_gazebo_worlds')
     models_package_root = os.path.join(package_share, 'models')
     generator = os.path.join(package_share, 'scripts', 'generate_worlds.py')
+    launch_gazebo = LaunchConfiguration('launch_gazebo').perform(context).lower() == 'true'
+    spawn_on_start = LaunchConfiguration('spawn_on_start').perform(context).lower() == 'true'
     base_world = LaunchConfiguration('base_world').perform(context)
     placement_config = LaunchConfiguration('placement_config').perform(context)
     models_root = LaunchConfiguration('models_root').perform(context)
@@ -152,42 +168,53 @@ def _launch_setup(context, *args, **kwargs):
     save_world = LaunchConfiguration('save_world').perform(context)
     output_world_name = LaunchConfiguration('output_world_name').perform(context)
 
-    worlds_dir = _resolve_worlds_output_dir(package_share)
+    temp_world_path = None
+    generated_world = ''
+    if launch_gazebo:
+        worlds_dir = _resolve_worlds_output_dir(package_share)
+        normalized_output_world_name = _normalize_world_filename(output_world_name)
 
-    normalized_output_world_name = _normalize_world_filename(output_world_name)
+        if save_world.lower() == 'true':
+            if not output_world_name:
+                raise RuntimeError('save_world was enabled, but output_world_name was not provided.')
+            generated_world = os.path.join(worlds_dir, normalized_output_world_name)
+            temp_world_path = None
+        else:
+            fd, generated_world = tempfile.mkstemp(prefix='generated_random_', suffix='.world')
+            os.close(fd)
+            temp_world_path = generated_world
 
-    if save_world.lower() == 'true':
-        if not output_world_name:
-            raise RuntimeError('save_world was enabled, but output_world_name was not provided.')
-        generated_world = os.path.join(worlds_dir, normalized_output_world_name)
-        temp_world_path = None
+        command = [
+            sys.executable,
+            generator,
+            '--base-world',
+            base_world,
+            '--placement-config',
+            placement_config,
+            '--models-root',
+            models_root,
+            '--output',
+            generated_world,
+            '--object-count',
+            object_count,
+        ]
+
+        if seed:
+            command.extend(['--seed', seed])
+
+        subprocess.check_call(command)
     else:
-        fd, generated_world = tempfile.mkstemp(prefix='generated_random_', suffix='.world')
-        os.close(fd)
-        temp_world_path = generated_world
-
-    command = [
-        sys.executable,
-        generator,
-        '--base-world',
-        base_world,
-        '--placement-config',
-        placement_config,
-        '--models-root',
-        models_root,
-        '--output',
-        generated_world,
-        '--object-count',
-        object_count,
-    ]
-
-    if seed:
-        command.extend(['--seed', seed])
-
-    subprocess.check_call(command)
+        if save_world.lower() == 'true':
+            launch.logging.get_logger('launch').warning(
+                'save_world is ignored when launch_gazebo:=false.'
+            )
+        if task_command:
+            raise RuntimeError(
+                'task_command is not supported when launch_gazebo:=false because no generated world file is loaded.'
+            )
 
     task_human_spawn_specs = []
-    if task_command:
+    if task_command and launch_gazebo:
         gpsr_spawner = os.path.join(package_share, 'scripts', 'generate_gpsr_task_entities.py')
         task_human_specs_fd, task_human_specs_path = tempfile.mkstemp(prefix='gpsr_task_humans_', suffix='.json')
         os.close(task_human_specs_fd)
@@ -217,7 +244,8 @@ def _launch_setup(context, *args, **kwargs):
                 task_human_spawn_specs = json.load(file_obj) or []
             os.unlink(task_human_specs_path)
 
-    world_name = get_world_name(generated_world)
+    world_reference_path = generated_world if launch_gazebo else base_world
+    world_name = get_world_name(world_reference_path)
     reserved_human_poses = []
     for spec in task_human_spawn_specs:
         missing = [field for field in ('x', 'y', 'z', 'yaw') if field not in spec]
@@ -227,17 +255,51 @@ def _launch_setup(context, *args, **kwargs):
             )
         reserved_human_poses.append((spec['x'], spec['y'], spec['z'], spec['yaw']))
     human_spawn_poses = generate_human_spawn_poses(
-        generated_world, models_package_root, human_count, seed, reserved_human_poses
+        world_reference_path, models_package_root, human_count, seed, reserved_human_poses
     )
 
-    actions = [
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                [os.path.join(get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]
-            ),
-            launch_arguments=[('gz_args', generated_world)],
+    actions = []
+    if launch_gazebo:
+        actions.append(
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    [os.path.join(get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]
+                ),
+                launch_arguments=[('gz_args', generated_world)],
+            )
         )
-    ]
+
+    actions.extend([
+        Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            output='screen',
+            arguments=[
+                f'/world/{world_name}/create@ros_gz_interfaces/srv/SpawnEntity',
+                f'/world/{world_name}/remove@ros_gz_interfaces/srv/DeleteEntity',
+                f'/world/{world_name}/control@ros_gz_interfaces/srv/ControlWorld',
+            ],
+        ),
+        Node(
+            package='sobits_gazebo_worlds',
+            executable='random_world_manager.py',
+            output='screen',
+            parameters=[
+                {
+                    'world_name': world_name,
+                    'base_world': base_world,
+                    'placement_config': placement_config,
+                    'models_root': models_root,
+                    'initial_layout_world_path': generated_world if launch_gazebo else '',
+                    'seed': seed,
+                    'object_count': int(object_count),
+                    'object_prefix': 'random_ycb',
+                    'pause_physics_during_reconfigure': True,
+                    'spawn_on_start': spawn_on_start,
+                }
+            ],
+        ),
+    ])
 
     for index, (x, y, z, yaw) in enumerate(human_spawn_poses):
         actions.append(
@@ -287,7 +349,9 @@ def _launch_setup(context, *args, **kwargs):
         f"Total task human spawns added: {len(task_human_spawn_specs)}"
     )
     launch.logging.get_logger('launch').info(f"GPSR task command: {task_command}")
-    launch.logging.get_logger('launch').info(f"Generated world: {generated_world}")
+    launch.logging.get_logger('launch').info(
+        f"{'Generated world' if launch_gazebo else 'Attached base world'}: {world_reference_path}"
+    )
 
     if temp_world_path:
         def _cleanup_temp_world(context):
