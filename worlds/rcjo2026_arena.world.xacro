@@ -1,0 +1,286 @@
+<?xml version="1.0" ?>
+<sdf version="1.8" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- TODO: allow xacro -->
+  <xacro:arg name="fast_physics" default="true" />
+  <xacro:arg name="trofast_knob" default="true" />
+  <xacro:arg name="highrtf" default="false" />
+
+  <world name='rcjo2026_arena'>
+    <plugin
+        filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-sensors-system"
+        name="gz::sim::systems::Sensors">
+    </plugin>
+
+    <scene>
+      <grid>false</grid>
+    </scene>
+
+    <physics name="1ms" type="ignored">
+        <max_step_size>0.001</max_step_size>
+        <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!--light-->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose relative_to=''>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+          <range>1000</range>
+          <constant>0.9</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!--gravity-->
+    <gravity>0 0 -9.8</gravity>
+
+    <!-- Import models -->
+    <!-- Global Models -->
+    <include>
+      <name>floor_plane_fl</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_fr</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 -5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_bl</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_br</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 -5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>rcjo2026_frame</name>
+      <static>1</static>
+      <uri>model://rcjo2025_frame</uri>
+      <pose relative_to=''>0 0 0 0 0 0</pose>
+    </include>
+    <!-- Global Models -->
+
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- Arena Entrance Door (inline box model)                               -->
+    <!--                                                                     -->
+    <!-- Arena front wall is at x=-5.0. Three wall segments leave two 1 m   -->
+    <!-- gaps. This door fills the gap nearest the laundry area:             -->
+    <!--   wall_front_right : y=-4.0 → -3.0  (ends at y=-3.0)              -->
+    <!--   wall_front_center: y=-2.0 → +1.0  (starts at y=-2.0)            -->
+    <!--   Gap centre       : y=-2.5, x=-5.0  (1.0 m wide)                 -->
+    <!--                                                                     -->
+    <!-- OPEN  pose (default): panel swung 90° into arena alongside          -->
+    <!--   wall_front_right inner face.                                      -->
+    <!--   centre (-4.55, -3.0, 1.0), yaw=0 — panel runs along world-X     -->
+    <!--                                                                     -->
+    <!-- CLOSED pose (for testing): change to  -5.0 -2.5 1.0 0 0 1.5708   -->
+    <!--   panel will block the gap and LiDAR will detect it as obstacle    -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <model name="arena_door">
+      <static>true</static>
+
+      <!-- OPEN: panel alongside inner face of wall_front_right (y≈-3.0),
+           reaching 0.9 m into the arena from the front wall (x=-5.0→-4.1) -->
+      <!-- <pose>-4.55 2.0 1.0 0.0 0.0 0.0</pose> -->
+      <pose>-5.0 1.5 1.0 0 0 1.5708</pose>
+
+      <link name="panel">
+        <collision name="col">
+          <!-- X=0.9 m deep (into arena), Y=0.05 m thick, Z=2.0 m tall -->
+          <geometry><box><size>0.9 0.05 2.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.9 0.05 2.0</size></box></geometry>
+          <material>
+            <ambient>0.72 0.52 0.32 1</ambient>
+            <diffuse>0.72 0.52 0.32 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- Living Room / Laundry Area                                          -->
+    <!--                                                                     -->
+    <!-- Layout changes vs rcjo2025_arena:                                   -->
+    <!--   - Removed: counter, kachaka_shelf_left, kachaka_shelf_right       -->
+    <!--   - Added:   washing_machine + laundry_basket + pile_of_clothes     -->
+    <!--              in the freed kachaka-shelf area (x≈1.4, y=-3.5)       -->
+    <!--   - Folding table = existing long_table (x=2.0, y=-0.5)            -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Folding table — the long white table already in this room.
+         Robot folds T-shirts here. No change in pose from original world. -->
+    <include>
+      <name>long_table</name>
+      <uri>model://wrc_long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>2.0 -0.5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>tall_table</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.75 -0.5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>trash_box</name>
+      <uri>model://trash_box</uri>
+      <static>1</static>
+      <pose relative_to=''>4.5 -3.5 0 0 0 -1.57</pose>
+    </include>
+
+    <!-- Washing machine — replaces the two kachaka shelves.
+         Centred at x=1.375 (midpoint of old shelf positions 1.0 and 1.75).
+         yaw=1.5708 (π/2): model +X → world +Y, so the door faces the room
+         interior (+Y direction) away from the back wall at y≈-3.5.
+         NOTE: "rotate 90 deg over Z" relative to the original world pose. -->
+    <include>
+      <name>washing_machine</name>
+      <uri>model://washing_machine</uri>
+      <static>0</static>
+      <pose relative_to=''>1.375 -3.5 0.0 0.0 0.0 1.5708</pose>
+    </include>
+
+    <!-- Laundry basket — placed to the right of (higher X than) the washer,
+         close enough for the robot to reach both washer and basket from one
+         navigation waypoint. -->
+    <include>
+      <name>laundry_basket</name>
+      <uri>model://laundry_basket</uri>
+      <static>0</static>
+      <pose relative_to=''>2.3 -3.2 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Pile of clothes inside the basket (z=0.15 above basket floor).
+         model.sdf has roll=1.5708 (X-flip) and scale=0.4 to fit the interior. -->
+    <include>
+      <name>pile_of_clothes</name>
+      <uri>model://pile_of_clothes</uri>
+      <static>1</static>
+      <pose relative_to=''>2.3 -3.2 0.15 0.0 0.0 0.0</pose>
+    </include>
+    <!-- Laundry cloth in drum — rigid box proxy for fabric (Gazebo cloth not supported).
+         Washing machine is at (1.375, -3.5, 0.0) yaw=π/2, so the drum door faces world +Y.
+         This places the proxy inside the drum: same X as washer, 0.2 m toward room along
+         the drum axis (Y=-3.3), at the drum interior height (Z=0.55).
+         Name MUST be "laundry_in_drum" — stubs_node publishes TF "laundry_in_drum_0". -->
+    <model name="laundry_in_drum">
+      <static>false</static>
+      <pose>1.375 -3.5 0.55 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.3</mass>
+          <inertia>
+            <ixx>0.001</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.001</iyy><iyz>0</iyz>
+            <izz>0.001</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.15 0.10 0.05</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.10 0.05</size></box></geometry>
+          <material>
+            <ambient>0.2 0.4 0.8 1</ambient>
+            <diffuse>0.2 0.4 0.8 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <!-- Living Room / Laundry Area -->
+
+
+    <!-- Study Room -->
+    <include>
+      <name>chair_left</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>1.75 3.5 0.0 0.0 0.0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>chair_right</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>0.75 3.5 0.0 0.0 0.0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>shelf</name>
+      <uri>model://shelf</uri>
+      <static>1</static>
+      <pose relative_to=''>3.2 3.5 0.0 0.0 0.0 1.57</pose>
+    </include>
+    <!-- Study Room -->
+
+
+    <!-- Dining Room -->
+    <include>
+      <name>dining_table</name>
+      <uri>model://dining_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-2.0 -2.25 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <include>
+      <name>couch_left</name>
+      <uri>model://sofa</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.35 -2.75 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <include>
+      <name>couch_right</name>
+      <uri>model://sofa</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.35 -1.75 0.0 0.0 0.0 0.0</pose>
+    </include>
+    <!-- Dining Room -->
+
+
+    <!-- Bed Room -->
+    <include>
+      <name>bed</name>
+      <uri>model://bed</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
+    </include>
+    <!-- Bed Room -->
+
+  </world>
+</sdf>

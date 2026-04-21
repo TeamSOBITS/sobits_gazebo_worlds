@@ -26,6 +26,10 @@
         name="gz::sim::systems::Sensors">
     </plugin>
 
+    <scene>
+      <grid>false</grid>
+    </scene>
+
     <!-- <plugin
         filename="EntityTree"
         name="Entity tree">
@@ -92,10 +96,28 @@
     <!-- Import models -->
     <!-- Global Models -->
     <include>
-      <name>floor_plane</name>
+      <name>floor_plane_fl</name>
       <static>1</static>
-      <uri>model://floor_plane</uri>
-      <pose relative_to=''>0 0 0 0 0 0</pose>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_fr</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 -5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_bl</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_br</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 -5 0 0 0 0</pose>
     </include>
 
     <include>
@@ -110,21 +132,21 @@
     <!-- Living Room -->
     <include>
       <name>living_room#long_table</name>
-      <uri>model://long_table</uri>
+      <uri>model://wrc_long_table</uri>
       <static>1</static>
       <pose relative_to=''>-4.02 0.4 0 0 0 1.57</pose>
     </include>
 
     <include>
       <name>living_room#counter</name>
-      <uri>model://long_table</uri>
+      <uri>model://wrc_long_table</uri>
       <static>1</static>
       <pose relative_to=''>3.25 -3.5 0 0 0 1.57</pose>
     </include>
 
     <include>
       <name>living_room#tall_table</name>
-      <uri>model://tall_table</uri>
+      <uri>model://wrc_tall_table</uri>
       <static>1</static>
       <pose relative_to=''>0.75 -0.5 0 0 0 1.57</pose>
     </include>

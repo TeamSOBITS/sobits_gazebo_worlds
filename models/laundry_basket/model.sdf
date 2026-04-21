@@ -1,0 +1,136 @@
+<?xml version="1.0" ?>
+<!--
+  IKEA TORKIS Laundry Basket — Gazebo Harmonic (SDF 1.8)
+
+  GLB visual mesh, simplified oval-box collision.
+  IKEA TORKIS real dimensions: ⌀55cm top, ⌀38cm bottom, height 28cm.
+  GLB scale: assumed metres (scale=1.0). If the basket appears too large/small,
+  adjust <scale> in the visual section.
+
+  Collision geometry: two stacked boxes approximating the tapered basket shape.
+  These handle points are exposed as TF frames by @perception-3d:
+    basket_handle_left  — left handle link origin
+    basket_handle_right — right handle link origin
+-->
+<sdf version="1.8">
+  <model name="laundry_basket">
+    <static>false</static>
+
+    <!-- ── Main basket body ─────────────────────────────────────────────── -->
+    <link name="basket">
+      <pose>0 0 0 0 0 0</pose>
+
+      <inertial>
+        <!-- Lightweight plastic basket, ~1.5 kg -->
+        <mass>1.5</mass>
+        <inertia>
+          <ixx>0.04</ixx> <ixy>0</ixy> <ixz>0</ixz>
+          <iyy>0.06</iyy> <iyz>0</iyz>
+          <izz>0.08</izz>
+        </inertia>
+      </inertial>
+
+      <!-- Simplified box collision — bimanual grasping targets the handle links -->
+      <collision name="basket_col">
+        <pose>0 0 0.1 0 0 0</pose>
+        <geometry>
+          <box><size>0.50 0.38 0.2</size></box>
+        </geometry>
+        <surface>
+          <friction>
+            <ode><mu>0.6</mu><mu2>0.6</mu2></ode>
+          </friction>
+          <contact>
+            <ode>
+              <kp>100000</kp>
+              <kd>1</kd>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <!-- GLB mesh visual -->
+      <visual name="basket_visual">
+        <pose>0 0 0 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://laundry_basket/meshes/laundry_basket.glb</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+
+    <!-- ── Left handle link (bimanual grasp target — left arm) ──────────── -->
+    <!--
+      Handle geometry: cylindrical rod at the rim, ⌀≈2cm, spans ~10cm.
+      These are the TF frames used by @perception-3d and @manip-deformable.
+      Adjust pose to match the actual GLB mesh handle position.
+    -->
+    <link name="handle_left">
+      <!-- Left handle: +X side of basket rim (rotated 90° around Z from original ±Y placement).
+           0.26 > 0.25 (half of box X=0.50) so the handle sits just outside the basket body. -->
+      <pose>0.28 0.0 0.275 1.5708 0 0</pose>
+      <inertial>
+        <mass>0.05</mass>
+        <inertia>
+          <ixx>0.0001</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.0001</iyy><iyz>0</iyz><izz>0.0001</izz>
+        </inertia>
+      </inertial>
+      <collision name="handle_left_col">
+        <geometry>
+          <cylinder><radius>0.012</radius><length>0.10</length></cylinder>
+        </geometry>
+      </collision>
+      <visual name="handle_left_vis">
+        <geometry>
+          <cylinder><radius>0.012</radius><length>0.10</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.7 0.7 0.7 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- ── Right handle link (bimanual grasp target — right arm) ─────────── -->
+    <link name="handle_right">
+      <!-- Right handle: −X side of basket rim (rotated 90° around Z from original ±Y placement). -->
+      <pose>-0.28 0.0 0.275 1.5708 0 0</pose>
+      <inertial>
+        <mass>0.05</mass>
+        <inertia>
+          <ixx>0.0001</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.0001</iyy><iyz>0</iyz><izz>0.0001</izz>
+        </inertia>
+      </inertial>
+      <collision name="handle_right_col">
+        <geometry>
+          <cylinder><radius>0.012</radius><length>0.10</length></cylinder>
+        </geometry>
+      </collision>
+      <visual name="handle_right_vis">
+        <geometry>
+          <cylinder><radius>0.012</radius><length>0.10</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0.7 0.7 0.7 1</ambient>
+          <diffuse>0.7 0.7 0.7 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Fixed joints welding handles to basket body -->
+    <joint name="left_handle_joint" type="fixed">
+      <parent>basket</parent>
+      <child>handle_left</child>
+    </joint>
+
+    <joint name="right_handle_joint" type="fixed">
+      <parent>basket</parent>
+      <child>handle_right</child>
+    </joint>
+
+  </model>
+</sdf>
