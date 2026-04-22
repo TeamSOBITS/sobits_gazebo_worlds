@@ -3,7 +3,7 @@ echo "╔══╣ Setup: SOBITS Gazebo Worlds (STARTING) ╠══╗"
 
 
 # Add Gazebo models to GZ_SIM_RESOURCE_PATH
-echo "export GZ_SIM_RESOURCE_PATH=\$\{GZ_SIM_RESOURCE_PATH\}:${HOME}/colcon_ws/install/sobits_gazebo_worlds/share/sobits_gazebo_worlds/models" >> ~/.bashrc
+echo "export GZ_SIM_RESOURCE_PATH=\${GZ_SIM_RESOURCE_PATH}:\${HOME}/colcon_ws/install/sobits_gazebo_worlds/share/sobits_gazebo_worlds/models" >> ~/.bashrc
 
 # Install Gazebo Harmonic
 sudo curl https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg
