@@ -4,6 +4,8 @@ import random
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+from generate_worlds import resolve_model_sdf
+
 
 HUMAN_RADIUS = 0.35
 HUMAN_WALL_CLEARANCE = 0.25
@@ -135,10 +137,18 @@ def model_collision_rects(models_root, model_uri):
         return override
 
     model_dir = os.path.join(models_root, model_name)
-    if not os.path.isdir(model_dir):
+    if os.path.isdir(model_dir):
+        model_sdf_path = find_model_sdf(model_dir)
+    else:
+        try:
+            model_sdf_path = resolve_model_sdf(models_root, model_name)
+        except RuntimeError:
+            return []
+
+    if not os.path.exists(model_sdf_path):
         return []
 
-    model_root = ET.fromstring(Path(find_model_sdf(model_dir)).read_text(encoding='utf-8'))
+    model_root = ET.fromstring(Path(model_sdf_path).read_text(encoding='utf-8'))
     rects = []
     for collision in model_root.findall('.//collision'):
         pose = parse_pose(collision.findtext('pose', default='0 0 0 0 0 0'))
