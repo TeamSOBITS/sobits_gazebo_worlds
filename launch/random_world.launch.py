@@ -1,11 +1,11 @@
-import launch.logging
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable
 from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
+import launch.logging
 
 import json
 import os
@@ -149,6 +149,23 @@ def _normalize_world_filename(output_world_name):
         return output_world_name
     return output_world_name + '.world.xacro'
 
+
+def _gazebo_resource_path(package_share):
+    model_paths = [
+        os.path.join(package_share, 'models'),
+    ]
+    for package_name in ('tmc_wrs_gz_worlds',):
+        try:
+            model_paths.append(os.path.join(get_package_share_directory(package_name), 'models'))
+        except PackageNotFoundError:
+            pass
+
+    current_path = os.environ.get('GZ_SIM_RESOURCE_PATH', '')
+    if current_path:
+        model_paths.append(current_path)
+    return os.pathsep.join(model_paths)
+
+
 def _launch_setup(context, *args, **kwargs):
     package_share = get_package_share_directory('sobits_gazebo_worlds')
     models_package_root = os.path.join(package_share, 'models')
@@ -258,7 +275,12 @@ def _launch_setup(context, *args, **kwargs):
         world_reference_path, models_package_root, human_count, seed, reserved_human_poses
     )
 
-    actions = []
+    actions = [
+        SetEnvironmentVariable(
+            name='GZ_SIM_RESOURCE_PATH',
+            value=_gazebo_resource_path(package_share),
+        )
+    ]
     if launch_gazebo:
         actions.append(
             IncludeLaunchDescription(
