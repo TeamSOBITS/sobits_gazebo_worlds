@@ -13,7 +13,7 @@ SCRIPTS_DIR = os.path.join(get_package_share_directory('sobits_gazebo_worlds'), 
 if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
-from generate_worlds import extract_random_object_specs_from_world, find_model_sdf, generate_random_object_specs
+from generate_worlds import extract_random_object_specs_from_world, generate_random_object_specs, resolve_model_sdf
 
 
 def quaternion_from_yaw(yaw):
@@ -40,9 +40,11 @@ def resolve_model_sdf_path(models_root, model_uri):
 
     relative_path = model_uri.removeprefix('model://')
     model_dir = Path(models_root).parent / relative_path
-    if not model_dir.is_dir():
-        raise RuntimeError(f'Model directory was not found for URI {model_uri!r}: {model_dir}')
-    return find_model_sdf(model_dir)
+    if model_dir.is_dir():
+        from generate_worlds import find_model_sdf
+        return find_model_sdf(model_dir)
+
+    return resolve_model_sdf(models_root, relative_path)
 
 
 def build_spawn_sdf(model_uri, entity_name, models_root, is_static=True):
