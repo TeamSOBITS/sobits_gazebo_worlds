@@ -39,9 +39,14 @@ def resolve_model_sdf_path(models_root, model_uri):
         raise RuntimeError(f'Unsupported model URI format: {model_uri}')
 
     relative_path = model_uri.removeprefix('model://')
+    from generate_worlds import find_model_sdf
+
+    model_dir = Path(models_root) / relative_path
+    if model_dir.is_dir():
+        return find_model_sdf(model_dir)
+
     model_dir = Path(models_root).parent / relative_path
     if model_dir.is_dir():
-        from generate_worlds import find_model_sdf
         return find_model_sdf(model_dir)
 
     return resolve_model_sdf(models_root, relative_path)
