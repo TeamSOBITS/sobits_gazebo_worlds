@@ -73,13 +73,18 @@ def get_ycb_category(uri):
     return parts[1]
 
 
+def _root_has_ycb_models(root):
+    if not root.is_dir():
+        return False
+    return any(path.name.startswith("ycb_") for path in root.iterdir() if path.is_dir())
+
+
 def discover_ycb_uris(models_root):
     models_root = Path(models_root)
     candidate_roots = [models_root]
-    if not models_root.is_dir():
-        for root in model_search_roots(models_root):
-            if root.is_dir() and any(path.name.startswith("ycb_") for path in root.iterdir() if path.is_dir()):
-                candidate_roots.append(root)
+    for root in model_search_roots(models_root):
+        if root not in candidate_roots and _root_has_ycb_models(root):
+            candidate_roots.append(root)
 
     uris = []
     checked_roots = []
@@ -101,7 +106,7 @@ def discover_ycb_uris(models_root):
             if not has_model_definition:
                 continue
 
-            if item_dir.name.startswith("ycb_"):
+            if item_dir.parent == candidate_root:
                 relative_path = item_dir.name
             else:
                 relative_path = item_dir.relative_to(candidate_root.parent).as_posix()
