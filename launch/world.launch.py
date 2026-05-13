@@ -5,24 +5,15 @@ from launch.actions import SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch.substitutions import PathJoinSubstitution
-from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
+from ament_index_python.packages import get_package_share_directory
 import os
+import sys
 
+SCRIPTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'scripts')
+if SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, SCRIPTS_DIR)
 
-def gazebo_resource_path():
-    model_paths = [
-        os.path.join(get_package_share_directory('sobits_gazebo_worlds'), 'models'),
-    ]
-    for package_name in ('tmc_wrs_gz_worlds',):
-        try:
-            model_paths.append(os.path.join(get_package_share_directory(package_name), 'models'))
-        except PackageNotFoundError:
-            pass
-
-    current_path = os.environ.get('GZ_SIM_RESOURCE_PATH', '')
-    if current_path:
-        model_paths.append(current_path)
-    return os.pathsep.join(model_paths)
+from launch_utils import build_gz_resource_path
 
 
 def generate_launch_description():
@@ -47,7 +38,7 @@ def generate_launch_description():
         world_arg,
         SetEnvironmentVariable(
             name='GZ_SIM_RESOURCE_PATH',
-            value=gazebo_resource_path(),
+            value=build_gz_resource_path(get_package_share_directory('sobits_gazebo_worlds')),
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([os.path.join(
