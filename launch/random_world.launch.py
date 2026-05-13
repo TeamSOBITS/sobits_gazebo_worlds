@@ -1,11 +1,11 @@
-import launch.logging
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, RegisterEventHandler, SetEnvironmentVariable
 from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
+import launch.logging
 
 import json
 import os
@@ -17,6 +17,7 @@ if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
 from human_spawn_utils import generate_human_spawn_poses, get_world_name
+from launch_utils import build_gz_resource_path
 
 
 def generate_launch_description():
@@ -149,6 +150,7 @@ def _normalize_world_filename(output_world_name):
         return output_world_name
     return output_world_name + '.world.xacro'
 
+
 def _launch_setup(context, *args, **kwargs):
     package_share = get_package_share_directory('sobits_gazebo_worlds')
     models_package_root = os.path.join(package_share, 'models')
@@ -258,7 +260,12 @@ def _launch_setup(context, *args, **kwargs):
         world_reference_path, models_package_root, human_count, seed, reserved_human_poses
     )
 
-    actions = []
+    actions = [
+        SetEnvironmentVariable(
+            name='GZ_SIM_RESOURCE_PATH',
+            value=build_gz_resource_path(package_share),
+        )
+    ]
     if launch_gazebo:
         actions.append(
             IncludeLaunchDescription(

@@ -2,10 +2,13 @@
 
 import argparse
 import math
+import os
 import random
 from pathlib import Path
 import xml.etree.ElementTree as ET
 import yaml
+
+from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
 
 
 MARKER = "<!-- RANDOM_YCB_OBJECTS -->"
@@ -13,38 +16,107 @@ MARKER = "<!-- RANDOM_YCB_OBJECTS -->"
 DEFAULT_OBJECT_PREFIX = "random_ycb"
 
 
+YCB_CATEGORY_KEYWORDS = {
+    "food": (
+        "cheez-it",
+        "cracker",
+        "sugar",
+        "pudding",
+        "gelatin",
+        "spam",
+        "tuna",
+        "tomato_soup",
+        "mustard",
+        "strawberry",
+        "apple",
+        "lemon",
+        "peach",
+        "pear",
+        "orange",
+        "plum",
+        "banana",
+    ),
+    "kitchen_item": (
+        "pitcher",
+        "bleach",
+        "windex",
+        "bowl",
+        "mug",
+        "plate",
+        "skillet",
+        "fork",
+        "spoon",
+        "knife",
+        "spatula",
+    ),
+}
+
+
 def get_ycb_category(uri):
     if not uri.startswith("model://"):
         raise RuntimeError(f"Unsupported YCB URI format: {uri}")
 
     parts = uri.removeprefix("model://").split("/")
+    if len(parts) >= 3 and parts[0] == "ycb":
+        return parts[1]
+
+    model_name = parts[0]
+    if model_name.startswith("ycb_"):
+        for category, keywords in YCB_CATEGORY_KEYWORDS.items():
+            if any(keyword in model_name for keyword in keywords):
+                return category
+        return "other"
+
     if len(parts) < 3 or parts[0] != "ycb":
         raise RuntimeError(f"Unsupported YCB URI format: {uri}")
 
     return parts[1]
 
 
+def _root_has_ycb_models(root):
+    if not root.is_dir():
+        return False
+    return any(path.name.startswith("ycb_") for path in root.iterdir() if path.is_dir())
+
+
 def discover_ycb_uris(models_root):
     models_root = Path(models_root)
-    if not models_root.is_dir():
-        raise RuntimeError(f"YCB models directory was not found: {models_root}")
+    candidate_roots = [models_root]
+    for root in model_search_roots(models_root):
+        if root not in candidate_roots and _root_has_ycb_models(root):
+            candidate_roots.append(root)
 
     uris = []
-    for item_dir in sorted(models_root.glob("*/*")):
-        if not item_dir.is_dir():
+    checked_roots = []
+    for candidate_root in candidate_roots:
+        if not candidate_root.is_dir():
+            checked_roots.append(candidate_root)
             continue
 
-        has_model_definition = (item_dir / "model.config").exists() or any(item_dir.glob("model*.sdf"))
-        if not has_model_definition:
-            continue
+        checked_roots.append(candidate_root)
+        item_dirs = sorted(candidate_root.glob("*/*"))
+        if any(path.name.startswith("ycb_") for path in candidate_root.iterdir() if path.is_dir()):
+            item_dirs.extend(sorted(candidate_root.glob("ycb_*")))
 
-        relative_path = item_dir.relative_to(models_root.parent).as_posix()
-        uris.append(f"model://{relative_path}")
+        for item_dir in item_dirs:
+            if not item_dir.is_dir():
+                continue
+
+            has_model_definition = (item_dir / "model.config").exists() or any(item_dir.glob("model*.sdf"))
+            if not has_model_definition:
+                continue
+
+            if item_dir.parent == candidate_root:
+                relative_path = item_dir.name
+            else:
+                relative_path = item_dir.relative_to(candidate_root.parent).as_posix()
+            uris.append(f"model://{relative_path}")
 
     if not uris:
-        raise RuntimeError(f"No YCB models were discovered under: {models_root}")
+        checked = "\n  - ".join(str(path) for path in checked_roots)
+        raise RuntimeError(f"No YCB models were discovered. Checked:\n  - {checked}")
 
-    return uris
+    return sorted(set(uris))
 
 
 def parse_base_world(base_world_path):
@@ -86,6 +158,51 @@ def find_model_sdf(model_dir):
     raise RuntimeError(f"No model.sdf was found under: {model_dir}")
 
 
+def model_search_roots(base_world_path):
+    roots = [Path(base_world_path).resolve().parent.parent / "models"]
+    src_root = Path(__file__).resolve().parents[2]
+    roots.append(src_root / "tmc_wrs_gz" / "tmc_wrs_gz_worlds" / "models")
+
+    for value in (
+        os.environ.get("GZ_SIM_RESOURCE_PATH", ""),
+        os.environ.get("GAZEBO_MODEL_PATH", ""),
+    ):
+        for entry in value.split(os.pathsep):
+            if entry and "$" not in entry:
+                roots.append(Path(entry).expanduser())
+
+    for package_name in ("tmc_wrs_gz_worlds",):
+        try:
+            roots.append(Path(get_package_share_directory(package_name)) / "models")
+        except PackageNotFoundError:
+            pass
+
+    unique_roots = []
+    seen = set()
+    for root in roots:
+        resolved = root.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        unique_roots.append(resolved)
+
+    return unique_roots
+
+
+def resolve_model_sdf(base_world_path, model_relative_path):
+    checked_dirs = []
+    for models_dir in model_search_roots(base_world_path):
+        model_dir = models_dir / model_relative_path
+        checked_dirs.append(model_dir)
+        try:
+            return find_model_sdf(model_dir)
+        except RuntimeError:
+            continue
+
+    checked = "\n  - ".join(str(path) for path in checked_dirs)
+    raise RuntimeError(f"No model.sdf was found for model://{model_relative_path}. Checked:\n  - {checked}")
+
+
 def find_surface_element(link, surface_name):
     if surface_name:
         surface = link.find(f"./collision[@name='{surface_name}']")
@@ -117,8 +234,7 @@ def load_surface_geometry(base_world_path, area_name, surface_name=None):
         raise RuntimeError(f"Unsupported model URI for '{area_name}': {uri}")
 
     model_relative_path = uri.removeprefix("model://")
-    models_dir = Path(base_world_path).resolve().parent.parent / "models"
-    model_sdf_path = find_model_sdf(models_dir / model_relative_path)
+    model_sdf_path = resolve_model_sdf(base_world_path, model_relative_path)
 
     model_root = ET.fromstring(model_sdf_path.read_text())
     link = model_root.find(".//link")

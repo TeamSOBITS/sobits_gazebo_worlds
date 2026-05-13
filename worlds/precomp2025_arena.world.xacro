@@ -233,42 +233,42 @@
 
     <include>
       <name>cheez-it</name>
-      <uri>model://ycb/food/cheez-it</uri>
+      <uri>model://ycb_001_cheez-it</uri>
       <static>0</static>
       <pose relative_to=''>-4.02 0.28 0.4 0 0 1.57</pose>
     </include>
 
     <include>
       <name>spam</name>
-      <uri>model://ycb/food/spam</uri>
+      <uri>model://ycb_005_spam</uri>
       <static>0</static>
       <pose relative_to=''>-1.54 3.52 0.31 0 0 1.57</pose>
     </include>
 
     <include>
       <name>apple</name>
-      <uri>model://ycb/fruit/apple</uri>
+      <uri>model://ycb_013_apple</uri>
       <static>0</static>
       <pose relative_to=''>-3.71 0.39 0.40 0 0 1.57</pose>
     </include>
 
     <include>
       <name>banana</name>
-      <uri>model://ycb/fruit/banana</uri>
+      <uri>model://ycb_011_banana</uri>
       <static>0</static>
       <pose relative_to=''>-1.69 3.52 0.61 0 0 1.57</pose>
     </include>
   
     <include>
       <name>bowl</name>
-      <uri>model://ycb/kitchen_item/bowl</uri>
+      <uri>model://ycb_024_bowl</uri>
       <static>0</static>
       <pose relative_to=''>-1.53 3.40 0.91 0 0 1.57</pose>
     </include>
 
     <include>
       <name>mug</name>
-      <uri>model://ycb/kitchen_item/mug</uri>
+      <uri>model://ycb_025_mug</uri>
       <static>0</static>
       <pose relative_to=''>-4.44 0.52 0.40 0 0 1.57</pose>
     </include>
