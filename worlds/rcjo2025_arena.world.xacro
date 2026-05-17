@@ -243,6 +243,12 @@
       <static>1</static>
       <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
     </include>
+
+    <include>
+      <uri>model://arm_chair</uri>
+      <static>false</static>
+      <pose relative_to=''>-2.0 3.25 5.0 0.0 0.0 1.57</pose>
+    </include>
     <!-- Bedroom -->
 
     <!-- RANDOM_YCB_OBJECTS -->
