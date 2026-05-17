@@ -68,6 +68,7 @@ def create_model_directory(model_name, file_type):
 
         print(f"'{base_path}' のテンプレートを作成しました。")
         print(f"'meshes' フォルダに {file_type} ファイルを配置し、colcon build を行ってください。")
+        print(f"<uri>model://{model_name}</uri>")
 
     except Exception as e:
         print(f"Error creating model directory: {e}")
