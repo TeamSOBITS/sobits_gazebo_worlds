@@ -224,8 +224,22 @@
 
     <!-- Bedroom -->
     <include>
+      <name>bedroom#sofa</name>
+      <uri>model://sofa</uri>
+      <static>1</static>
+      <pose relative_to=''>-2.0 3.25 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+    <include>
       <name>bedroom#bed</name>
       <uri>model://bed</uri>
+      <static>1</static>
+      <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+    <include>
+      <name>human</name>
+      <uri>model://human</uri>
       <static>1</static>
       <pose relative_to=''>-3.9 3.25 0.0 0.0 0.0 1.57</pose>
     </include>

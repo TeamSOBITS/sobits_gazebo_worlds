@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="human">
+    <static>true</static> 
+    
+    <link name="link">
+      <!-- 90度回転を防止 -->
+      <pose>0 0 0 1.5708 0 0</pose>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://human/meshes/human.obj</uri>
+          </mesh>
+        </geometry>
+      </collision>
+
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://human/meshes/human.obj</uri>
+          </mesh>
+        </geometry>
+        <material>
+          <diffuse>0.0 0.5 0.5 1.0</diffuse>
+          <ambient>0.1 0.1 0.1 1.0</ambient>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>
