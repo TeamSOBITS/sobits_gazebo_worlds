@@ -1,0 +1,167 @@
+<?xml version="1.0" ?>
+<sdf version="1.8" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Doing Laundry world (template)
+       - Entrance door is represented by a removable "blocker" model:
+         model name: entrance_door_blocker
+       - After Gazebo starts, remove that model via:
+         /world/<world_name>/remove  (gz service)
+  -->
+
+  <world name='doing_laundry_arena'>
+    <plugin filename="gz-sim-physics-system"        name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"  name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"        name="gz::sim::systems::Sensors"/>
+
+    <scene>
+      <grid>false</grid>
+    </scene>
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose relative_to=''>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <gravity>0 0 -9.8</gravity>
+
+    <!-- Floor -->
+    <include>
+      <name>floor_plane_fl</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_fr</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 -5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_bl</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_br</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 -5 0 0 0 0</pose>
+    </include>
+
+    <!-- Optional frame -->
+    <include>
+      <name>rcjo2025_frame</name>
+      <static>1</static>
+      <uri>model://rcjo2025_frame</uri>
+      <pose relative_to=''>0 0 0 0 0 0</pose>
+    </include>
+
+    <!-- ============================================================= -->
+    <!-- Entrance "door" as a blocker (remove after start)              -->
+    <!-- ============================================================= -->
+    <model name="entrance_door_blocker">
+      <static>true</static>
+
+      <!-- TODO: Adjust this pose to your actual entrance location.
+           This pose is just a placeholder.
+           z=1.0 so the 2m-high panel is centered around the doorway height.
+      -->
+      <pose>5.0 0.0 1.0 0 0 0</pose>
+
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <!-- width>=0.90, height>=2.00 -->
+            <box><size>0.05 1.0 2.05</size></box>
+          </geometry>
+        </collision>
+
+        <visual name="visual">
+          <geometry>
+            <box><size>0.05 1.0 2.05</size></box>
+          </geometry>
+          <material>
+            <!-- slightly transparent so you can see it in GUI -->
+            <diffuse>0.2 0.2 0.2 0.6</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ============================================================= -->
+    <!-- Laundry area                                                   -->
+    <!-- ============================================================= -->
+
+    <!-- Folding/work table -->
+    <include>
+      <name>laundry_room#folding_table</name>
+      <uri>model://wrc_long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>2.0 -0.5 0 0 0 0</pose>
+    </include>
+
+    <!-- (optional) tall table -->
+    <include>
+      <name>laundry_room#tall_table</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose relative_to=''>0.75 -0.5 0 0 0 0</pose>
+    </include>
+
+    <!-- Washing machine (door remains closed) -->
+    <include>
+      <name>washing_machine</name>
+      <uri>model://washing_machine</uri>
+      <static>0</static>
+      <pose relative_to=''>1.375 -3.5 0.0 0.0 0.0 1.5708</pose>
+    </include>
+
+    <!-- Laundry basket -->
+    <include>
+      <name>laundry_basket</name>
+      <uri>model://laundry_basket</uri>
+      <static>0</static>
+      <pose relative_to=''>2.3 -3.2 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- One shirt proxy on table (add more later) -->
+    <model name="shirt_on_table_0">
+      <static>false</static>
+      <pose>2.0 -0.5 0.78 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.2</mass>
+          <inertia>
+            <ixx>0.0005</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.0005</iyy><iyz>0</iyz>
+            <izz>0.0005</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.28 0.28 0.03</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.28 0.28 0.03</size></box></geometry>
+          <material><diffuse>0.2 0.5 0.9 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
