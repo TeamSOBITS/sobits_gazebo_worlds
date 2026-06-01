@@ -22,7 +22,7 @@ def generate_launch_description():
 
     open_entrance_arg = DeclareLaunchArgument(
         'open_entrance_door',
-        default_value='true',
+        default_value='false',
         description='If true, remove entrance_door_blocker after Gazebo starts.',
     )
 

@@ -140,6 +140,53 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
    Gazebo対応しているロボットのリポジトリから，Gazeboのworldファイルを指定．\
    また，ロボットの初期位置も設定することもできるので注意．
 
+## 入口ドアの開閉（ROS 2 service）
+
+`doing_laundry.world.xacro` には入口ドアモデル（例：`entrance_door_blocker`）が配置されており、ROS 2 service で開閉できます。  
+開閉は Gazebo の `/world/<world_name>/set_pose` を呼び出して、ドアモデルの yaw を変更する方式です。
+
+### 1. Gazebo を起動
+
+```sh
+ros2 launch sobits_gazebo_worlds doing_laundry.launch.py
+```
+
+> 補足：`doing_laundry.launch.py` には「入口ブロッカーを削除する」処理（legacy）がある場合があります。  
+> ドアを service で開閉したい場合は `open_entrance_door:=false`（または launch 側でデフォルト false）で起動してください。
+
+### 2. ドア開閉サービスノードを起動
+
+別ターミナルで以下を実行します。
+
+```sh
+source ~/colcon_ws/install/setup.sh
+ros2 run sobits_gazebo_worlds door_open_service.py
+
+```
+
+### 3. サービスで開閉
+
+開ける：
+
+```sh
+ros2 service call /door_open std_srvs/srv/SetBool "{data: true}"
+```
+
+閉める：
+
+```sh
+ros2 service call /door_open std_srvs/srv/SetBool "{data: false}"
+```
+
+### パラメータ調整
+
+`door_open_service.py` 内の以下を環境に合わせて調整してください。
+
+- `WORLD_NAME`：Gazebo world 名（SDFの `<world name="...">`）
+- `MODEL_NAME`：開閉したいドアモデル名（SDFの `<model name="...">`）
+- `X, Y, Z`：ドアモデルの基準位置
+- `YAW_OPEN / YAW_CLOSED`：開閉角度（rad）
+
 ### ランダムWorldを起動
 
 [random_world.launch.py](launch/random_world.launch.py)を用いることで，固定家具をベースにYCB物体と人をランダム配置したWorldを生成して起動できる．

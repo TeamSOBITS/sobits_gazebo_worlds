@@ -3,42 +3,41 @@
   <model name="folded_shirt_white">
     <static>false</static>
 
-    
     <pose>0 0 0 1.5708 0 0</pose>
 
     <link name="link">
-      <!-- Keep inertial simple; tune later if needed -->
       <inertial>
         <mass>0.25</mass>
         <inertia>
-          <ixx>0.001</ixx><ixy>0</ixy><ixz>0</ixz>
-          <iyy>0.001</iyy><iyz>0</iyz>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
           <izz>0.001</izz>
         </inertia>
       </inertial>
 
-      
       <collision name="collision">
         <geometry>
-          <mesh>
-            <uri>model://folded_shirt_white/meshes/folded_shirt_white.glb</uri>
-          </mesh>
+          <box>
+            <size>0.28 0.22 0.05</size>
+          </box>
         </geometry>
       </collision>
 
-      <!-- Visual mesh -->
       <visual name="visual">
+        <cast_shadows>false</cast_shadows>
+
+
         <geometry>
           <mesh>
-            <uri>model://folded_shirt_white/meshes/folded_shirt_white.glb</uri>
+            <uri>model://folded_shirt_white/meshes/simple_folded_shirt.obj</uri>
+
+            <scale>0.1 0.1 0.1</scale>
           </mesh>
         </geometry>
 
-        <!-- Tint (may be overridden by GLB PBR textures, but harmless) -->
-        <material>
-          <ambient>0.95 0.95 0.95 1</ambient>
-          <diffuse>0.95 0.95 0.95 1</diffuse>
-        </material>
       </visual>
     </link>
   </model>

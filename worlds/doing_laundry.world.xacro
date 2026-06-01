@@ -36,19 +36,39 @@
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- Entrance door blocker (pose matches image1) -->
-    <model name="entrance_door_blocker">
-      <static>true</static>
-      <!-- from image1 UI: x=-0.06, y=-1.98, z=1.00, r=p=yaw=0 -->
-      <pose>-0.06 -1.98 1.00 0 0 0</pose>
-      <link name="link">
+    <!-- Entrance door (open/close by pose update) -->
+    <model name="entrance_door">
+      <static>false</static>
+      <pose>0.02 -3.01 0.87 0 0 0</pose>
+
+      <link name="door_link">
+
         <collision name="collision">
-          <geometry><box><size>0.05 1.0 2.05</size></box></geometry>
+          <pose>0 1 0 0 0 0</pose>
+          <geometry>
+            <box><size>0.05 2.0 2.05</size></box>
+          </geometry>
         </collision>
+
         <visual name="visual">
-          <geometry><box><size>0.05 1.0 2.05</size></box></geometry>
-          <material><diffuse>0.2 0.2 0.2 0.6</diffuse></material>
+          <pose>0 1 0 0 0 0</pose>
+          <geometry>
+            <box><size>0.05 2.0 2.05</size></box>
+          </geometry>
+          <material>
+            <ambient>0.6 0.6 0.6 1</ambient>
+            <diffuse>0.6 0.6 0.6 1</diffuse>
+          </material>
         </visual>
+
+        <inertial>
+          <mass>10</mass>
+          <inertia>
+            <ixx>1</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>1</iyy><iyz>0</iyz>
+            <izz>1</izz>
+          </inertia>
+        </inertial>
       </link>
     </model>
 
@@ -81,47 +101,28 @@
       <pose>2.3 -3.2 0.0 0.0 0.0 0.0</pose>
     </include>
 
-        <!-- Folded shirts (GLB-based models) -->
-    <!-- Table (1) -->
+
     <include>
-      <name>folded_shirt_table_0</name>
+      <name>folded_shirt_front</name>
       <uri>model://folded_shirt_white</uri>
       <static>0</static>
-      <pose>2.00 -0.50 0.78 0 0 0</pose>
+      <pose>2.18 -0.49 0.41 1.5708  0 0</pose>
     </include>
 
-    <!-- Washing machine (3) - TODO: tune pose to be inside drum -->
+
+
     <include>
-      <name>folded_shirt_washer_0</name>
-      <uri>model://folded_shirt_green</uri>
-      <static>0</static>
-      <pose>1.33 -3.50 0.60 0 0 1.57</pose>
-    </include>
-    <include>
-      <name>folded_shirt_washer_1</name>
+      <name>folded_shirt_back_1</name>
       <uri>model://folded_shirt_white</uri>
       <static>0</static>
-      <pose>1.40 -3.45 0.60 0 0 1.20</pose>
-    </include>
-    <include>
-      <name>folded_shirt_washer_2</name>
-      <uri>model://folded_shirt_green</uri>
-      <static>0</static>
-      <pose>1.28 -3.55 0.60 0 0 1.90</pose>
+      <pose>1.51 -0.49 0.41 1.5708  0 0</pose>
     </include>
 
-    <!-- Basket (2) - TODO: tune pose to be inside basket -->
     <include>
-      <name>folded_shirt_basket_0</name>
-      <uri>model://folded_shirt_white</uri>
-      <static>0</static>
-      <pose>2.30 -3.20 0.22 0 0 0.20</pose>
-    </include>
-    <include>
-      <name>folded_shirt_basket_1</name>
+      <name>folded_shirt_back_2</name>
       <uri>model://folded_shirt_green</uri>
       <static>0</static>
-      <pose>2.35 -3.15 0.22 0 0 -0.30</pose>
+      <pose>1.88 -0.49 0.41 1.5708  0 0</pose>
     </include>
 
   </world>

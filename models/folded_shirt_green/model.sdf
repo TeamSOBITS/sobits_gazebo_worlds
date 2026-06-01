@@ -2,30 +2,30 @@
 <sdf version="1.8">
   <model name="folded_shirt_green">
     <static>false</static>
-    
+
     <pose>0 0 0 1.5708 0 0</pose>
 
     <link name="link">
-      <!-- Keep inertial simple; tune later if needed -->
       <inertial>
         <mass>0.25</mass>
         <inertia>
-          <ixx>0.001</ixx><ixy>0</ixy><ixz>0</ixz>
-          <iyy>0.001</iyy><iyz>0</iyz>
+          <ixx>0.001</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.001</iyy>
+          <iyz>0</iyz>
           <izz>0.001</izz>
         </inertia>
       </inertial>
 
-      
       <collision name="collision">
         <geometry>
-          <mesh>
-            <uri>model://folded_shirt_green/meshes/folded_shirt_green.glb</uri>
-          </mesh>
+          <box>
+            <size>0.28 0.22 0.05</size>
+          </box>
         </geometry>
       </collision>
 
-      <!-- Visual mesh -->
       <visual name="visual">
         <geometry>
           <mesh>
@@ -33,10 +33,12 @@
           </mesh>
         </geometry>
 
-        <!-- Tint (may be overridden by GLB PBR textures, but harmless) -->
         <material>
-          <ambient>0.95 0.95 0.95 1</ambient>
-          <diffuse>0.95 0.95 0.95 1</diffuse>
+          <ambient>0.05 0.35 0.10 1</ambient>
+          <diffuse>0.10 0.60 0.20 1</diffuse>
+          <specular>0.05 0.05 0.05 1</specular>
+
+
         </material>
       </visual>
     </link>

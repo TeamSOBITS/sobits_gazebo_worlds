@@ -36,5 +36,10 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
+# Install Python scripts so they are runnable 
+install(PROGRAMS
+  scripts/door_open_service.py
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
