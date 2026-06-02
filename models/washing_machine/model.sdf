@@ -36,7 +36,7 @@
       <collision name="body_collision">
         <geometry>
           <mesh>
-            <uri>model://washing_machine/meshes/main-body.stl</uri>
+            <uri>model://washing_machine/meshes/main-body_lod.stl</uri>
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
@@ -80,7 +80,7 @@
       <collision name="door_collision">
         <geometry>
           <mesh>
-            <uri>model://washing_machine/meshes/door.stl</uri>
+            <uri>model://washing_machine/meshes/door_lod.stl</uri>
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
@@ -142,7 +142,7 @@
       <collision name="tray_collision">
         <geometry>
           <mesh>
-            <uri>model://washing_machine/meshes/tray.stl</uri>
+            <uri>model://washing_machine/meshes/tray_lod.stl</uri>
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
