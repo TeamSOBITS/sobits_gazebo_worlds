@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="t-shirt_red">
+    <static>true</static>
+
+    <link name="link">
+      <pose>0 0 0 1.5708 0 0</pose>
+
+      <visual name="visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://t-shirt_red/meshes/t-shirt_red.glb</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+        <cast_shadows>true</cast_shadows>
+      </visual>
+    </link>
+
+  </model>
+</sdf>

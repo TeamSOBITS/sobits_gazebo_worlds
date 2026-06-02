@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="t-shirt_on_hanger">
+    <static>true</static>
+
+    <link name="link">
+      <!-- Upright pose — hanger model is likely Z-up already -->
+      <pose>0 0 0 0 0 0</pose>
+
+      <visual name="visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://t-shirt_on_hanger/meshes/t-shirt_on_hanger.glb</uri>
+            <scale>1.0 1.0 1.0</scale>
+          </mesh>
+        </geometry>
+        <cast_shadows>true</cast_shadows>
+      </visual>
+    </link>
+
+  </model>
+</sdf>
