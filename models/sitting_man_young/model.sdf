@@ -1,0 +1,27 @@
+
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="sitting_man_young">
+    <static>false</static>
+    <link name="link">
+      <!-- 90度回転を防止 & デフォルトで Y 軸正方向になるようにする -->
+      <pose>0 0 0 1.5708 0 3.16</pose>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://sitting_man_young/meshes/sitting_man_young.glb</uri>
+            <scale>1.4000 1.4000 1.4000</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sitting_man_young/meshes/sitting_man_young.glb</uri>
+            <scale>1.4000 1.4000 1.4000</scale>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

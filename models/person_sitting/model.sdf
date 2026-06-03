@@ -4,8 +4,8 @@
     <static>false</static>
 
     <link name="link">
-      <!-- モデル姿勢補正 -->
-      <pose>0 0 0 1.5708 0 0</pose>
+      <!-- モデル姿勢補正 & デフォルトで Y 軸正方向を見るようにする -->
+      <pose>0 0 0 1.57 0 1.57</pose>
       <visual name="visual">
         <geometry>
           <mesh>
@@ -17,7 +17,6 @@
       </visual>
 
       <collision name="collision">
-        <pose>0 0 0.5 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://person_sitting/meshes/person_sitting.glb</uri>
