@@ -4,8 +4,8 @@
     <static>false</static>
 
     <link name="link">
-      <!-- モデル姿勢補正 & デフォルトで Y 軸正方向を見るようにする -->
-      <pose>0 0 0 1.57 0 1.57</pose>
+      <!-- モデル姿勢補正 & デフォルトで X 軸正方向を見るようにする -->
+      <pose>0 0 0 1.57 0 0</pose>
       <visual name="visual">
         <geometry>
           <mesh>

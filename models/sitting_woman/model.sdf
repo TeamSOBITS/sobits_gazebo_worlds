@@ -4,8 +4,8 @@
   <model name="sitting_woman">
     <static>true</static>
     <link name="link">
-      <!-- 90度回転を防止 -->
-      <pose>0 0 0 1.5708 0 -1.57</pose>
+      <!-- 90度回転を防止 & デフォルトで X 軸正方向を向くようにする -->
+      <pose>0 0 0 1.5708 0 3.16</pose>
       <visual name="visual">
         <geometry>
           <mesh>
