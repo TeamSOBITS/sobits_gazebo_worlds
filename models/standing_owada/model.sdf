@@ -1,0 +1,31 @@
+
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="standing_owada">
+    <static>false</static>
+    <link name="link">
+      <!-- 90度回転を防止 -->
+      <pose>0 0 0 1.5708 0 1.57</pose>
+      <visual name="visual">
+        <!-- offset -->
+        <pose>0 0.2 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://standing_owada/meshes/standing_owada.glb</uri>
+            <scale>1.8000 1.8000 1.8000</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <!-- offset -->
+        <pose>0 0.2 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://standing_owada/meshes/standing_owada.glb</uri>
+            <scale>1.8000 1.8000 1.8000</scale>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
