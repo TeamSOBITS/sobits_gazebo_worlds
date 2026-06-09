@@ -1,0 +1,256 @@
+<?xml version="1.0" ?>
+<sdf version="1.8" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- TODO: allow xacro -->
+  <xacro:arg name="fast_physics" default="true" />
+  <xacro:arg name="trofast_knob" default="true" />
+  <xacro:arg name="highrtf" default="false" />
+
+  <world name='restaurant'>
+    <plugin
+        filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+
+    <plugin
+        filename="gz-sim-sensors-system"
+        name="gz::sim::systems::Sensors">
+    </plugin>
+
+    <scene>
+      <background>0.0 0.1 0.1 0.0</background>
+      <grid>false</grid>
+    </scene>
+
+    <physics name="1ms" type="ignored">
+        <max_step_size>0.001</max_step_size>
+        <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <!--light-->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose relative_to=''>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+          <range>1000</range>
+          <constant>0.9</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!--gravity-->
+    <gravity>0 0 -9.8</gravity>
+
+    <!-- Import models -->
+    <!-- Global Models -->
+    <include>
+      <name>floor_plane_fl</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_fr</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>5 -5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_bl</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_br</name>
+      <static>1</static>
+      <uri>model://wrc_ground_plane</uri>
+      <pose relative_to=''>-5 -5 0 0 0 0</pose>
+    </include>
+
+    <!-- Global Models -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- Living Room / Laundry Area                                          -->
+    <!--                                                                     -->
+    <!-- Layout changes vs rcjo2025_arena:                                   -->
+    <!--   - Removed: counter, kachaka_shelf_left, kachaka_shelf_right       -->
+    <!--   - Added:   washing_machine + laundry_basket + pile_of_clothes     -->
+    <!--              in the freed kachaka-shelf area (x≈1.4, y=-3.5)       -->
+    <!--   - Folding table = existing long_table (x=2.0, y=-0.5)            -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+
+    <!-- Folding table — the long white table already in this room.
+         Robot folds T-shirts here. No change in pose from original world. -->
+
+    <include>
+      <name>tall_table_1</name>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
+      <static>1</static>
+      <pose relative_to=''>2.2 3.5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>chair_1</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>2.8 3.5 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>chair_4</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>2.2 4.1 0.0 0.0 0.0 -1.57</pose>
+    </include>
+
+    <include>
+        <name>tall_table_2</name>
+        <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
+        <static>1</static>
+        <pose relative_to=''>2.2 0.0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>chair_2</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>2.8 0.0 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+        <name>tall_table_3</name>
+        <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
+        <static>1</static>
+        <pose relative_to=''>2.2 -3.5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>chair_3</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>2.8 -3.5 0.0 0.0 0.0 3.14</pose>
+    </include>
+
+    <include>
+      <name>chair_5</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>2.2 -4.1 0.0 0.0 0.0 1.57</pose>
+    </include>
+    <!-- Study Room -->
+
+
+    <!-- Dining Room -->
+    <!-- <include>
+      <name>counter</name>
+      <uri>model://dining_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-2.0 -2.25 0.0 0.0 0.0 0.0</pose>
+    </include> -->
+
+    <include>
+      <name>counter</name>
+      <uri>model://long_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-2.0 -1.75 0.0 0.0 0.0 1.57</pose>
+    </include>
+
+
+    <model name="ceiling">
+      <static>true</static>
+      <!-- レストランの広さに合わせて位置(pose)を調整してください -->
+      <!-- [X, Y, Z, Roll, Pitch, Yaw] Z=3.0 で高さ3メートルの天井になります -->
+      <pose>2.8 0.0 4.0 0 0 0</pose> 
+      <link name="ceiling_link">
+        <collision name="ceiling_collision">
+          <geometry>
+            <!-- 天井のサイズ [横幅, 奥行き, 厚み] -->
+            <box><size>10.0 10.0 0.1</size></box>
+          </geometry>
+        </collision>
+        <visual name="ceiling_visual">
+          <geometry>
+            <box><size>10.0 10.0 0.1</size></box>
+          </geometry>
+          <material>
+            <!-- 天井の色（白系） -->
+            <ambient>0.9 0.9 0.9 1.0</ambient>
+            <diffuse>0.9 0.9 0.9 1.0</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <light type="point" name="ceiling_light_1">
+      <!-- 天井(Z=3.0)の少し下(Z=2.8)に光源を浮かせる -->
+      <pose>2.8 0.0 2.8 0 0 0</pose>
+      
+      <!-- 光の色（白色: RGBA） -->
+      <diffuse>0.8 0.8 0.8 1.0</diffuse>
+      <specular>0.2 0.2 0.2 1.0</specular>
+      
+      <!-- 光の減衰設定（届く距離や強さ） -->
+      <attenuation>
+        <range>15.0</range>     <!-- 光が届く最大距離(m) -->
+        <linear>0.05</linear>   <!-- 線形減衰 -->
+        <constant>0.8</constant><!-- 基本の強さ -->
+        <quadratic>0.01</quadratic>
+      </attenuation>
+      
+      <!-- 影の有効化（重い場合は false に） -->
+      <cast_shadows>true</cast_shadows>
+    </light>
+
+    <include>
+      <name>person_1</name>
+      <!-- <uri>model://sitting_owada</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://right_hand_raising_owada</uri> -->
+      <uri>model://left_hand_raising_owada</uri>
+      <static>1</static>
+      <pose>2.2 -4.1 0.7 0 0 1.57</pose>
+    </include>
+
+        <include>
+      <name>person_2</name>
+      <!-- <uri>model://sitting_owada</uri> -->
+      <uri>model://person_sitting</uri>
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://right_hand_raising_owada</uri> -->
+      <!-- <uri>model://left_hand_raising_owada</uri> -->
+      <static>1</static>
+      <pose>2.7 -3.5 0.7 0 0 3.14</pose>
+    </include>
+
+        <include>
+      <name>person_3</name>
+      <!-- <uri>model://sitting_owada</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://right_hand_raising_owada</uri> -->
+      <uri>model://left_hand_raising_owada</uri>
+      <static>1</static>
+      <pose>2.7 0.0 0.7 0 0 3.14</pose>
+    </include>
+    <!-- RANDOM_YCB_OBJECTS -->
+
+  </world>
+</sdf>

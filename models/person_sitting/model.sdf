@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="person_sitting">
+    <static>false</static>
+
+    <link name="link">
+      <!-- モデル姿勢補正 & デフォルトで X 軸正方向を見るようにする -->
+      <pose>0 0 0 1.57 0 0</pose>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://person_sitting/meshes/person_sitting.glb</uri>
+            <!-- ここでスケール変更 -->
+            <scale>0.7127 0.7127 0.7127</scale>
+          </mesh>
+        </geometry>
+      </visual>
+
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://person_sitting/meshes/person_sitting.glb</uri>
+            <!-- ここでスケール変更 -->
+            <scale>0.7127 0.7127 0.7127</scale>
+          </mesh>
+        </geometry>
+      </collision>
+
+    </link>
+  </model>
+</sdf>
