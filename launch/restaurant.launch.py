@@ -67,7 +67,7 @@ def generate_launch_description():
 
     object_count_arg = DeclareLaunchArgument(
         'object_count',
-        default_value='6',
+        default_value='15',
         description='Number of random YCB objects to place.',
     )
 

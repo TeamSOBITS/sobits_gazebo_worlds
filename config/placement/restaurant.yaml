@@ -9,9 +9,13 @@ placement_areas:
     # max_objects: 4                # Optional: cap the number of objects on this area
     # surface_name: plate1          # Optional: specify a particular surface on the furniture (e.g., a specific shelf or tabletop)
 
-  - name: counter
+  - name: counter_1
+    edge_margin: 0.08
+    min_object_spacing: 0.18
+    allowed_categories: [food]
+
+  - name: counter_2
     edge_margin: 0.08
     min_object_spacing: 0.13
     allowed_categories: [food]
-
 
