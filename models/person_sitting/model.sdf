@@ -5,13 +5,13 @@
 
     <link name="link">
       <!-- モデル姿勢補正 & デフォルトで X 軸正方向を見るようにする -->
-      <pose>0 0 0 1.57 0 0</pose>
+      <pose>0 0 0.675 1.57 0 0</pose>
       <visual name="visual">
         <geometry>
           <mesh>
             <uri>model://person_sitting/meshes/person_sitting.glb</uri>
-            <!-- ここでスケール変更 -->
-            <scale>0.7127 0.7127 0.7127</scale>
+            <!-- ここでスケール変更 135cm になるように -->
+            <scale>0.6872 0.6872 0.6872</scale>
           </mesh>
         </geometry>
       </visual>
@@ -21,7 +21,7 @@
           <mesh>
             <uri>model://person_sitting/meshes/person_sitting.glb</uri>
             <!-- ここでスケール変更 -->
-            <scale>0.7127 0.7127 0.7127</scale>
+            <scale>0.6872 0.6872 0.6872</scale>
           </mesh>
         </geometry>
       </collision>

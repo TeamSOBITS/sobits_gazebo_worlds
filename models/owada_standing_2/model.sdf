@@ -1,24 +1,24 @@
 
 <?xml version="1.0"?>
 <sdf version="1.10">
-  <model name="sitting_owada">
+  <model name="owada_standing_2">
     <static>false</static>
     <link name="link">
       <!-- 90度回転を防止 -->
-      <pose>0 0 0 1.5708 0 1.57</pose>
+      <pose>0 0 0.875 1.5708 0 1.57</pose>
       <visual name="visual">
         <geometry>
           <mesh>
-            <uri>model://sitting_owada/meshes/sitting_owada.glb</uri>
-            <scale>1.4000 1.4000 1.4000</scale>
+            <uri>model://owada_standing_2/meshes/standing_owada.glb</uri>
+            <scale>1.75 1.75 1.75</scale>
           </mesh>
         </geometry>
       </visual>
       <collision name="collision">
         <geometry>
           <mesh>
-            <uri>model://sitting_owada/meshes/sitting_owada.glb</uri>
-            <scale>1.4000 1.4000 1.4000</scale>
+            <uri>model://owada_standing_2/meshes/standing_owada.glb</uri>
+            <scale>1.75 1.75 1.75</scale>
           </mesh>
         </geometry>
       </collision>

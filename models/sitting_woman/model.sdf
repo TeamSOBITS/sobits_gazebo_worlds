@@ -5,12 +5,12 @@
     <static>true</static>
     <link name="link">
       <!-- 90度回転を防止 & デフォルトで X 軸正方向を向くようにする -->
-      <pose>0 0 0 1.5708 0 3.16</pose>
+      <pose>0 0 0.65 1.5708 0 3.16</pose>
       <visual name="visual">
         <geometry>
           <mesh>
             <uri>model://sitting_woman/meshes/sitting_woman.glb</uri>
-            <scale>1.4000 1.4000 1.4000</scale>
+            <scale>1.3000 1.3000 1.3000</scale>
           </mesh>
         </geometry>
       </visual>
@@ -18,7 +18,7 @@
         <geometry>
           <mesh>
             <uri>model://sitting_woman/meshes/sitting_woman.glb</uri>
-            <scale>1.4000 1.4000 1.4000</scale>
+            <scale>1.3000 1.3000 1.3000</scale>
           </mesh>
         </geometry>
       </collision>

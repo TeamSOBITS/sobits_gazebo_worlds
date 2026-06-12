@@ -1,24 +1,24 @@
 
 <?xml version="1.0"?>
 <sdf version="1.10">
-  <model name="uema_sitting">
+  <model name="owada_left_hand_raising">
     <static>false</static>
     <link name="link">
       <!-- 90度回転を防止 -->
-      <pose>0 0 0.7 1.5708 0 1.57</pose>
+      <pose>0 0 0.825 1.5708 0 1.57</pose>
       <visual name="visual">
         <geometry>
           <mesh>
-            <uri>model://uema_sitting/meshes/uema_sitting.glb</uri>
-            <scale>1.4 1.4 1.4</scale>
+            <uri>model://owada_left_hand_raising/meshes/owada_left_hand_raising.glb</uri>
+            <scale>1.65 1.65 1.65</scale>
           </mesh>
         </geometry>
       </visual>
       <collision name="collision">
         <geometry>
           <mesh>
-            <uri>model://uema_sitting/meshes/uema_sitting.glb</uri>
-            <scale>1.4 1.4 1.4</scale>
+            <uri>model://owada_left_hand_raising/meshes/owada_left_hand_raising.glb</uri>
+            <scale>1.65 1.65 1.65</scale>
           </mesh>
         </geometry>
       </collision>

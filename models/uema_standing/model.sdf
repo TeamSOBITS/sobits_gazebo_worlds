@@ -5,11 +5,12 @@
     <static>false</static>
     <link name="link">
       <!-- 90度回転を防止 -->
-      <pose>0 0 0 1.5708 0 1.57</pose>
+      <pose>0 0 0.805 1.5708 0 1.57</pose>
       <visual name="visual">
         <geometry>
           <mesh>
             <uri>model://uema_standing/meshes/uema_standing.glb</uri>
+            <scale>1.61 1.61 1.61</scale>
           </mesh>
         </geometry>
       </visual>
@@ -17,6 +18,7 @@
         <geometry>
           <mesh>
             <uri>model://uema_standing/meshes/uema_standing.glb</uri>
+            <scale>1.61 1.61 1.61</scale>
           </mesh>
         </geometry>
       </collision>
