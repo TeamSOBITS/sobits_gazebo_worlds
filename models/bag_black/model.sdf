@@ -1,0 +1,29 @@
+
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="bag_black">
+    <static>false</static>
+    <link name="link">
+      <!-- 90度回転を防止 -->
+      <!-- TODO: バッグの中心を考える。取手を中心にする必要があるか -->
+      <!-- その場合 pose を書き換える -->
+      <pose>0 0 0.38 3.14 0 0</pose>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://bag_black/meshes/bag_black.glb</uri>
+            <scale>0.0881 0.0881 0.0881</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://bag_black/meshes/bag_black.glb</uri>
+            <scale>0.0881 0.0881 0.0881</scale>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
