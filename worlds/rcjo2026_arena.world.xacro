@@ -282,5 +282,11 @@
     </include>
     <!-- Bed Room -->
 
+    <include>
+      <name>dining_table</name>
+      <uri>model://dining_table</uri>
+      <static>1</static>
+      <pose relative_to=''>-2.0 -2.25 0.0 0.0 0.0 0.0</pose>
+    </include>
   </world>
 </sdf>
