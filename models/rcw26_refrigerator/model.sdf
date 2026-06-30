@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<!--
+  Refrigerator — real-furniture GLB model (RoboCup@Home 2026).
+  GLB is unit-normalized + Y-up; uniform scale=1.7 brings it to real size,
+  roll=1.5708 corrects Y-up -> Z-up. World footprint ~0.56x0.56 m, height ~1.7 m.
+  Box collision approximates the mesh; tune sizes/pose if grasp/nav needs it.
+-->
+<sdf version="1.10">
+  <model name="rcw26_refrigerator">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>60</mass>
+        <inertia>
+          <ixx>16.01800</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>16.01800</iyy><iyz>0</iyz>
+          <izz>3.13600</izz>
+        </inertia>
+      </inertial>
+      <collision name="collision">
+        <pose>0 0 0.9325 0 0 0</pose>
+        <geometry><box><size>0.614 0.610 1.865</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0.9325 1.5708 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://rcw26_refrigerator/meshes/refrigerator.glb</uri>
+            <scale>1.8649 1.8649 1.8649</scale>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
