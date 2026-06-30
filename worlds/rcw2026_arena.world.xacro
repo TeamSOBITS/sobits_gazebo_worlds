@@ -1,0 +1,583 @@
+<?xml version="1.0" ?>
+<!--
+  ════════════════════════════════════════════════════════════════════════════
+  RoboCup @Home 2026 — Doing Laundry arena (floor-plan replica)
+  ════════════════════════════════════════════════════════════════════════════
+  Self-contained world: walls are built INLINE here (no rcjo2025_frame mesh).
+  Furniture uses the workspace's LOCAL model:// directories (resolved via
+  GZ_SIM_RESOURCE_PATH -> sobits_gazebo_worlds/models + tmc_wrs_gz_worlds/models).
+
+  GEOMETRY
+    - Outer footprint: 9.0 x 9.0 m. Walls 0.15 thick => centre-lines at +/-4.425
+      (= 4.5 - 0.075), INNER faces at +/-4.35, internal span 8.70 m.
+    - Origin (0,0,0) = exact centre where the cross-shaped interior walls meet.
+    - Wall height = 1.25 m, thickness = 0.15 m.
+    - Centre of each wall slab sits at z = 1.25/2 = 0.625.
+
+    Quadrant map (matches field_pic.jpg):
+        +Y (top)
+          ┌──────────┬──────────┐
+          │ KITCHEN  │ BEDROOM  │
+          │  (-2,+2) │  (+2,+2) │
+   -X ────┼──────────┼──────────┼──── +X
+          │ DINING   │ LIVING   │
+          │  (-2,-2) │  (+2,-2) │
+          └──────────┴──────────┘
+        -Y (bottom)
+
+    Interior walls: TWO walls that CROSS through the origin (no central gap).
+    Door openings (0.95 m wide) — NO physical door models; openings only:
+      - 2 exterior openings on the LEFT (-X) outer wall: y = -2.175, +2.175
+      - 4 interior openings, one per cross arm, centred on the room entrances
+        the user set in the live sim:
+          +Y arm y=3.45 | -Y arm y=2.41 | +X arm x=3.19 | -X arm x=2.41
+
+  All poses are roll/pitch/yaw in radians. Adjust coordinates freely below.
+  ════════════════════════════════════════════════════════════════════════════
+-->
+<sdf version="1.10" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <world name='rcw2026_arena'>
+
+    <!-- ───────────────────────── Plugins (modern GZ) ───────────────────────── -->
+    <plugin filename="gz-sim-physics-system"          name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system"    name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system"          name="gz::sim::systems::Sensors"/>
+
+    <scene>
+      <ambient>0.3 0.3 0.3 1</ambient>
+      <background>0.8 0.85 0.9 1</background>
+      <grid>false</grid>
+    </scene>
+
+    <physics name="4ms" type="ignored">
+      <max_step_size>0.004</max_step_size>
+      <real_time_update_rate>250</real_time_update_rate>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <gravity>0 0 -9.8</gravity>
+
+    <!-- ───────────────────────── Lighting ───────────────────────── -->
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <!-- ───────────────────────── Ground plane ─────────────────────────
+         Wood/parquet floor reusing tmc_wrs_gz_worlds' wrc_ground_plane — a
+         proven textured floor (photo wood texture via PBR albedo_map, with a
+         <diffuse> term so it renders correctly). Resolved via
+         GZ_SIM_RESOURCE_PATH. Each plane is 10x10 m; tiled 2x2 at (+/-5,+/-5)
+         (same layout as rcjo2026_arena) for a continuous 20x20 m floor that
+         covers the 9x9 arena AND the outside-door staging area where the robot
+         starts (~x=-5.8), incl. floor behind the entrance/exit doors. -->
+    <include>
+      <name>floor_plane_fl</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_fr</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>5 -5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_bl</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>-5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_br</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>-5 -5 0 0 0 0</pose>
+    </include>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- STRUCTURE: OUTER WALLS                                                  -->
+    <!--                                                                        -->
+    <!-- Square perimeter, 9.0 m outer. Walls 0.15 thick => centre-lines at     -->
+    <!-- +/-4.425, INNER faces at +/-4.35 (internal span 8.70 m). Wall slab     -->
+    <!-- centre z = 0.625 (height 1.25). One inline static model "arena_walls"  -->
+    <!-- holds every wall segment as a separate link.                           -->
+    <!--                                                                        -->
+    <!-- Outer wall full length on each side = 9.0 - 0.15 = 8.85 (so corners    -->
+    <!-- mitre cleanly: long walls 9.0, short walls 8.70; here top/bottom span  -->
+    <!-- the full 9.0 and left/right fill the 8.70 gap between them).           -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <xacro:property name="wt" value="0.15"/>    <!-- wall thickness -->
+    <xacro:property name="wh" value="1.25"/>    <!-- wall height -->
+
+    <model name="arena_walls">
+      <static>true</static>
+
+      <!-- ── TOP wall (+Y), full span, no opening ── -->
+      <link name="wall_top">
+        <pose>0 4.425 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>9.00 0.15 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>9.00 0.15 1.25</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- ── BOTTOM wall (-Y), full span, no opening ── -->
+      <link name="wall_bottom">
+        <pose>0 -4.425 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>9.00 0.15 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>9.00 0.15 1.25</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- ── RIGHT wall (+X), full span, no opening (fills 8.70 gap) ── -->
+      <link name="wall_right">
+        <pose>4.425 0 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 8.70 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 8.70 1.25</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- ── LEFT wall (-X): 3 segments leaving TWO 0.95 m door openings ──
+           Internal span on Y is -4.35..+4.35 (8.70 m). Two openings centred at
+           y = -2.175 and y = +2.175, each 0.95 m wide:
+             opening A: y in [-2.650, -1.700]
+             opening B: y in [+1.700, +2.650]
+           => three solid segments:
+             seg_bottom: y in [-4.35, -2.650] -> len 1.700, centre y=-3.500
+             seg_mid   : y in [-1.700, +1.700]-> len 3.400, centre y= 0.000
+             seg_top   : y in [+2.650, +4.35] -> len 1.700, centre y= 3.500 -->
+      <link name="wall_left_bottom">
+        <pose>-4.425 -3.500 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 1.700 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 1.700 1.25</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="wall_left_mid">
+        <pose>-4.425 0.0 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 3.400 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 3.400 1.25</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="wall_left_top">
+        <pose>-4.425 3.500 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 1.700 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 1.700 1.25</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- ════════════════════════════════════════════════════════════════ -->
+      <!-- STRUCTURE: INNER CROSSING WALLS                                    -->
+      <!--                                                                   -->
+      <!-- TWO full-length interior walls that CROSS through the origin (no   -->
+      <!-- central nav-gap), splitting the arena into 4 rooms. The ONLY       -->
+      <!-- interior openings are four 0.95 m doorways (one per arm), centred  -->
+      <!-- on the room-entrance locations the user placed in the live sim:    -->
+      <!--                                                                   -->
+      <!--   +Y arm  doorway centre y = 3.45                                  -->
+      <!--   -Y arm  doorway centre y = 2.41                                  -->
+      <!--   +X arm  doorway centre x = 3.19                                  -->
+      <!--   -X arm  doorway centre x = 2.41                                  -->
+      <!--                                                                   -->
+      <!-- The VERTICAL wall (x=0) runs continuously through the centre; the  -->
+      <!-- HORIZONTAL wall (y=0) is two arms that butt into it at x=+/-0.075. -->
+      <!-- ════════════════════════════════════════════════════════════════ -->
+
+      <!-- ── VERTICAL wall (along Y at x=0), continuous through centre ──
+           Doorways on +Y arm (y=3.45) and -Y arm (y=2.41) => 3 segments:
+             bottom: y[-4.350,-2.885] len 1.465 centre -3.6175
+             mid   : y[-1.935,+2.975] len 4.910 centre +0.5200  (spans crossing)
+             top   : y[+3.925,+4.350] len 0.425 centre +4.1375 -->
+      <link name="inner_vert_bottom">
+        <pose>0 -3.6046 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 1.4907 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 1.4907 1.25</size></box></geometry>
+          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="inner_vert_mid">
+        <pose>0 0.5329 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 4.8843 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 4.8843 1.25</size></box></geometry>
+          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="inner_vert_top">
+        <pose>0 4.1375 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 0.425 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 0.425 1.25</size></box></geometry>
+          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        </visual>
+      </link>
+
+      <!-- ── HORIZONTAL wall (along X at y=0), two arms butting the vertical
+           wall at x=+/-0.075. Doorways on +X arm (x=3.19) and -X arm (x=2.41).
+             right_inner : x[+0.075,+2.715] len 2.640 centre +1.3950
+             right_outer : x[+3.665,+4.350] len 0.685 centre +4.0075
+             left_inner  : x[-1.935,-0.075] len 1.860 centre -1.0050
+             left_outer  : x[-4.350,-2.885] len 1.465 centre -3.6175 -->
+      <link name="inner_horiz_right_inner">
+        <pose>1.3950 0 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>2.640 0.15 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>2.640 0.15 1.25</size></box></geometry>
+          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="inner_horiz_right_outer">
+        <pose>4.0075 0 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.685 0.15 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.685 0.15 1.25</size></box></geometry>
+          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        </visual>
+      </link>
+      <!-- -X arm doorway MOVED to x=-1.591 (was -2.41); gap [-2.066,-1.116] -->
+      <link name="inner_horiz_left_inner">
+        <pose>-0.5955 0 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>1.041 0.15 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>1.041 0.15 1.25</size></box></geometry>
+          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        </visual>
+      </link>
+      <link name="inner_horiz_left_outer">
+        <pose>-3.2080 0 0.625 0 0 0</pose>
+        <collision name="c"><geometry><box><size>2.284 0.15 1.25</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>2.284 0.15 1.25</size></box></geometry>
+          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- DOOR FRAMES (casing) — 6 INDEPENDENT models, one per room entrance     -->
+    <!--                                                                        -->
+    <!-- Each opening keeps its 0.95 m clear width. The casing adds two side    -->
+    <!-- JAMBS (0.05 m posts flanking the gap, flush to the wall edges) and a   -->
+    <!-- HEADER lintel across the top. Frame total height = 2.0 m (the casing   -->
+    <!-- rises above the 1.25 m walls, so the doorways read as 2 m portals).    -->
+    <!-- Frame depth = 0.15 m = wall thickness, so jambs sit in-plane with the  -->
+    <!-- wall. Clear opening between jamb inner faces stays exactly 0.95 m.      -->
+    <!--                                                                        -->
+    <!--   jamb post  : 0.05 cross-section, 2.0 tall, centre z=1.0             -->
+    <!--   jambs sit BETWEEN the wall ends: outer face flush at +/-0.475       -->
+    <!--   (jamb centre +/-0.45); clear opening between jambs = 0.85 m.         -->
+    <!--   header     : 0.10 tall, spans 0.95 (the doorway gap), centre z=1.95  -->
+    <!--                                                                        -->
+    <!-- Openings (opening axis = direction the gap runs):                      -->
+    <!--   ext_lower   (-4.425, -2.175)  along Y                                -->
+    <!--   ext_upper   (-4.425, +2.175)  along Y                                -->
+    <!--   int_vpos    ( 0.000, +3.450)  along Y                                -->
+    <!--   int_vneg    ( 0.000, -2.3843) along Y  (moved to -Y side in GUI)     -->
+    <!--   int_hpos    (+3.190,  0.000)  along X                                -->
+    <!--   int_hneg    (-1.591,   0.000) along X  (entrance moved in GUI)       -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <xacro:property name="dfh" value="2.0"/>     <!-- door frame height -->
+    <xacro:property name="dfd" value="0.15"/>    <!-- frame depth = wall thickness -->
+    <xacro:property name="jt"  value="0.05"/>    <!-- jamb post cross-section -->
+    <xacro:property name="hh"  value="0.10"/>    <!-- header lintel height -->
+
+    <!-- Each frame is its OWN independent static <model>, so it can be moved or
+         deleted individually in the GUI. The model is posed at the doorway
+         centre (cx,cy); its 3 links (2 jambs + header) are posed RELATIVE to
+         that origin, so dragging the model moves the whole casing together. -->
+
+    <!-- Frame whose opening runs along Y (jambs offset in Y; frame faces +/-X). -->
+    <xacro:macro name="frame_y" params="name cx cy">
+      <model name="door_frame_${name}">
+        <static>true</static>
+        <pose>${cx} ${cy} 0 0 0 0</pose>
+        <link name="jamb_a">
+          <pose>0 0.45 1.0 0 0 0</pose>
+          <collision name="c"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry>
+            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+          </visual>
+        </link>
+        <link name="jamb_b">
+          <pose>0 -0.45 1.0 0 0 0</pose>
+          <collision name="c"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry>
+            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+          </visual>
+        </link>
+        <link name="header">
+          <pose>0 0 1.95 0 0 0</pose>
+          <collision name="c"><geometry><box><size>${dfd} 0.95 ${hh}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>${dfd} 0.95 ${hh}</size></box></geometry>
+            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+          </visual>
+        </link>
+      </model>
+    </xacro:macro>
+
+    <!-- Frame whose opening runs along X (jambs offset in X; frame faces +/-Y). -->
+    <xacro:macro name="frame_x" params="name cx cy">
+      <model name="door_frame_${name}">
+        <static>true</static>
+        <pose>${cx} ${cy} 0 0 0 0</pose>
+        <link name="jamb_a">
+          <pose>0.45 0 1.0 0 0 0</pose>
+          <collision name="c"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry>
+            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+          </visual>
+        </link>
+        <link name="jamb_b">
+          <pose>-0.45 0 1.0 0 0 0</pose>
+          <collision name="c"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry>
+            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+          </visual>
+        </link>
+        <link name="header">
+          <pose>0 0 1.95 0 0 0</pose>
+          <collision name="c"><geometry><box><size>0.95 ${dfd} ${hh}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>0.95 ${dfd} ${hh}</size></box></geometry>
+            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+          </visual>
+        </link>
+      </model>
+    </xacro:macro>
+
+    <!-- 6 independent door-frame models, one per room entrance -->
+    <!-- Exterior left-wall doorways -->
+    <xacro:frame_y name="ext_lower" cx="-4.425" cy="-2.175"/>
+    <xacro:frame_y name="ext_upper" cx="-4.425" cy="2.175"/>
+    <!-- Interior vertical-wall doorways -->
+    <xacro:frame_y name="int_vpos"  cx="0.0"    cy="3.45"/>
+    <xacro:frame_y name="int_vneg"  cx="0.0"    cy="-2.3843"/>
+    <!-- Interior horizontal-wall doorways -->
+    <xacro:frame_x name="int_hpos"  cx="3.19"   cy="0.0"/>
+    <xacro:frame_x name="int_hneg"  cx="-1.591" cy="0.0"/>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ARENA DOORS (entrance / exit) — CLOSED, blocking the 2 exterior         -->
+    <!-- openings on the left wall (x=-4.425).                                   -->
+    <!--                                                                        -->
+    <!-- RoboCup start condition: robot waits outside until the door opens. So  -->
+    <!-- each door is a static panel filling its 0.95 m opening (LiDAR sees it   -->
+    <!-- as an obstacle). To "open" the door at run start, delete or slide the   -->
+    <!-- model aside in the GUI / via gz-live-editor set_pose.                   -->
+    <!--                                                                        -->
+    <!-- Panel: 0.95 wide (along Y) x 0.05 thick (along X) x 2.0 tall, centred   -->
+    <!-- in the wall plane (x=-4.425) at the opening centre (y=-2.175 / +2.175). -->
+    <!-- Each is its OWN model so it can be opened independently.                -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <xacro:macro name="arena_door" params="name cy">
+      <model name="${name}">
+        <static>true</static>
+        <pose>-4.425 ${cy} 1.0 0 0 0</pose>
+        <link name="panel">
+          <collision name="c"><geometry><box><size>0.05 0.95 2.0</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>0.05 0.95 2.0</size></box></geometry>
+            <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse>
+              <specular>0.1 0.1 0.1 1</specular></material>
+          </visual>
+        </link>
+      </model>
+    </xacro:macro>
+    <xacro:arena_door name="arena_door_lower" cy="-2.175"/>
+    <xacro:arena_door name="arena_door_upper" cy="2.175"/>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- INTERIOR DOORS REMOVED.                                                 -->
+    <!--                                                                        -->
+    <!-- The door_open models (2 exterior + 4 interior) were only used to mark  -->
+    <!-- where each room entrance is. Their live positions in the GUI were read -->
+    <!-- back and baked into the wall openings above:                           -->
+    <!--   exterior left wall : openings at y = -2.175 and y = +2.175           -->
+    <!--   +Y cross arm       : doorway centre y = 3.45                         -->
+    <!--   -Y cross arm       : doorway centre y = 2.41                         -->
+    <!--   +X cross arm       : doorway centre x = 3.19                         -->
+    <!--   -X cross arm       : doorway centre x = 2.41                         -->
+    <!-- All openings are 0.95 m wide. No physical doors remain.                -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ROOM 1: DINING AREA   (Bottom-Left quadrant, centre ≈ [-2, -2])        -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- 4 dining chairs around the table (chair footprint ~0.5 x 0.45).
+         Table long axis now along X (yaw=pi/2): chairs on +/-Y long sides and
+         +/-X ends. yaw points the seat toward the table. -->
+    <include>
+      <name>dining_chair_n</name>
+      <uri>model://rcw26_chair</uri>
+      <static>1</static>
+      <pose>2.620 -1.374 0.0 0.0 0.0 0.0</pose>
+    </include>
+    <include>
+      <name>dining_chair_s</name>
+      <uri>model://rcw26_chair</uri>
+      <static>1</static>
+      <pose>2.576 -2.685 0.0 0.0 0.0 3.1416</pose>
+    </include>
+    <include>
+      <name>dining_chair_e</name>
+      <uri>model://rcw26_chair</uri>
+      <static>1</static>
+      <pose>3.232 -2.000 0.0 0.0 0.0 -1.5708</pose>
+    </include>
+    <include>
+      <name>dining_chair_w</name>
+      <uri>model://rcw26_chair</uri>
+      <static>1</static>
+      <pose>1.897 -2.000 0.0 0.0 0.0 1.5708</pose>
+    </include>
+
+    <!-- Kitchen counter / cabinet against the BOTTOM (-Y) wall of this room.
+         book_shelf stands in as a counter unit (0.28 deep x 0.8 wide x 2.02 -
+         tall; used here as a cabinet block). Pushed flush to inner wall face at
+         y=-4.0: half-depth 0.14 => centre y=-3.85. -->
+    <include>
+      <name>dining_counter</name>
+      <uri>model://rcw26_sink</uri>
+      <static>1</static>
+      <pose>1.161 -3.986 0.0 0.0 0.0 3.1416</pose>
+    </include>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ROOM 2: LIVING ROOM   (Bottom-Right quadrant, centre ≈ [+2, -2])       -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- 2-seater sofa against the BOTTOM (-Y) wall. sofa faces +Y (into room). -->
+    <include>
+      <name>living_sofa</name>
+      <uri>model://rcw26_sofa</uri>
+      <static>1</static>
+      <pose>-2.184 -3.881 0.0 0.0 0.0 3.1416</pose>
+    </include>
+
+    <!-- Small side table next to the sofa (tall_table as a lamp/side stand). -->
+    <include>
+      <name>living_side_table</name>
+      <uri>model://rcw26_side_table</uri>
+      <static>1</static>
+      <pose>-0.346 -4.038 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ROOM 3: BEDROOM   (Top-Right quadrant, centre ≈ [+2, +2])              -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Double bed toward the TOP (+Y) of the room. Local bed mesh is scaled
+         0.5 on X; placed long-axis along X. Pushed toward the top wall. -->
+    <include>
+      <name>bedroom_bed</name>
+      <uri>model://rcw26_bed</uri>
+      <static>1</static>
+      <pose>1.174 0.644 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Wardrobe / dresser at the FOOT of the bed (toward room centre, -Y of
+         the bed). book_shelf stands in as a wardrobe block. -->
+    <include>
+      <name>bedroom_wardrobe</name>
+      <uri>model://rcw26_refrigerator</uri>
+      <static>1</static>
+      <pose>3.969 -0.661 0.0 0.0 0.0 -1.5708</pose>
+    </include>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ROOM 4: KITCHEN / STORAGE   (Top-Left quadrant, centre ≈ [-2, +2])     -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- Prep area: a couple of counter/table units against the TOP (+Y) wall.
+         Inner top-wall face at y=+4.0; long_table top depth ~ keep centre at
+         y=3.55 so it sits flush without clipping. -->
+    <include>
+      <name>kitchen_prep_a</name>
+      <uri>model://rcw26_kitchen_table</uri>
+      <static>1</static>
+      <pose>2.587 -2.023 0.0 0.0 0.0 1.5708</pose>
+    </include>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ADDED FIXTURES (positions are placeholders — user will adjust)         -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+
+    <!-- Dishwasher: LEFT of the sink. Sink is at (1.500,-3.986) yaw=pi; placed
+         beside it along the -Y wall at lower X (one sink-width over). -->
+    <include>
+      <name>dishwasher</name>
+      <uri>model://rcw26_dishwasher_close</uri>
+      <static>1</static>
+      <pose>2.741 -3.986 0.0 0.0 0.0 3.1416</pose>
+    </include>
+
+    <!-- TV stand: in front of the sofa. Sofa at (-2.184,-3.712) yaw=pi; placed
+         ~1 m toward room interior (+Y). -->
+    <include>
+      <name>tv_stand</name>
+      <uri>model://rcw26_tv_stand</uri>
+      <static>1</static>
+      <pose>-3.193 -0.257 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Empty room (top-left KITCHEN quadrant, -X/+Y): washing machine
+         (door-closed model), laundry basket, and laundry desk. Adjust freely. -->
+    <include>
+      <name>washing_machine</name>
+      <uri>model://rcw26_washing_machine</uri>
+      <static>0</static>
+      <pose>-1.708 3.920 0.0 0.0 0.0 0.0</pose>
+    </include>
+    <include>
+      <name>laundry_basket</name>
+      <uri>model://rcw26_laundry_basket</uri>
+      <static>0</static>
+      <pose>-0.765 3.941 0.0 0.0 0.0 0.0</pose>
+    </include>
+    <include>
+      <name>laundry_desk</name>
+      <uri>model://rcw26_laundry_desk</uri>
+      <static>1</static>
+      <pose>-2.988 3.913 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Extra trashbin near the kitchen table (kitchen_prep_a at 2.777,-2.023). -->
+    <include>
+      <name>kitchen_trashbin</name>
+      <uri>model://rcw26_trashbin</uri>
+      <static>1</static>
+      <pose>-2.970 0.323 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Two cabinets / bookshelves from tmc_wrs_gz_worlds (resolved via
+         GZ_SIM_RESOURCE_PATH). Tall bookshelf + low stair-like drawer cabinet.
+         Placeholder poses against walls — user will adjust. -->
+    <include>
+      <name>bookshelf</name>
+      <uri>model://wrc_bookshelf</uri>
+      <static>1</static>
+      <pose>-3.687 0.309 0.0 0.0 0.0 3.1416</pose>
+    </include>
+
+    <!-- Copies duplicated in the GUI -->
+    <include>
+      <name>bookshelf_1</name>
+      <uri>model://wrc_bookshelf</uri>
+      <static>1</static>
+      <pose>0.312 -0.570 0.0 0.0 0.0 1.5708</pose>
+    </include>
+    <include>
+      <name>kitchen_trashbin_1</name>
+      <uri>model://rcw26_trashbin</uri>
+      <static>1</static>
+      <pose>3.936 -4.160 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+  </world>
+</sdf>
