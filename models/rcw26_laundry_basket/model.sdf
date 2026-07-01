@@ -11,11 +11,11 @@
     <link name="link">
       <pose>0 0 0 0 0 0</pose>
       <inertial>
-        <mass>1.5</mass>
+        <mass>0.3</mass>
         <inertia>
-          <ixx>0.03916</ixx><ixy>0</ixy><ixz>0</ixz>
-          <iyy>0.05986</iyy><iyz>0</iyz>
-          <izz>0.05493</izz>
+          <ixx>0.00783</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.01197</iyy><iyz>0</iyz>
+          <izz>0.01099</izz>
         </inertia>
       </inertial>
       <!-- Collision uses the GLB mesh itself (true basket shape, hollow
