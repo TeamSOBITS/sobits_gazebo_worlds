@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<!-- Door — real-furniture GLB. Y-up; scale=1.9979, roll=1.5708 -> Z-up.
+     Height ~2.00 m, footprint ~0.93x0.17 m. Simple box collision. -->
+<sdf version="1.10">
+  <model name="rcw26_door">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial><mass>20</mass>
+        <inertia><ixx>6.71218</ixx><ixy>0</ixy><ixz>0</ixz><iyy>8.10080</iyy><iyz>0</iyz><izz>1.47965</izz></inertia></inertial>
+      <!-- Collision = door PANEL only (depth 0.06 m), excluding the doorknob
+           that protrudes from both faces (the GLB footprint depth 0.165 m
+           includes the knob). Width 0.928, height 2.0. -->
+      <collision name="collision">
+        <pose>0 0 1.0000 0 0 0</pose>
+        <geometry><box><size>0.928 0.060 2.000</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 1.0000 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_door/meshes/door.glb</uri><scale>1.9979 1.9979 1.9979</scale></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<!-- Cushion — long bolster GLB (0.65 length), laid FLAT the way the user set
+     it in the GUI (baked from model pitch=-90 -> visual roll=1.5708 only).
+     Long axis along Y (0.65), width X (0.339), height Z (0.297) — lies as a
+     low flat bolster. Collision is a plain AXIS-ALIGNED box of those world
+     dims so it MATCHES the visual. Inertia + COM match this box. Non-static. -->
+<sdf version="1.10">
+  <model name="rcw26_cushion">
+    <static>false</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <!-- COM at the CENTRE of the cushion body (z=0.1484), not the link
+           origin. A COM below the body made it topple / refuse to stand still. -->
+      <inertial>
+        <pose>0 0 0.1484 0 0 0</pose>
+        <mass>0.4</mass>
+        <inertia><ixx>0.01702</ixx><ixy>0</ixy><ixz>0</ixz><iyy>0.00676</iyy><iyz>0</iyz><izz>0.01790</izz></inertia>
+      </inertial>
+      <collision name="collision">
+        <pose>0 0 0.1484 0 0 0</pose>
+        <geometry><box><size>0.339 0.650 0.297</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0.1484 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_cushion/meshes/cushion.glb</uri><scale>0.6509 0.6509 0.6509</scale></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
