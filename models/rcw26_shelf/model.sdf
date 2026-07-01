@@ -8,49 +8,11 @@
       <pose>0 0 0 0 0 0</pose>
       <inertial><mass>25</mass>
         <inertia><ixx>8.68457</ixx><ixy>0</ixy><ixz>0</ixz><iyy>10.02435</iyy><iyz>0</iyz><izz>1.70725</izz></inertia></inertial>
-      <!-- Multiple simple box collisions forming an OPEN shelf (2 side panels
-           + back panel + 7 horizontal boards) so items can rest on the levels
-           and the interior isn't a solid block. Panel thickness 0.02.
-           Footprint 0.855 x 0.297, height 2.02. -->
-      <collision name="col_side_pos">
-        <pose>0.417 0 1.010 0 0 0</pose>
-        <geometry><box><size>0.02 0.297 2.020</size></box></geometry>
-      </collision>
-      <collision name="col_side_neg">
-        <pose>-0.417 0 1.010 0 0 0</pose>
-        <geometry><box><size>0.02 0.297 2.020</size></box></geometry>
-      </collision>
-      <collision name="col_back">
-        <pose>0 -0.138 1.010 0 0 0</pose>
-        <geometry><box><size>0.855 0.02 2.020</size></box></geometry>
-      </collision>
-      <collision name="col_shelf0">
-        <pose>0 0 0.010 0 0 0</pose>
-        <geometry><box><size>0.855 0.297 0.02</size></box></geometry>
-      </collision>
-      <collision name="col_shelf1">
-        <pose>0 0 0.343 0 0 0</pose>
-        <geometry><box><size>0.855 0.297 0.02</size></box></geometry>
-      </collision>
-      <collision name="col_shelf2">
-        <pose>0 0 0.677 0 0 0</pose>
-        <geometry><box><size>0.855 0.297 0.02</size></box></geometry>
-      </collision>
-      <collision name="col_shelf3">
-        <pose>0 0 1.010 0 0 0</pose>
-        <geometry><box><size>0.855 0.297 0.02</size></box></geometry>
-      </collision>
-      <collision name="col_shelf4">
-        <pose>0 0 1.343 0 0 0</pose>
-        <geometry><box><size>0.855 0.297 0.02</size></box></geometry>
-      </collision>
-      <collision name="col_shelf5">
-        <pose>0 0 1.677 0 0 0</pose>
-        <geometry><box><size>0.855 0.297 0.02</size></box></geometry>
-      </collision>
-      <collision name="col_shelf6">
-        <pose>0 0 2.010 0 0 0</pose>
-        <geometry><box><size>0.855 0.297 0.02</size></box></geometry>
+      <!-- Collision uses the GLB mesh itself (true open-shelf shape). Same
+           pose/scale as the visual. -->
+      <collision name="collision">
+        <pose>0 0 1.0100 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_shelf/meshes/shelf.glb</uri><scale>2.0178 2.0178 2.0178</scale></mesh></geometry>
       </collision>
       <visual name="visual">
         <pose>0 0 1.0100 1.5708 0 0</pose>
