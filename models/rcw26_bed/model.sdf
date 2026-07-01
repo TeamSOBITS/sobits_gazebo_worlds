@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <!-- Bed (GLB) — real-furniture GLB variant. GLB unit-normalized + Y-up;
-     uniform scale=2.0 -> real size, roll=1.5708 corrects Y-up->Z-up.
-     World footprint ~2.0x1.01 m, height ~0.47 m. Box collision approximates mesh. -->
+     uniform scale=2.1349 -> real size, roll=1.5708 corrects Y-up->Z-up.
+     World footprint ~2.135x1.078 m, height 0.50 m. Box collision approximates mesh. -->
 <sdf version="1.10">
   <model name="rcw26_bed">
     <static>true</static>
@@ -13,12 +13,12 @@
           <iyy>10.55225</iyy><iyz>0</iyz><izz>12.55025</izz></inertia>
       </inertial>
       <collision name="collision">
-        <pose>0 0 0.2350 0 0 0</pose>
-        <geometry><box><size>2.000 1.010 0.470</size></box></geometry>
+        <pose>0 0 0.2500 0 0 0</pose>
+        <geometry><box><size>2.135 1.078 0.500</size></box></geometry>
       </collision>
       <visual name="visual">
-        <pose>0 0 0.2350 1.5708 0 0</pose>
-        <geometry><mesh><uri>model://rcw26_bed/meshes/bed.glb</uri><scale>2.0 2.0 2.0</scale></mesh></geometry>
+        <pose>0 0 0.2500 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_bed/meshes/bed.glb</uri><scale>2.1349 2.1349 2.1349</scale></mesh></geometry>
       </visual>
     </link>
   </model>
