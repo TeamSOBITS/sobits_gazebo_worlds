@@ -1,6 +1,6 @@
 <a name="readme-top"></a>
 
-[JA](README.md) | [EN](README.en.md)
+[EN](README.md) | [JA](README.ja.md)
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
@@ -12,77 +12,83 @@
 
 # SOBITS Gazebo Worlds
 
-<!--目次-->
+<!-- Table of contents -->
 <details>
-   <summary>目次</summary>
+   <summary>Table of Contents</summary>
    <ol>
     <li>
-      <a href="#概要">概要</a>
+      <a href="#overview">Overview</a>
     </li>
     <li>
-      <a href="#セットアップ">セットアップ</a>
+      <a href="#setup">Setup</a>
       <ul>
-        <li><a href="#環境条件">環境条件</a></li>
-        <li><a href="#インストール方法">インストール方法</a></li>
+        <li><a href="#requirements">Requirements</a></li>
+        <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
     <li>
-    <a href="#実行・操作方法">実行・操作方法</a>
+    <a href="#usage">Usage</a>
       <ul>
-        <li><a href="#固定worldを起動">固定Worldを起動</a></li>
-        <li><a href="#ランダムworldを起動">ランダムWorldを起動</a></li>
-        <li><a href="#ランタイムでランダムworldを再生成">ランタイムでランダムWorldを再生成</a></li>
+        <li><a href="#launch-a-fixed-world">Launch a Fixed World</a></li>
+        <li><a href="#launch-a-random-world">Launch a Random World</a></li>
+        <li><a href="#regenerate-a-random-world-at-runtime">Regenerate a Random World at Runtime</a></li>
       </ul>
     </li>
     <li>
-    <a href="#新しいWorld作成">新しいWorld作成</a>
+    <a href="#creating-a-new-world">Creating a New World</a>
       <ul>
-        <li><a href="#配置エリアyamlを作成">配置エリアYAMLを作成</a></li>
-        <li><a href="#ランダム生成launchを使う">ランダム生成launchを使う</a></li>
+        <li><a href="#create-a-placement-area-yaml">Create a Placement-Area YAML</a></li>
+        <li><a href="#use-the-random-generation-launch">Use the Random-Generation Launch</a></li>
       </ul>
     </li>
-    <li><a href="#対応家具リスト">対応家具リスト</a></li>
-    <li><a href="#マイルストーン">マイルストーン</a></li>
-    <li><a href="#参考文献">参考文献</a></li>
+    <li>
+    <a href="#worlds-and-furniture-models">Worlds and Furniture Models</a>
+      <ul>
+        <li><a href="#supported-furniture-list">Supported Furniture List</a></li>
+        <li><a href="#adding-a-new-glb-furniture-model">Adding a New GLB Furniture Model</a></li>
+      </ul>
+    </li>
+    <li><a href="#milestones">Milestones</a></li>
+    <li><a href="#references">References</a></li>
    </ol>
 </details>
 
 
-<!--レポジトリの概要-->
-## 概要
+<!-- Repository overview -->
+## Overview
 
-ignition Gazeboのファイルを複数含んだリポジトリ．
-特に，家具を自由にカスタマイズできるような構成となっている．
+A repository bundling multiple Gazebo (ignition) world files.
+It is structured so that furniture can be freely customized.
 
-現在は以下の機能に対応している．
+The following features are currently supported:
 
-- 固定の家具レイアウトを持つWorldの起動
-- YCB物体のランダム配置
-- YAMLによる配置面設定
-- 家具モデルの`model.sdf`からの配置面サイズ・高さ推定
-- 棚の`plate1` / `plate2` / `plate3`のような複数面指定
-- `allowed_categories`による物体カテゴリ制限
-- `human_count`による`gz_human_sim`人モデルの自動スポーン
-- GPSRコマンドに応じた物体・人の追加スポーン
-- follow系GPSRタスクに応じた人テレオペ起動
-- 生成したWorldの保存
-- ROS 2サービスによるランダム物体のランタイム再生成
+- Launching worlds with fixed furniture layouts
+- Random placement of YCB objects
+- Placement-surface configuration via YAML
+- Placement-surface size/height estimation from a furniture model's `model.sdf`
+- Multi-surface specification for shelves (e.g. `plate1` / `plate2` / `plate3`)
+- Object-category restriction via `allowed_categories`
+- Automatic spawning of `gz_human_sim` human models via `human_count`
+- Additional spawning of objects/people from GPSR commands
+- Human teleop launch for follow-type GPSR tasks
+- Saving generated worlds
+- Runtime regeneration of random objects via ROS 2 services
 
 > [!TODO]
-> GUIで家具を配置したり色を着せ替えたりしながら家具を配置できるようにする予定．
+> Planned: place and re-color furniture interactively through a GUI.
 
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
-<!-- セットアップ -->
-## セットアップ
+<!-- Setup -->
+## Setup
 
-ここで，本レポジトリのセットアップ方法について説明します．
+This section explains how to set up this repository.
 
-### 環境条件
+### Requirements
 
-まず，以下の環境を整えてから，次のインストール段階に進んでください．
+First prepare the following environment, then proceed to the installation step.
 
 | System  | Version |
 | ------------- | ------------- |
@@ -91,80 +97,80 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 | Gazebo | ignition |
 
 > [!NOTE]
-> `Ubuntu`や`ROS`のインストール方法に関しては，[SOBIT Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)に参照してください．
+> For how to install `Ubuntu` and `ROS`, refer to the [SOBIT Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6).
 
-### インストール方法
+### Installation
 
-1. ROSの`src`フォルダに移動します．
+1. Move to the `src` folder of your ROS workspace.
    ```sh
    $ cd ~/colcon_ws/src/
    ```
-2. 本レポジトリをcloneします．
+2. Clone this repository.
    ```sh
    $ git clone -b humble-devel https://github.com/TeamSOBITS/sobits_gazebo_worlds.git
    ```
-3. レポジトリの中へ移動します．
+3. Move into the repository.
    ```sh
    $ cd sobits_gazebo_worlds/
    ```
-4. 依存パッケージをインストールします．
+4. Install the dependencies.
    ```sh
    $ bash install.sh
    ```
-5. パッケージをコンパイルします．
+5. Build the package.
    ```sh
    $ cd ~/colcon_ws/
    $ colcon build --symlink-install
    ```
 
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
-<!-- 実行・操作方法 -->
-## 実行・操作方法
+<!-- Usage -->
+## Usage
 
-### 固定Worldを起動
+### Launch a Fixed World
 
-1. worldファイルを指定\
-   [world.launch.py](launch/world.launch.py)の`world_file_path`を指定する．\
-   worldファイルは[このフォルダ](worlds/)に存在する．
+1. Specify the world file\
+   Set `world_file_path` in [world.launch.py](launch/world.launch.py).\
+   World files live in [this folder](worlds/).
 
-2. [world.launch.py](launch/world.launch.py)というlaunchファイルを起動
+2. Launch the [world.launch.py](launch/world.launch.py) launch file.
    ```sh
    $ ros2 launch sobits_gazebo_worlds world.launch.py
    ```
-   これによってGazeboを起動することができます．
+   This starts Gazebo.
 
-3. [任意] ロボットをGazebo環境内で動かしてみよう\
-   Gazebo対応しているロボットのリポジトリから，Gazeboのworldファイルを指定．\
-   また，ロボットの初期位置も設定することもできるので注意．
+3. [Optional] Try driving a robot inside the Gazebo environment\
+   From a Gazebo-compatible robot repository, point it to the Gazebo world file.\
+   Note that you can also set the robot's initial pose.
 
-### ランダムWorldを起動
+### Launch a Random World
 
-[random_world.launch.py](launch/random_world.launch.py)を用いることで，固定家具をベースにYCB物体と人をランダム配置したWorldを生成して起動できる．
+Using [random_world.launch.py](launch/random_world.launch.py), you can generate and launch a world that randomly places YCB objects and people on top of the fixed furniture base.
 
 ```sh
 $ ros2 launch sobits_gazebo_worlds random_world.launch.py
 ```
 
-主な引数は以下の通り．
+The main arguments are as follows.
 
 | Argument | Description |
 | --- | --- |
-| `base_world` | ベースとなるworldファイル |
-| `placement_config` | 配置面YAML |
-| `models_root` | YCBモデルのルートディレクトリ |
-| `seed` | ランダムシード |
-| `object_count` | ランダム配置するYCB物体数 |
-| `human_count` | 生成する人モデル数 |
-| `human_model` | `person_standing` などの人モデル名 |
-| `task_command` | GPSRタスク文に基づいて追加スポーンを行うコマンド文字列 |
-| `gpsr_groq_model` | `groq_ros`経由で使用するモデル名 |
-| `save_world` | 生成worldを保存するかどうか |
-| `output_world_name` | 保存するworld名．拡張子省略時は`.world.xacro`が自動付与される |
+| `base_world` | Base world file |
+| `placement_config` | Placement-surface YAML |
+| `models_root` | Root directory of the YCB models |
+| `seed` | Random seed |
+| `object_count` | Number of YCB objects to place randomly |
+| `human_count` | Number of human models to spawn |
+| `human_model` | Human model name, e.g. `person_standing` |
+| `task_command` | Command string that triggers extra spawns based on a GPSR task sentence |
+| `gpsr_groq_model` | Model name used via `groq_ros` |
+| `save_world` | Whether to save the generated world |
+| `output_world_name` | Name of the saved world; if the extension is omitted, `.world.xacro` is appended automatically |
 
-例:
+Example:
 
 ```sh
 $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
@@ -173,7 +179,7 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
     seed:=42
 ```
 
-生成worldを保存する例:
+Example that saves the generated world:
 
 ```sh
 $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
@@ -181,9 +187,9 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
     output_world_name:=rcjo2025_version_1
 ```
 
-この場合，`worlds/rcjo2025_version_1.world.xacro`に保存される．
+In this case it is saved to `worlds/rcjo2025_version_1.world.xacro`.
 
-GPSRコマンドに基づいて追加スポーンする例:
+Example that spawns extra items from a GPSR command:
 
 ```sh
 $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
@@ -192,10 +198,10 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
     human_count:=2
 ```
 
-この機能を使うときは，事前に`groq_ros`の`groq_action`サーバを起動しておく必要がある．
-物体は配置エリアYAMLに定義された`room_name#furniture_name`に従って追加され，人は対象の部屋の家具近傍に`gz_human_sim`で追加される．
+To use this feature, the `groq_action` server of `groq_ros` must be running beforehand.
+Objects are added according to the `room_name#furniture_name` defined in the placement-area YAML, and people are added near the furniture of the target room via `gz_human_sim`.
 
-follow系タスクの例:
+Example of a follow-type task:
 
 ```sh
 $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
@@ -203,45 +209,45 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
     object_count:=15
 ```
 
-この場合，対象の人は`enable_teleop:=true`で起動され，`sobits_teleop`経由で操作できる．
+In this case the target person is launched with `enable_teleop:=true` and can be operated via `sobits_teleop`.
 
-### ランタイムでランダムWorldを再生成
+### Regenerate a Random World at Runtime
 
-`random_world.launch.py`では，起動後にランダム配置されたYCB物体だけを削除・再生成するROS 2サービスが利用できる．
-Gazeboやロボットを再起動せずに，ランダムレイアウトを更新できる．
+With `random_world.launch.py`, ROS 2 services are available to delete and regenerate only the randomly placed YCB objects after launch.
+You can update the random layout without restarting Gazebo or the robot.
 
-利用可能なサービス:
+Available services:
 
 | Service | Type | Description |
 | --- | --- | --- |
-| `/random_world/regenerate` | `std_srvs/srv/Trigger` | 現在のランダム物体を削除して再生成する |
-| `/sobits_gazebo_worlds/change_world` | `std_srvs/srv/Trigger` | `/random_world/regenerate`と同じ動作 |
-| `/random_world/clear` | `std_srvs/srv/Trigger` | 現在のランダム物体だけを削除する |
+| `/random_world/regenerate` | `std_srvs/srv/Trigger` | Delete the current random objects and regenerate them |
+| `/sobits_gazebo_worlds/change_world` | `std_srvs/srv/Trigger` | Same behavior as `/random_world/regenerate` |
+| `/random_world/clear` | `std_srvs/srv/Trigger` | Delete only the current random objects |
 
-基本的な使い方:
+Basic usage:
 
-1. まずランダムWorldを起動する．
+1. First launch a random world.
 
    ```sh
    $ ros2 launch sobits_gazebo_worlds random_world.launch.py
    ```
 
-2. ランダム物体をすべて削除する．
+2. Delete all random objects.
 
    ```sh
    $ ros2 service call /random_world/clear std_srvs/srv/Trigger {}
    ```
 
-3. 新しいランダム配置を生成する．
+3. Generate a new random layout.
 
    ```sh
    $ ros2 service call /random_world/regenerate std_srvs/srv/Trigger {}
    ```
 
-`/random_world/regenerate`は，ランダム配置されたYCB物体のみを対象とする．
-ロボット本体や固定家具，ベースWorldは削除されない．
+`/random_world/regenerate` targets only the randomly placed YCB objects.
+The robot itself, the fixed furniture, and the base world are not deleted.
 
-決定的に再生成したい場合は，サービス呼び出し前に`random_world_manager`のパラメータを変更する．
+To regenerate deterministically, change the `random_world_manager` parameters before calling the service.
 
 ```sh
 $ ros2 param set /random_world_manager seed "123"
@@ -249,43 +255,43 @@ $ ros2 param set /random_world_manager object_count 20
 $ ros2 service call /random_world/regenerate std_srvs/srv/Trigger {}
 ```
 
-非決定的な再生成に戻す場合:
+To return to non-deterministic regeneration:
 
 ```sh
 $ ros2 param set /random_world_manager seed ""
 ```
 
-主なランタイムパラメータ:
+Main runtime parameters:
 
 | Parameter | Description |
 | --- | --- |
-| `seed` | 空文字なら非決定的，再現したいときは整数文字列を指定 |
-| `object_count` | 再生成時に配置するYCB物体数 |
-| `pause_physics_during_reconfigure` | 削除・再スポーン中に物理演算を停止するか |
+| `seed` | Non-deterministic when empty; specify an integer string to reproduce a layout |
+| `object_count` | Number of YCB objects placed on regeneration |
+| `pause_physics_during_reconfigure` | Whether to pause physics during deletion/re-spawning |
 
 > [!IMPORTANT]
-> このランタイム再生成機能は`random_world.launch.py`の起動を前提としている．
-> `ros2 launch sobit_home_bringup gz_minimal.launch.py`と`ros2 launch sobits_gazebo_worlds random_world.launch.py`は，どちらもGazeboを起動するため，同じシミュレーションに対して同時に使わないこと．
+> This runtime-regeneration feature assumes that `random_world.launch.py` is running.
+> `ros2 launch sobit_home_bringup gz_minimal.launch.py` and `ros2 launch sobits_gazebo_worlds random_world.launch.py` both start Gazebo, so do not use them on the same simulation at the same time.
 
 > [!NOTE]
-> `gz_minimal.launch.py`側で同じ機能を使いたい場合は，既存のGazeboに対して`/world/<world_name>/create`，`/remove`，`/control`のbridgeと`random_world_manager.py`を追加する構成にする必要がある．
+> To use the same feature on the `gz_minimal.launch.py` side, you need to add bridges for `/world/<world_name>/create`, `/remove`, and `/control`, plus `random_world_manager.py`, against the existing Gazebo instance.
 
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
-<!-- 新しいWorld作成 -->
-## 新しいWorld作成
+<!-- Creating a new world -->
+## Creating a New World
 
-新しいWorldの作り方．
+How to create a new world.
 
-[TODO] GUIによって簡単に家具を配置できるようにする．
+[TODO] Make it easy to place furniture through a GUI.
 
-### 配置エリアYAMLを作成
+### Create a Placement-Area YAML
 
-配置エリアは[config/placement](config/placement/)以下のYAMLで指定する．
+Placement areas are specified in YAML files under [config/placement](config/placement/).
 
-例:
+Example:
 
 ```yaml
 placement_areas:
@@ -300,24 +306,24 @@ placement_areas:
     min_object_spacing: 0.10
 ```
 
-主なキーは以下の通り．
+The main keys are as follows.
 
 | Key | Description |
 | --- | --- |
-| `name` | world内の家具include名 |
-| `surface_name` | 棚などで使用する面名．未指定時は`top` |
-| `edge_margin` | 家具の端から除外する安全マージン[m] |
-| `min_object_spacing` | 同一面上の物体間最小距離[m] |
-| `allowed_categories` | 許可するYCBカテゴリ．未指定時は全カテゴリ |
-| `selection_weight` | その面が選ばれやすくなる重み |
-| `max_objects` | その面に置ける最大物体数 |
+| `name` | Furniture include name in the world |
+| `surface_name` | Surface name used for shelves etc.; defaults to `top` if unspecified |
+| `edge_margin` | Safety margin [m] excluded from the furniture edge |
+| `min_object_spacing` | Minimum distance [m] between objects on the same surface |
+| `allowed_categories` | Allowed YCB categories; all categories if unspecified |
+| `selection_weight` | Weight that makes a surface more likely to be chosen |
+| `max_objects` | Maximum number of objects that can be placed on the surface |
 
-`size`や`z`は通常書く必要がない．\
-家具の`model.sdf`とworld中のposeから自動で推定される．
+You usually do not need to write `size` or `z`.\
+They are estimated automatically from the furniture's `model.sdf` and its pose in the world.
 
-### ランダム生成launchを使う
+### Use the Random-Generation Launch
 
-作成したYAMLを指定して起動する．
+Launch with the YAML you created.
 
 ```sh
 $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
@@ -327,16 +333,26 @@ $ ros2 launch sobits_gazebo_worlds random_world.launch.py \
     human_count:=2
 ```
 
-人モデルは`floor_plane`上の空き領域から自動サンプリングされ，家具と重ならないように配置される．
-GPSRタスクで追加される人モデルも，同様に対象の部屋の周辺で衝突回避しながら配置される．
+Human models are automatically sampled from the free area on the `floor_plane` and placed so they do not overlap furniture.
+People added by GPSR tasks are likewise placed around the target room while avoiding collisions.
 
 
-<!-- 対応家具リスト -->
-## 対応家具リスト
+<!-- Worlds and furniture models -->
+## Worlds and Furniture Models
 
-このリポジトリが保有する家具のリスト．
+World files live in [worlds/](worlds/) and furniture models in [models/](models/).
+Worlds are written as `.world.xacro` and can be launched directly (fixed layout) or fed to
+the random-placement launch as a base world. The models fall into two families:
 
-主な対応家具・面:
+- **Legacy / shared models** (unprefixed) such as `long_table`, `tall_table`,
+  `dining_table`, `shelf`, `sofa`, `bed`, `kachaka_shelf` — used by the older arenas and by
+  the random-placement system.
+- **Real-furniture GLB models** (`rcw26_*`) — embedded-texture GLB meshes scaled to
+  real-world dimensions, described below.
+
+### Supported Furniture List
+
+Furniture with defined placement surfaces (used by the random-placement system):
 
 - `long_table`
 - `tall_table`
@@ -348,26 +364,56 @@ GPSRタスクで追加される人モデルも，同様に対象の部屋の周�
   - `plate2`
   - `plate3`
 
-補足:
+Notes:
 
-- 家具面が`box`形状として定義されている場合は，自動でサイズ推定される
-- `sofa` / `bed` / `kachaka_shelf`のような一部mesh家具は，人スポーン用に保守的なfootprintを内部で使用している
-
-<!-- マイルストーン -->
-## マイルストーン
-
-- [x] 固定家具をベースにしたランダムYCB配置
-- [x] `gz_human_sim`による人モデルスポーン
-- [ ] GUIベースの家具配置編集
-
-現時点のバッグや新規機能の依頼を確認するために[Issueページ][issues-url] をご覧ください．
-
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+- When a furniture surface is defined as a `box` shape, its size is estimated automatically.
+- Some mesh furniture such as `sofa` / `bed` / `kachaka_shelf` uses a conservative internal footprint for human spawning.
 
 
+### Adding a New GLB Furniture Model
 
-<!-- 参考文献 -->
-## 参考文献
+The source GLBs live in `real_furniture/` (untracked). To add one:
+
+1. **Fix the GLB so it renders in Gazebo ogre2.** Raw GLBs from the source set are broken
+   three ways and must all be fixed (edit in place with `pygltflib`, **not** `trimesh`,
+   which rescales the geometry to a cube):
+   - Add per-vertex **`NORMAL`** — without normals there is no lighting and the mesh
+     renders **black**.
+   - Set **`metallicFactor = 0`** — a fully-metallic surface with no environment map
+     renders **black**.
+   - Add a texture **sampler** (and strip `baseColorFactor` / `emissiveFactor` /
+     `alphaMode`, set `doubleSided=true`) — without a sampler the texture is not bound and
+     the mesh renders **white**.
+2. Package it as `models/rcw26_<name>/` with `model.config`, `model.sdf`, and
+   `meshes/<name>.glb`. GLBs are **Y-up** and unit-normalized, so `model.sdf` applies
+   `roll=1.5708` (Y-up -> Z-up) and a uniform `<scale> = target_height / GLB_Y_extent`,
+   with the collision/visual raised by `height/2` to rest on the floor.
+3. Reference it in a world with `<uri>model://rcw26_<name></uri>`.
+
+> [!NOTE]
+> For the floor, include the existing `wrc_ground_plane` model rather than authoring a
+> custom plane — its material carries the `<diffuse>` term that makes the wood texture
+> render (a bare `<plane>` + `albedo_map` renders black).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- Milestones -->
+## Milestones
+
+- [x] Random YCB placement on top of fixed furniture
+- [x] Human-model spawning via `gz_human_sim`
+- [ ] GUI-based furniture placement editing
+
+See the [Issues page][issues-url] to check current bugs and feature requests.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- References -->
+## References
 
 * [ROS Jazzy](http://wiki.ros.org/jazzy)
 * [WRS Gazebo](---)
