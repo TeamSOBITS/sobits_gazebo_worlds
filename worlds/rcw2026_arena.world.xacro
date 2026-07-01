@@ -378,7 +378,7 @@
       <name>arena_door_lower</name>
       <uri>model://rcw26_door</uri>
       <static>1</static>
-      <pose>-4.425 -2.175 0.0 0.0 0.0 1.5708</pose>
+      <pose>-4.425 -2.175 0.0 0.0 0.0 -1.5708</pose>
     </include>
     <include>
       <name>arena_door_upper</name>
