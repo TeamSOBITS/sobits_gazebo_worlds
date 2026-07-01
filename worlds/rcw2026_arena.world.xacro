@@ -303,21 +303,21 @@
         <static>true</static>
         <pose>${cx} ${cy} 0 0 0 0</pose>
         <link name="jamb_a">
-          <pose>0 0.45 1.0 0 0 0</pose>
+          <pose>0 0.45 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry>
             <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
           </visual>
         </link>
         <link name="jamb_b">
-          <pose>0 -0.45 1.0 0 0 0</pose>
+          <pose>0 -0.45 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry>
             <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
           </visual>
         </link>
         <link name="header">
-          <pose>0 0 1.95 0 0 0</pose>
+          <pose>0 0 ${dfh - hh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${dfd} 0.95 ${hh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${dfd} 0.95 ${hh}</size></box></geometry>
             <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
@@ -332,21 +332,21 @@
         <static>true</static>
         <pose>${cx} ${cy} 0 0 0 0</pose>
         <link name="jamb_a">
-          <pose>0.45 0 1.0 0 0 0</pose>
+          <pose>0.45 0 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry>
             <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
           </visual>
         </link>
         <link name="jamb_b">
-          <pose>-0.45 0 1.0 0 0 0</pose>
+          <pose>-0.45 0 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry>
             <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
           </visual>
         </link>
         <link name="header">
-          <pose>0 0 1.95 0 0 0</pose>
+          <pose>0 0 ${dfh - hh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>0.95 ${dfd} ${hh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>0.95 ${dfd} ${hh}</size></box></geometry>
             <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
@@ -368,32 +368,24 @@
 
     <!-- ════════════════════════════════════════════════════════════════════ -->
     <!-- ARENA DOORS (entrance / exit) — CLOSED, blocking the 2 exterior         -->
-    <!-- openings on the left wall (x=-4.425).                                   -->
+    <!-- openings on the left wall (x=-4.425). Now the rcw26_door GLB model.     -->
     <!--                                                                        -->
-    <!-- RoboCup start condition: robot waits outside until the door opens. So  -->
-    <!-- each door is a static panel filling its 0.95 m opening (LiDAR sees it   -->
-    <!-- as an obstacle). To "open" the door at run start, delete or slide the   -->
-    <!-- model aside in the GUI / via gz-live-editor set_pose.                   -->
-    <!--                                                                        -->
-    <!-- Panel: 0.95 wide (along Y) x 0.05 thick (along X) x 2.0 tall, centred   -->
-    <!-- in the wall plane (x=-4.425) at the opening centre (y=-2.175 / +2.175). -->
-    <!-- Each is its OWN model so it can be opened independently.                -->
+    <!-- RoboCup start condition: robot waits outside until the door opens.      -->
+    <!-- yaw=1.5708 aligns the door's ~0.93 m width with the 0.95 m opening      -->
+    <!-- (which runs along Y). To "open", delete/slide the model.               -->
     <!-- ════════════════════════════════════════════════════════════════════ -->
-    <xacro:macro name="arena_door" params="name cy">
-      <model name="${name}">
-        <static>true</static>
-        <pose>-4.425 ${cy} 1.0 0 0 0</pose>
-        <link name="panel">
-          <collision name="c"><geometry><box><size>0.05 0.95 2.0</size></box></geometry></collision>
-          <visual name="v"><geometry><box><size>0.05 0.95 2.0</size></box></geometry>
-            <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse>
-              <specular>0.1 0.1 0.1 1</specular></material>
-          </visual>
-        </link>
-      </model>
-    </xacro:macro>
-    <xacro:arena_door name="arena_door_lower" cy="-2.175"/>
-    <xacro:arena_door name="arena_door_upper" cy="2.175"/>
+    <include>
+      <name>arena_door_lower</name>
+      <uri>model://rcw26_door</uri>
+      <static>1</static>
+      <pose>-4.425 -2.175 0.0 0.0 0.0 1.5708</pose>
+    </include>
+    <include>
+      <name>arena_door_upper</name>
+      <uri>model://rcw26_door</uri>
+      <static>1</static>
+      <pose>-4.425 2.175 0.0 0.0 0.0 1.5708</pose>
+    </include>
 
     <!-- ════════════════════════════════════════════════════════════════════ -->
     <!-- INTERIOR DOORS REMOVED.                                                 -->
@@ -448,7 +440,7 @@
       <name>dining_counter</name>
       <uri>model://rcw26_sink</uri>
       <static>1</static>
-      <pose>1.161 -3.986 0.0 0.0 0.0 3.1416</pose>
+      <pose>1.161 -4.007 0.0 0.0 0.0 3.1416</pose>
     </include>
 
     <!-- ════════════════════════════════════════════════════════════════════ -->
@@ -514,7 +506,7 @@
       <name>dishwasher</name>
       <uri>model://rcw26_dishwasher_close</uri>
       <static>1</static>
-      <pose>2.741 -3.986 0.0 0.0 0.0 3.1416</pose>
+      <pose>2.741 -4.113 0.0 0.0 0.0 3.1416</pose>
     </include>
 
     <!-- TV stand: in front of the sofa. Sofa at (-2.184,-3.712) yaw=pi; placed
@@ -560,7 +552,7 @@
          Placeholder poses against walls — user will adjust. -->
     <include>
       <name>bookshelf</name>
-      <uri>model://wrc_bookshelf</uri>
+      <uri>model://rcw26_shelf</uri>
       <static>1</static>
       <pose>-3.687 0.309 0.0 0.0 0.0 3.1416</pose>
     </include>
@@ -568,7 +560,7 @@
     <!-- Copies duplicated in the GUI -->
     <include>
       <name>bookshelf_1</name>
-      <uri>model://wrc_bookshelf</uri>
+      <uri>model://rcw26_shelf</uri>
       <static>1</static>
       <pose>0.312 -0.570 0.0 0.0 0.0 1.5708</pose>
     </include>
@@ -577,6 +569,51 @@
       <uri>model://rcw26_trashbin</uri>
       <static>1</static>
       <pose>3.936 -4.160 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ADDED DECOR (placeholder poses — user will adjust)                     -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+
+    <!-- TV on top of the tv_stand (tv_stand at -3.193,-0.257; stand top ~0.55).
+         TV raised to sit on the stand surface. -->
+    <include>
+      <name>tv</name>
+      <uri>model://rcw26_tv</uri>
+      <static>1</static>
+      <pose>-3.193 -0.257 0.545 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Living-room plant next to the sofa (sofa at -2.184,-3.881). -->
+    <include>
+      <name>livingroom_plant</name>
+      <uri>model://rcw26_plant_tall</uri>
+      <static>1</static>
+      <pose>-4.014 -3.988 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Bedroom plant (bed at 1.174,0.644). -->
+    <include>
+      <name>bed_plant</name>
+      <uri>model://rcw26_plant_mid</uri>
+      <static>1</static>
+      <pose>4.022 0.340 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Stand in the bedroom. -->
+    <include>
+      <name>bedroom_stand</name>
+      <uri>model://rcw26_stand</uri>
+      <static>1</static>
+      <pose>3.962 3.900 0.0 0.0 0.0 0.0</pose>
+    </include>
+
+    <!-- Cushion over the bed (non-static). Bed top ~0.47; cushion placed on it. -->
+    <include>
+      <name>bed_cushion</name>
+      <uri>model://rcw26_cushion</uri>
+      <static>0</static>
+      <pose>0.869 0.656 0.470 0.0 0.0 1.0472</pose>
     </include>
 
   </world>
