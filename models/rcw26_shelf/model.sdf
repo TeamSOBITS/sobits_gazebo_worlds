@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<!-- Shelf — real-furniture GLB. Y-up; scale=2.0178, roll=1.5708 -> Z-up.
+     Height ~2.02 m, footprint ~0.86x0.30 m. Simple box collision. -->
+<sdf version="1.10">
+  <model name="rcw26_shelf">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial><mass>25</mass>
+        <inertia><ixx>8.68457</ixx><ixy>0</ixy><ixz>0</ixz><iyy>10.02435</iyy><iyz>0</iyz><izz>1.70725</izz></inertia></inertial>
+      <!-- Collision uses the GLB mesh itself (true open-shelf shape). Same
+           pose/scale as the visual. -->
+      <collision name="collision">
+        <pose>0 0 1.0100 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_shelf/meshes/shelf.glb</uri><scale>2.0178 2.0178 2.0178</scale></mesh></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 1.0100 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_shelf/meshes/shelf.glb</uri><scale>2.0178 2.0178 2.0178</scale></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

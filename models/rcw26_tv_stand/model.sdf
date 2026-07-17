@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<!-- Tv Stand — real-furniture GLB. Y-up; scale=1.1209, roll=1.5708 -> Z-up.
+     World footprint ~1.12x0.29 m, height ~0.45 m. -->
+<sdf version="1.10">
+  <model name="rcw26_tv_stand">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial><mass>15</mass>
+        <inertia><ixx>0.35902</ixx><ixy>0</ixy><ixz>0</ixz><iyy>1.82652</iyy><iyz>0</iyz><izz>1.67929</izz></inertia>
+      </inertial>
+      <collision name="collision">
+        <pose>0 0 0.2725 0 0 0</pose>
+        <geometry><box><size>1.359 0.353 0.545</size></box></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0.2725 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_tv_stand/meshes/tv_stand.glb</uri><scale>1.3576 1.3576 1.3576</scale></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>

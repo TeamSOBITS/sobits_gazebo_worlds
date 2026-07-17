@@ -1,0 +1,27 @@
+<?xml version="1.0" ?>
+<!-- Sofa (GLB) — real-furniture GLB variant. GLB unit-normalized + Y-up;
+     uniform scale=1.8 -> real size, roll=1.5708 corrects Y-up->Z-up.
+     World footprint ~1.8x0.77 m, height ~0.56 m. Box collision approximates mesh. -->
+<sdf version="1.10">
+  <model name="rcw26_sofa">
+    <static>true</static>
+    <link name="link">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>40</mass>
+        <inertia><ixx>3.02167</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>11.84533</iyy><iyz>0</iyz><izz>12.77633</izz></inertia>
+      </inertial>
+      <!-- Collision uses the GLB mesh itself (true sofa shape). Same
+           pose/scale as the visual. -->
+      <collision name="collision">
+        <pose>0 0 0.3250 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_sofa/meshes/sofa.glb</uri><scale>2.1035 2.1035 2.1035</scale></mesh></geometry>
+      </collision>
+      <visual name="visual">
+        <pose>0 0 0.3250 1.5708 0 0</pose>
+        <geometry><mesh><uri>model://rcw26_sofa/meshes/sofa.glb</uri><scale>2.1035 2.1035 2.1035</scale></mesh></geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
