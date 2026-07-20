@@ -24,7 +24,9 @@ def generate_launch_description():
             'World filename under sobits_gazebo_worlds/worlds. '
             'Options: precomp2025_arena.world.xacro, '
             'rcjo2025_arena.world.xacro, '
-            'rcjo2026_arena.world.xacro'
+            'rcjo2026_arena.world.xacro, '
+            'follower_env.world.xacro, '
+            'physics.world.xacro, '
         ),
     )
 
