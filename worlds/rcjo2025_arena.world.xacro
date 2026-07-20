@@ -233,5 +233,9 @@
 
     <!-- RANDOM_YCB_OBJECTS -->
 
+    <!-- 人物(human_actor)はworldに焼き込まず、起動後にGUIサイドバーの
+         Human Control パネル（gz_human_simパッケージ, guide_robotの
+         GuiderRobotManagerと同じ方式）からspawnする運用に変更。 -->
+
   </world>
 </sdf>

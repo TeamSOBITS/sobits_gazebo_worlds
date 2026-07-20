@@ -1,0 +1,13 @@
+# Gazebo環境の設定
+world_name: "rcjo2026_arena"
+marker_name: "interactive_marker"
+
+# 保存先の設定
+# 絶対パス（例: /home/ユーザー名/Desktop/saved_positions）での指定がおすすめです
+save_directory: "./saved_positions"
+
+# マーカーの初期スポーン位置 (x, y, z)
+initial_position:
+  x: 0.0
+  y: 0.0
+  z: 0.0

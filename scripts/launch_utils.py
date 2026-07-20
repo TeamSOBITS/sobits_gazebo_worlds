@@ -8,6 +8,14 @@ def build_gz_resource_path(package_share):
         os.path.join(package_share, 'models'),
     ]
 
+    # Human models (walking actors and static poses) live in gz_human_sim.
+    try:
+        model_paths.append(
+            os.path.join(get_package_share_directory('gz_human_sim'), 'models')
+        )
+    except PackageNotFoundError:
+        pass
+
     # Source-checkout fallback: find sibling tmc_wrs_gz source tree
     src_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     tmc_source_models = os.path.join(src_root, 'tmc_wrs_gz', 'tmc_wrs_gz_worlds', 'models')
