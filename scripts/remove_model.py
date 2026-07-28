@@ -1,9 +1,9 @@
 import subprocess
 
 
-def remove_model(model_name: str) -> None:
+def remove_model(target: str) -> None:
     # 削除用リクエスト文を綺麗に改行して構築
-    req_string = f'name: "{model_name}" ' f"type: MODEL"
+    req_string = f'name: "{target}" ' f"type: MODEL"
 
     command = [
         "gz",
@@ -24,7 +24,7 @@ def remove_model(model_name: str) -> None:
     result = subprocess.run(
         command, capture_output=True, text=True, check=True
     )
-    print(f"Successfully removed model: {model_name}")
+    print(f"Successfully removed model: {target}")
 
 
 if __name__ == "__main__":
@@ -49,6 +49,6 @@ if __name__ == "__main__":
 
     # 関数の実行
     try:
-        remove_model(model_name=args.model_name)
+        remove_model(target=args.target)
     except subprocess.CalledProcessError as e:
         print(f"Error executing Gazebo service: {e.stderr}")

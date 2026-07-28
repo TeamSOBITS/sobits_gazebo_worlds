@@ -35,15 +35,15 @@ import os
 import argparse
 
 
-def create_model_directory(model_name, file_type):
+def create_model_directory(new_model_type, file_type):
     """
     Create a model directory with the necessary files and folders.
 
     Args:
-        model_name (str): Name of the model.
+        new_model_type (str): Name of the model.
         file_type (str): File type (e.g., obj, glb).
     """
-    base_path = os.path.join("models", model_name)
+    base_path = os.path.join("models", new_model_type)
 
     if os.path.exists(base_path):
         raise FileExistsError(f"モデルディレクトリ '{base_path}' は既に存在します。")
@@ -61,7 +61,7 @@ def create_model_directory(model_name, file_type):
             config_file.write(f"""
 <?xml version="1.0"?>
 <model>
-  <name>{model_name}</name>
+  <name>{new_model_type}</name>
   <version>1.0</version>
   <sdf version="1.10">model.sdf</sdf>
   <author>
@@ -69,7 +69,7 @@ def create_model_directory(model_name, file_type):
     <email>author@example.com</email>
   </author>
   <description>
-    A description of the {model_name} model.
+    A description of the {new_model_type} model.
   </description>
 </model>
 """)
@@ -80,7 +80,7 @@ def create_model_directory(model_name, file_type):
             sdf_file.write(f"""
 <?xml version="1.0"?>
 <sdf version="1.10">
-  <model name="{model_name}">
+  <model name="{new_model_type}">
     <static>false</static>
     <link name="link">
       <!-- 90度回転を防止 -->
@@ -88,14 +88,14 @@ def create_model_directory(model_name, file_type):
       <visual name="visual">
         <geometry>
           <mesh>
-            <uri>model://{model_name}/meshes/{model_name}.{file_type}</uri>
+            <uri>model://{new_model_type}/meshes/{new_model_type}.{file_type}</uri>
           </mesh>
         </geometry>
       </visual>
       <collision name="collision">
         <geometry>
           <mesh>
-            <uri>model://{model_name}/meshes/{model_name}.{file_type}</uri>
+            <uri>model://{new_model_type}/meshes/{new_model_type}.{file_type}</uri>
           </mesh>
         </geometry>
       </collision>
@@ -105,9 +105,9 @@ def create_model_directory(model_name, file_type):
 """)
 
         print(f"'{base_path}' のテンプレートを作成しました。以下の作業を行ってください。")
-        print(f"1. 'models/{model_name}/meshes' フォルダに {model_name}.{file_type} を配置（ファイル名注意）")
+        print(f"1. 'models/{new_model_type}/meshes' フォルダに {new_model_type}.{file_type} を配置（ファイル名注意）")
         print("2. colcon build を実行")
-        print(f"xacro に記述する uri は <uri>model://{model_name}</uri> です")
+        print(f"xacro に記述する uri は <uri>model://{new_model_type}</uri> です")
 
     except Exception as e:
         print(f"Error creating model directory: {e}")
@@ -115,12 +115,12 @@ def create_model_directory(model_name, file_type):
 
 def main():
     parser = argparse.ArgumentParser(description="Create a Gazebo model directory structure.")
-    parser.add_argument("model_name", type=str, help="Name of the model to create.")
+    parser.add_argument("new_model_type", type=str, help="Name of the model to create.")
     parser.add_argument("file_type", type=str, choices=["obj", "glb", "stl"], help="File type for the model (e.g., obj, glb, stl).")
 
     args = parser.parse_args()
 
-    create_model_directory(args.model_name, args.file_type)
+    create_model_directory(args.new_model_type, args.file_type)
 
 
 if __name__ == "__main__":

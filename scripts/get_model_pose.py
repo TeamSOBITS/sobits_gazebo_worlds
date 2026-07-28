@@ -5,10 +5,10 @@ import math
 from geometry_msgs.msg import Pose
 
 
-def get_model_pose_raw(model_name: str) -> list[float]:
+def get_model_pose_raw(target: str) -> list[float]:
     """Gazeboコマンドを実行して、生の6つの数値 [x, y, z, r, p, y] を取得する関数"""
     # 実行するGazeboコマンドの構築
-    command = ["gz", "model", "-m", model_name, "-p"]
+    command = ["gz", "model", "-m", target, "-p"]
 
     # コマンドを実行し、標準出力を取得
     result = subprocess.run(
@@ -22,7 +22,7 @@ def get_model_pose_raw(model_name: str) -> list[float]:
 
     if len(numbers) < 2:
         raise RuntimeError(
-            f"モデル '{model_name}' の位置・姿勢データをパースできませんでした。"
+            f"モデル '{target}' の位置・姿勢データをパースできませんでした。"
         )
 
     # 1つ目のマッチが XYZ、2つ目のマッチが RPY (ラジアン)
@@ -32,9 +32,9 @@ def get_model_pose_raw(model_name: str) -> list[float]:
     return xyz + rpy
 
 
-def get_model_pose(model_name: str) -> Pose:
+def get_model_pose(target: str) -> Pose:
     # 共通の共通処理（コマンド実行とパース）を呼び出す
-    xyzrpy = get_model_pose_raw(model_name)
+    xyzrpy = get_model_pose_raw(target)
 
     # Poseオブジェクトの作成
     pose = Pose()
@@ -86,10 +86,10 @@ if __name__ == "__main__":
 
     try:
         # 関数の実行
-        current_pose = get_model_pose(model_name=args.model_name)
+        current_pose = get_model_pose(target=args.target)
 
         # 結果を分かりやすく表示
-        print(f"--- {args.model_name} の現在のPose ---")
+        print(f"--- {args.target} の現在のPose ---")
         print(
             f"Position:    x={current_pose.position.x:.4f}, y={current_pose.position.y:.4f}, z={current_pose.position.z:.4f}"
         )

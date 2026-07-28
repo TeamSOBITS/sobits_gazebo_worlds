@@ -41,7 +41,7 @@ def get_bbox(model_path: str):
 def main():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("model")
+    parser.add_argument("model_path")
 
     parser.add_argument(
         "--expected-height",
@@ -58,7 +58,7 @@ def main():
 
     args = parser.parse_args()
 
-    bbox_min, bbox_max = get_bbox(args.model)
+    bbox_min, bbox_max = get_bbox(args.model_path)
 
     dx = bbox_max[0] - bbox_min[0]
     dy = bbox_max[1] - bbox_min[1]
@@ -89,7 +89,7 @@ def main():
     else:
         # auto: choose largest axis
         vals = {"X": dx, "Y": dy, "Z": dz}
-        axis = max(vals, key=vals.get)
+        axis = max(vals, key=lambda k: vals[k])
         raw_height = vals[axis]
 
     # -----------------------------

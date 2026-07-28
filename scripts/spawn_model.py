@@ -3,11 +3,11 @@ import subprocess
 from geometry_msgs.msg import Pose
 
 
-def spawn_model(model_id: str, model_name: str, pose: Pose) -> None:
+def spawn_model(model_type: str, new_model_name: str, pose: Pose) -> None:
     """gz コマンドをラッパーして出現コマンドを実行"""
     req_string = (
-        f'name: "{model_name}" '
-        f'sdf_filename: "model://{model_id}" '
+        f'name: "{new_model_name}" '
+        f'sdf_filename: "model://{model_type}" '
         f"pose {{ "
         f"  position {{ "
         f"    x: {pose.position.x} "
@@ -137,8 +137,8 @@ if __name__ == "__main__":
     # 関数の実行
     try:
         spawn_model(
-            model_id=args.model_id,
-            model_name=args.model_name,
+            model_type=args.model_type,
+            new_model_name=args.new_model_name,
             pose=target_pose,
         )
     except subprocess.CalledProcessError as e:

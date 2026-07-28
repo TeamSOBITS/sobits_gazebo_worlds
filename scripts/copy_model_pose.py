@@ -3,28 +3,28 @@ import subprocess
 from scripts.get_model_pose import get_model_pose_raw
 
 
-def get_model_pose_tag(model_name: str) -> str:
+def get_model_pose_tag(target: str) -> str:
     """モデル名から姿勢情報を取得して `<pose>` タグとして返す。
 
     Args:
-        model_name: Gazebo のモデル名。
+        target: Gazebo のモデル名。
     """
-    x, y, z, roll, pitch, yaw = get_model_pose_raw(model_name)
+    x, y, z, roll, pitch, yaw = get_model_pose_raw(target)
     tag = f"<pose>{x} {y} {z} {roll} {pitch} {yaw}</pose>"
 
     return tag
 
 
-def copy_model_pose_tag(model_name: str) -> None:
+def copy_model_pose_tag(target: str) -> None:
     """モデル名から姿勢情報を取得して `<pose>` タグとしてクリップボードにコピーする。
 
     Args:
-        model_name: Gazebo のモデル名。
+        target: Gazebo のモデル名。
 
     Memo:
         今後，何かをコピーする機能として utils とかにしてもいいかも．
     """
-    tag = get_model_pose_tag(model_name)
+    tag = get_model_pose_tag(target)
 
     try:
         # Linuxで最も一般的な xsel コマンドでのコピーを試みる
@@ -57,7 +57,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    copy_model_pose_tag(args.model_name)
+    copy_model_pose_tag(args.target)
 
 
 if __name__ == "__main__":

@@ -4,19 +4,19 @@ from scripts.spawn_model import spawn_model
 
 
 def replace_model(
-    target_model_name: str, new_model_id: str, new_model_name: str
+    target: str, model_type: str, model_name: str
 ) -> None:
     # 1. 既存のモデルの現在のPose（位置と姿勢）を取得
-    pose = get_model_pose(target_model_name)
+    pose = get_model_pose(target)
 
     # 2. 古いモデルをワールドから削除
-    remove_model(target_model_name)
+    remove_model(target)
 
     # 3. 同じPoseに、新しいモデルIDと名前で生成
-    spawn_model(new_model_id, new_model_name, pose)
+    spawn_model(model_type, model_name, pose)
 
     print(
-        f"Successfully replaced '{target_model_name}' with '{new_model_name}' ({new_model_id})"
+        f"Successfully replaced '{target}' with '{model_name}' ({model_type})"
     )
 
 
@@ -58,9 +58,9 @@ if __name__ == "__main__":
     # 関数の実行
     try:
         replace_model(
-            target_model_name=args.target,
-            new_model_id=args.new_id,
-            new_model_name=args.new_name,
+            target=args.target,
+            model_type=args.new_id,
+            model_name=args.new_name,
         )
     except subprocess.CalledProcessError as e:
         print(f"Error during model replacement (Gazebo Service Failed): {e.stderr}")
