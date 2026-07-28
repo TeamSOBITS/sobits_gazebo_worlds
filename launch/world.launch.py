@@ -19,13 +19,12 @@ from launch_utils import build_gz_resource_path
 def generate_launch_description():
     world_arg = DeclareLaunchArgument(
         'world',
-        default_value='rcw2026_arena.world.xacro',
+        default_value='rcjo2025_arena.world.xacro',
         description=(
             'World filename under sobits_gazebo_worlds/worlds. '
             'Options: precomp2025_arena.world.xacro, '
             'rcjo2025_arena.world.xacro, '
-            'rcjo2026_arena.world.xacro, '
-            'rcw2026_arena.world.xacro'
+            'rcjo2026_arena.world.xacro'
         ),
     )
 
