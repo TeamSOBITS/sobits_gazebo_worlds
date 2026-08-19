@@ -26,11 +26,6 @@
         name="gz::sim::systems::Sensors">
     </plugin>
 
-    <scene>
-      <background>0.0 0.1 0.1 0.0</background>
-      <grid>false</grid>
-    </scene>
-
     <physics name="4ms" type="ignored">
         <max_step_size>0.004</max_step_size>
         <real_time_update_rate>250</real_time_update_rate>
@@ -51,6 +46,12 @@
       </attenuation>
       <direction>-0.5 0.1 -0.9</direction>
     </light>
+
+    <!-- background color -->
+    <scene>
+      <background>1.0 1.0 1.0 1.0</background>
+      <grid>false</grid>
+    </scene>
 
     <!--gravity-->
     <gravity>0 0 -9.8</gravity>
@@ -82,26 +83,26 @@
       <pose relative_to=''>-5 -5 0 0 0 0</pose>
     </include>
 
-    <!-- Global Models -->
-
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- Living Room / Laundry Area                                          -->
-    <!--                                                                     -->
-    <!-- Layout changes vs rcjo2025_arena:                                   -->
-    <!--   - Removed: counter, kachaka_shelf_left, kachaka_shelf_right       -->
-    <!--   - Added:   washing_machine + laundry_basket + pile_of_clothes     -->
-    <!--              in the freed kachaka-shelf area (x≈1.4, y=-3.5)       -->
-    <!--   - Folding table = existing long_table (x=2.0, y=-0.5)            -->
-    <!-- ═══════════════════════════════════════════════════════════════════ -->
-
-    <!-- Folding table — the long white table already in this room.
-         Robot folds T-shirts here. No change in pose from original world. -->
-
+    <!-- Furniture Models-->
     <include>
       <name>tall_table_1</name>
       <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
       <static>1</static>
       <pose relative_to=''>2.2 3.5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>tall_table_2</name>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
+      <static>1</static>
+      <pose relative_to=''>2.2 0.0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>tall_table_3</name>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
+      <static>1</static>
+      <pose relative_to=''>2.2 -3.5 0 0 0 0</pose>
     </include>
 
     <include>
@@ -112,31 +113,10 @@
     </include>
 
     <include>
-      <name>chair_4</name>
-      <uri>model://chair</uri>
-      <static>1</static>
-      <pose relative_to=''>2.2 4.1 0.0 0.0 0.0 -1.57</pose>
-    </include>
-
-    <include>
-        <name>tall_table_2</name>
-        <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
-        <static>1</static>
-        <pose relative_to=''>2.2 0.0 0 0 0 0</pose>
-    </include>
-
-    <include>
       <name>chair_2</name>
       <uri>model://chair</uri>
       <static>1</static>
       <pose relative_to=''>2.8 0.0 0.0 0.0 0.0 3.14</pose>
-    </include>
-
-    <include>
-        <name>tall_table_3</name>
-        <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Cafe table</uri>
-        <static>1</static>
-        <pose relative_to=''>2.2 -3.5 0 0 0 0</pose>
     </include>
 
     <include>
@@ -147,46 +127,34 @@
     </include>
 
     <include>
+      <name>chair_4</name>
+      <uri>model://chair</uri>
+      <static>1</static>
+      <pose relative_to=''>2.2 4.1 0.0 0.0 0.0 -1.57</pose>
+    </include>
+
+
+    <include>
       <name>chair_5</name>
       <uri>model://chair</uri>
       <static>1</static>
       <pose relative_to=''>2.2 -4.1 0.0 0.0 0.0 1.57</pose>
     </include>
-    <!-- Study Room -->
-
-
-    <!-- Dining Room -->
-    <!-- <include>
-      <name>counter</name>
-      <uri>model://dining_table</uri>
-      <static>1</static>
-      <pose relative_to=''>-2.0 -2.25 0.0 0.0 0.0 0.0</pose>
-    </include> -->
 
     <include>
       <name>counter_1</name>
-      <uri>model://long_table</uri>
-      <static>1</static>
-      <pose relative_to=''>-2.0 -1.75 0.0 0.0 0.0 1.57</pose>
-    </include>
-
-    <include>
-      <name>counter_2</name>
       <uri>model://dining_table</uri>
       <static>1</static>
       <pose relative_to=''>-3.5 -2.25 0.0 0.0 0.0 1.57</pose>
     </include>
 
-
+    <!-- ceiling models -->
     <model name="ceiling">
       <static>true</static>
-      <!-- レストランの広さに合わせて位置(pose)を調整してください -->
-      <!-- [X, Y, Z, Roll, Pitch, Yaw] Z=3.0 で高さ3メートルの天井になります -->
       <pose>2.8 0.0 4.0 0 0 0</pose> 
       <link name="ceiling_link">
         <collision name="ceiling_collision">
           <geometry>
-            <!-- 天井のサイズ [横幅, 奥行き, 厚み] -->
             <box><size>10.0 10.0 0.1</size></box>
           </geometry>
         </collision>
@@ -195,7 +163,6 @@
             <box><size>10.0 10.0 0.1</size></box>
           </geometry>
           <material>
-            <!-- 天井の色（白系） -->
             <ambient>0.9 0.9 0.9 1.0</ambient>
             <diffuse>0.9 0.9 0.9 1.0</diffuse>
           </material>
@@ -203,61 +170,72 @@
       </link>
     </model>
 
+    <!-- Light models -->
     <light type="point" name="ceiling_light_1">
-      <!-- 天井(Z=3.0)の少し下(Z=2.8)に光源を浮かせる -->
       <pose>2.8 0.0 2.8 0 0 0</pose>
-      
-      <!-- 光の色（白色: RGBA） -->
       <diffuse>0.8 0.8 0.8 1.0</diffuse>
       <specular>0.2 0.2 0.2 1.0</specular>
-      
-      <!-- 光の減衰設定（届く距離や強さ） -->
       <attenuation>
-        <range>15.0</range>     <!-- 光が届く最大距離(m) -->
-        <linear>0.05</linear>   <!-- 線形減衰 -->
-        <constant>0.8</constant><!-- 基本の強さ -->
+        <range>15.0</range>
+        <linear>0.05</linear>
+        <constant>0.8</constant>
         <quadratic>0.01</quadratic>
       </attenuation>
-      
-      <!-- 影の有効化（重い場合は false に） -->
       <cast_shadows>true</cast_shadows>
     </light>
 
+
+    <!-- People models -->
     <include>
       <name>person_1</name>
-      <!-- <uri>model://sitting_owada</uri> -->
-      <!-- <uri>model://person_sitting</uri> -->
-      <!-- <uri>model://sitting_woman</uri> -->
-      <!-- <uri>model://sitting_man_young</uri> -->
-      <!-- <uri>model://right_hand_raising_owada</uri> -->
-      <uri>model://left_hand_raising_owada</uri>
+      <uri>model://person_sitting</uri>
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
       <pose>2.2 -4.1 0.7 0 0 1.57</pose>
     </include>
 
         <include>
       <name>person_2</name>
-      <!-- <uri>model://sitting_owada</uri> -->
-      <uri>model://person_sitting</uri>
-      <!-- <uri>model://sitting_woman</uri> -->
-      <!-- <uri>model://sitting_man_young</uri> -->
-      <!-- <uri>model://right_hand_raising_owada</uri> -->
-      <!-- <uri>model://left_hand_raising_owada</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <uri>model://owada_left_hand_raising</uri>
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
       <pose>2.7 -3.5 0.7 0 0 3.14</pose>
     </include>
 
         <include>
       <name>person_3</name>
-      <!-- <uri>model://sitting_owada</uri> -->
-      <!-- <uri>model://person_sitting</uri> -->
-      <!-- <uri>model://sitting_woman</uri> -->
-      <!-- <uri>model://sitting_man_young</uri> -->
-      <!-- <uri>model://right_hand_raising_owada</uri> -->
-      <uri>model://left_hand_raising_owada</uri>
+      <uri>model://person_sitting</uri>
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
       <pose>2.7 0.0 0.7 0 0 3.14</pose>
     </include>
+
+    <include>
+      <name>person_4</name>
+      <uri>model://person_sitting</uri>
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <static>1</static>
+      <pose>2.7 3.5 0.7 0 0 3.14</pose>
+    </include>
+
+    <include>
+      <name>person_5</name>
+      <uri>model://person_sitting</uri>
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <static>1</static>
+      <pose>2.2 4.1 0.7 0 0 -1.57</pose>
+    </include>
+
     <!-- RANDOM_YCB_OBJECTS -->
 
   </world>
