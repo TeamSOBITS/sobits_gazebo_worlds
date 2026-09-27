@@ -1,0 +1,114 @@
+<?xml version="1.0" ?>
+<!--
+  rcjo2025_frame as a xacro macro.
+
+  model.sdf next to this file is the same geometry frozen at the closed
+  settings, kept so anything loading model://rcjo2025_frame still works. This
+  macro is the parameterized version: worlds that want an open/closed choice
+  xacro:include it and call rcjo2025_frame instead of using <include><uri>.
+
+  Wall footprint (X/Y) is fixed; only the height scales. Walls always sit on
+  the floor, so each slab centre is wall_h/2 and the ceiling underside lands
+  flush at wall_h.
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="rcjo2025_frame"
+               params="name:=rcjo2025_frame wall_h:=0.8 ceiling:=false lights:=false">
+
+    <!-- Slab centre and the derived ceiling/lamp heights. -->
+    <xacro:property name="cz"      value="${wall_h/2.0}"/>
+    <!-- Same grey as rcw2026_arena's struct_c. -->
+    <xacro:property name="struct_c" value="0.75 0.75 0.75 1"/>
+    <xacro:property name="ceil_t"  value="0.1"/>
+    <xacro:property name="ceil_cz" value="${wall_h + ceil_t/2.0}"/>
+    <xacro:property name="lamp_z"  value="${wall_h - 0.1}"/>
+
+    <!-- One wall slab: X/Y from the floor plan, Z from wall_h. -->
+    <xacro:macro name="frame_wall" params="wname x y yaw sx sy">
+      <collision name="${wname}">
+        <pose>${x} ${y} ${cz} 0.0 0.0 ${yaw}</pose>
+        <geometry><box><size>${sx} ${sy} ${wall_h}</size></box></geometry>
+      </collision>
+      <visual name="${wname}_v">
+        <pose>${x} ${y} ${cz} 0.0 0.0 ${yaw}</pose>
+        <geometry><box><size>${sx} ${sy} ${wall_h}</size></box></geometry>
+        <material>
+          <ambient>${struct_c}</ambient>
+          <diffuse>${struct_c}</diffuse>
+          <specular>0.2 0.2 0.2 1.0</specular>
+        </material>
+      </visual>
+    </xacro:macro>
+
+    <model name="${name}">
+      <static>true</static>
+      <link name="link">
+        <inertial>
+          <mass>1.0</mass>
+        </inertial>
+
+        <!-- Outer perimeter. -->
+        <xacro:frame_wall wname="wall_front_left"   x="-5.0" y="3.0"   yaw="0.0"  sx="0.1" sy="2.0"/>
+        <xacro:frame_wall wname="wall_front_center" x="-5.0" y="-0.5"  yaw="0.0"  sx="0.1" sy="3.0"/>
+        <xacro:frame_wall wname="wall_front_right"  x="-5.0" y="-3.5"  yaw="0.0"  sx="0.1" sy="1.0"/>
+        <xacro:frame_wall wname="wall_side_right"   x="0.0"  y="-4.05" yaw="1.57" sx="0.1" sy="10.1"/>
+        <xacro:frame_wall wname="wall_side_left"    x="0.0"  y="4.05"  yaw="1.57" sx="0.1" sy="10.1"/>
+        <xacro:frame_wall wname="wall_back"         x="5.0"  y="0.0"   yaw="0.0"  sx="0.1" sy="8.0"/>
+
+        <!-- Interior partitions. -->
+        <xacro:frame_wall wname="inside_wall_side_left"             x="0.0"    y="3.5"  yaw="0.0"  sx="0.1" sy="1.0"/>
+        <xacro:frame_wall wname="inside_wall_side_right"            x="0.0"    y="-3.5" yaw="0.0"  sx="0.1" sy="1.0"/>
+        <xacro:frame_wall wname="inside_wall_front"                 x="-4.0"   y="0.0"  yaw="1.57" sx="0.1" sy="2.0"/>
+        <xacro:frame_wall wname="inside_wall_back"                  x="-4.0"   y="0.0"  yaw="1.57" sx="0.1" sy="2.0"/>
+        <xacro:frame_wall wname="inside_wall_center_horizontal"     x="0.0"    y="0.0"  yaw="0.0"  sx="0.1" sy="2.0"/>
+        <xacro:frame_wall wname="inside_wall_center_vertical_front" x="-0.525" y="0.0"  yaw="1.57" sx="0.1" sy="0.95"/>
+        <xacro:frame_wall wname="inside_wall_center_vertical_back"  x="2.025"  y="0.0"  yaw="1.57" sx="0.1" sy="3.95"/>
+
+        <!-- Ceiling: underside flush at wall_h. Has collision, so it blocks
+             upward LiDAR/depth rays and occludes an overhead camera. -->
+        <xacro:if value="${ceiling}">
+          <collision name="ceiling">
+            <pose>0.0 0.0 ${ceil_cz} 0.0 0.0 0.0</pose>
+            <geometry><box><size>10.1 8.2 ${ceil_t}</size></box></geometry>
+          </collision>
+          <visual name="ceiling_v">
+            <pose>0.0 0.0 ${ceil_cz} 0.0 0.0 0.0</pose>
+            <geometry><box><size>10.1 8.2 ${ceil_t}</size></box></geometry>
+            <material>
+              <ambient>${struct_c}</ambient>
+              <diffuse>${struct_c}</diffuse>
+              <specular>0.2 0.2 0.2 1.0</specular>
+            </material>
+          </visual>
+        </xacro:if>
+
+        <!-- 3x2 grid of point lights. Lights must be children of <link>:
+             model-scope <light> is invalid in SDF and is silently dropped. -->
+        <xacro:if value="${lights}">
+          <xacro:macro name="frame_light" params="lname x y">
+            <light type="point" name="${lname}">
+              <pose>${x} ${y} ${lamp_z} 0.0 0.0 0.0</pose>
+              <cast_shadows>false</cast_shadows>
+              <diffuse>0.7 0.7 0.68 1.0</diffuse>
+              <specular>0.15 0.15 0.15 1.0</specular>
+              <attenuation>
+                <range>12.0</range>
+                <constant>0.4</constant>
+                <linear>0.08</linear>
+                <quadratic>0.005</quadratic>
+              </attenuation>
+            </light>
+          </xacro:macro>
+
+          <xacro:frame_light lname="ceiling_light_fl" x="-3.0" y="2.0"/>
+          <xacro:frame_light lname="ceiling_light_fr" x="-3.0" y="-2.0"/>
+          <xacro:frame_light lname="ceiling_light_cl" x="0.0"  y="2.0"/>
+          <xacro:frame_light lname="ceiling_light_cr" x="0.0"  y="-2.0"/>
+          <xacro:frame_light lname="ceiling_light_bl" x="3.0"  y="2.0"/>
+          <xacro:frame_light lname="ceiling_light_br" x="3.0"  y="-2.0"/>
+        </xacro:if>
+      </link>
+    </model>
+  </xacro:macro>
+</robot>
