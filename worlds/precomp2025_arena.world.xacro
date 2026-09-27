@@ -10,7 +10,7 @@
   <xacro:property name="closed" value="$(arg closed)" />
   <xacro:include filename="$(find sobits_gazebo_worlds)/models/rcjo2025_frame/frame.xacro" />
 
-  <world name='rcjo2025_arena'>
+  <world name='precomp2025_arena'>
     <plugin
         filename="gz-sim-physics-system"
         name="gz::sim::systems::Physics">
