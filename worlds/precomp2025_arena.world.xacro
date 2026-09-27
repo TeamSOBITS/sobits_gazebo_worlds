@@ -4,6 +4,11 @@
   <xacro:arg name="fast_physics" default="true" />
   <xacro:arg name="trofast_knob" default="true" />
   <xacro:arg name="highrtf" default="false" />
+  <!-- closed:=true -> 2.5 m walls + ceiling + lights;
+       false keeps the original open 0.8 m frame. -->
+  <xacro:arg name="closed" default="false" />
+  <xacro:property name="closed" value="$(arg closed)" />
+  <xacro:include filename="$(find sobits_gazebo_worlds)/models/rcjo2025_frame/frame.xacro" />
 
   <world name='rcjo2025_arena'>
     <plugin
@@ -121,12 +126,9 @@
       <pose relative_to=''>-5 -5 0 0 0 0</pose>
     </include>
 
-    <include>
-      <name>rcjo2025_frame</name>
-      <static>1</static>
-      <uri>model://rcjo2025_frame</uri>
-      <pose relative_to=''>0 0 0 0 0 0</pose>
-    </include>
+    <xacro:rcjo2025_frame name="rcjo2025_frame"
+                          wall_h="${2.5 if closed else 0.8}"
+                          ceiling="${closed}" lights="${closed}"/>
     <!-- Global Models -->
 
 
