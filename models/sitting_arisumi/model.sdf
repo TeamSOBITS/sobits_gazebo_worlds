@@ -1,0 +1,27 @@
+
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="sitting_arisumi">
+    <static>false</static>
+    <link name="link">
+      <!-- 90度回転を防止 & デフォルトで X 軸性方向を向くように -->
+      <pose>0 0 0 1.57 0 3.16</pose>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://sitting_arisumi/meshes/sitting_arisumi.glb</uri>
+            <scale>1.4000 1.4000 1.4000</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sitting_arisumi/meshes/sitting_arisumi.glb</uri>
+            <scale>1.4000 1.4000 1.4000</scale>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
