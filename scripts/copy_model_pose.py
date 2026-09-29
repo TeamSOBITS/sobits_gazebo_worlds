@@ -57,7 +57,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    copy_model_pose_tag(args.target)
+    copy_model_pose_tag(args.model_name)
 
 
 if __name__ == "__main__":

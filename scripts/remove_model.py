@@ -49,6 +49,6 @@ if __name__ == "__main__":
 
     # 関数の実行
     try:
-        remove_model(target=args.target)
+        remove_model(target=args.model_name)
     except subprocess.CalledProcessError as e:
         print(f"Error executing Gazebo service: {e.stderr}")

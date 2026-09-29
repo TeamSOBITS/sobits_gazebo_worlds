@@ -137,8 +137,8 @@ if __name__ == "__main__":
     # 関数の実行
     try:
         spawn_model(
-            model_type=args.model_type,
-            new_model_name=args.new_model_name,
+            model_type=args.model_id,
+            new_model_name=args.model_name,
             pose=target_pose,
         )
     except subprocess.CalledProcessError as e:

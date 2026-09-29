@@ -86,10 +86,10 @@ if __name__ == "__main__":
 
     try:
         # 関数の実行
-        current_pose = get_model_pose(target=args.target)
+        current_pose = get_model_pose(target=args.model_name)
 
         # 結果を分かりやすく表示
-        print(f"--- {args.target} の現在のPose ---")
+        print(f"--- {args.model_name} の現在のPose ---")
         print(
             f"Position:    x={current_pose.position.x:.4f}, y={current_pose.position.y:.4f}, z={current_pose.position.z:.4f}"
         )
