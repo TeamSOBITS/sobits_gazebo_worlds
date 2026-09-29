@@ -17,7 +17,7 @@
       <collision name="collision">
         <geometry>
           <mesh>
-            <uri>model://sitting_owada_2/meshes/sitting_owada.glb</uri>
+            <uri>model://owada_sitting_2/meshes/sitting_owada.glb</uri>
             <scale>1.4000 1.4000 1.4000</scale>
           </mesh>
         </geometry>
