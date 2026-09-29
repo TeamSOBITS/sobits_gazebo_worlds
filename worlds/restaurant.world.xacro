@@ -193,7 +193,7 @@
       <!-- <uri>model://owada_right_hand_raising</uri> -->
       <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
-      <pose>2.2 -4.1 0.7 0 0 1.57</pose>
+      <pose>2.2 -4.1 0.0 0 0 1.57</pose>
     </include>
 
         <include>
@@ -203,7 +203,7 @@
       <!-- <uri>model://owada_right_hand_raising</uri> -->
       <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
-      <pose>2.7 -3.5 0.7 0 0 3.14</pose>
+      <pose>2.7 -3.5 0.0 0 0 3.14</pose>
     </include>
 
         <include>
@@ -213,7 +213,7 @@
       <!-- <uri>model://owada_right_hand_raising</uri> -->
       <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
-      <pose>2.7 0.0 0.7 0 0 3.14</pose>
+      <pose>2.7 0.0 0.0 0 0 3.14</pose>
     </include>
 
     <include>
@@ -223,7 +223,7 @@
       <!-- <uri>model://owada_right_hand_raising</uri> -->
       <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
-      <pose>2.7 3.5 0.7 0 0 3.14</pose>
+      <pose>2.7 3.5 0.0 0 0 3.14</pose>
     </include>
 
     <include>
@@ -233,7 +233,7 @@
       <!-- <uri>model://owada_right_hand_raising</uri> -->
       <!-- <uri>model://owada_sitting</uri> -->
       <static>1</static>
-      <pose>2.2 4.1 0.7 0 0 -1.57</pose>
+      <pose>2.2 4.1 0.0 0 0 -1.57</pose>
     </include>
 
     <!-- RANDOM_YCB_OBJECTS -->
