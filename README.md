@@ -400,6 +400,71 @@ The source GLBs live in `real_furniture/` (untracked). To add one:
 
 
 <!-- Milestones -->
+## Exporting to USD (Isaac Sim) and MJCF (MuJoCo)
+
+[scripts/export_sim_formats.py](scripts/export_sim_formats.py) expands each `.world.xacro`
+(`closed:=false|true`) to SDF, then runs `sdf2usd` (gz-usd) and `sdf2mjcf` (gz-mujoco) with
+this package's `models/`, `tmc_wrs_gz_worlds/models` and `gz_human_sim/models` as resource
+paths. Failures do not stop the run; a summary table is printed and the exit code is non-zero
+if any target failed.
+
+```bash
+USD_PATH=/opt/openusd-24.08 SDF2USD_BIN=<path>/gz-usd/build/bin/sdf2usd \
+SDF2MJCF_BIN=~/venvs/sdf2mjcf/bin/sdf2mjcf \
+python3 scripts/export_sim_formats.py --closed both --models --out export
+```
+
+Use `--dry-run` to only expand the xacro and print the converter commands (`--help` lists
+everything). Narrow the export with:
+
+```bash
+... export_sim_formats.py --formats usd                   # USD only (or --formats mjcf)
+... export_sim_formats.py --worlds rcw2026_arena          # one world
+... export_sim_formats.py --no-worlds --models rcw26_shelf rcw26_door   # two models only
+```
+
+`--models` without names exports every model; unknown names are an error.
+
+```
+export/sdf/<world>[_closed].sdf            expanded SDF
+export/usd/<world>[_closed].usda           (+ materials/ textures)
+export/mjcf/<world>[_closed]/<world>.xml   (+ assets/)
+export/usd/models/<m>/<m>.usda, export/mjcf/models/<m>/<m>.xml   (with --models)
+```
+
+Validate with `scripts/validate_usd.py export/usd` (IsaacLab venv: pxr, optional Newton
+load) and `scripts/validate_mjcf.py export/mjcf` (MuJoCo load, stepping, renders).
+
+**Sharing the assets.** `export/` is not tracked in git (`.gitignore`). Download the
+published assets instead of regenerating them, and publish again after regenerating:
+
+```bash
+python3 scripts/download_sim_assets.py --formats usd --worlds rcw2026_arena --models rcw26_shelf
+python3 scripts/publish_sim_assets.py --tag v1      # needs HF_TOKEN or `hf auth login`; --dry-run lists files
+```
+
+Both default to the dataset `team-sobits/sobits_sim_assets` (`--repo-id`). Publishing writes
+`export/MANIFEST.json` (date, git SHAs, driver command, counts, size) and skips `_renders/` and logs.
+Download narrows by `--formats usd,mjcf,sdf`, `--worlds`, `--models`, takes `--revision`
+(branch or tag) and `--force`, and needs no token for public repos.
+
+**Known limitations**
+- MuJoCo: collision meshes are split into convex parts with CoACD (default; `--no-convex-decomposition` gives single hulls, `--coacd-threshold F` tunes it); plugins
+  are dropped, so doors (`JointPositionController`) are not driven; only diffuse textures
+  are exported.
+- Isaac Sim: lights are scaled x1000 / x30000 to match Gazebo brightness; metalness 0.5
+  is treated as unset.
+- `person_walking` (actor) is not exportable.
+
+**Inertia warning.** Before converting, the driver prints
+`WARNING: <model> link <link>: mass without <inertia>; identity tensor assumed` for every
+non-static link that has a `<mass>` but no `<inertia>` (sdformat then uses 1 kg m^2 per
+axis, which is unrealistic in Gazebo, Isaac and MuJoCo alike), and a similar warning for
+links without any `<inertial>`. Currently affected: `book_shelf`, `chair`, `sofa`,
+`wrc_long_table`, `wrc_tall_table` (mass without inertia), `rcw26_door` (`door_link`;
+`hinge_link` has no inertial) and `floor_plane`. Fix by authoring an `<inertia>` block in the
+model's `model.sdf`.
+
 ## Milestones
 
 - [x] Random YCB placement on top of fixed furniture

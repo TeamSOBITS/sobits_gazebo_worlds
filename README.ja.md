@@ -396,6 +396,67 @@ WorldファイルはXacro（`.world.xacro`）として[worlds/](worlds/)に，�
 
 
 <!-- マイルストーン -->
+## USD（Isaac Sim）・MJCF（MuJoCo）へのエクスポート
+
+[scripts/export_sim_formats.py](scripts/export_sim_formats.py)は各`.world.xacro`
+（`closed:=false|true`）をSDFに展開し，本パッケージの`models/`，`tmc_wrs_gz_worlds/models`，
+`gz_human_sim/models`をリソースパスとして`sdf2usd`（gz-usd）と`sdf2mjcf`（gz-mujoco）を
+実行する．失敗しても処理は継続し，最後にサマリ表を表示する．失敗があれば終了コードは非ゼロ．
+
+```bash
+USD_PATH=/opt/openusd-24.08 SDF2USD_BIN=<path>/gz-usd/build/bin/sdf2usd \
+SDF2MJCF_BIN=~/venvs/sdf2mjcf/bin/sdf2mjcf \
+python3 scripts/export_sim_formats.py --closed both --models --out export
+```
+
+`--dry-run`ではxacro展開と変換コマンドの表示のみ行う（詳細は`--help`）．対象は次で絞れる．
+
+```bash
+... export_sim_formats.py --formats usd                   # USDのみ（--formats mjcfも可）
+... export_sim_formats.py --worlds rcw2026_arena          # 1つのWorldのみ
+... export_sim_formats.py --no-worlds --models rcw26_shelf rcw26_door   # 2モデルのみ
+```
+
+`--models`のみ指定で全モデル．存在しない名前はエラー．
+
+```
+export/sdf/<world>[_closed].sdf            展開済みSDF
+export/usd/<world>[_closed].usda           （+ materials/ テクスチャ）
+export/mjcf/<world>[_closed]/<world>.xml   （+ assets/）
+export/usd/models/<m>/<m>.usda, export/mjcf/models/<m>/<m>.xml   （--models指定時）
+```
+
+検証は`scripts/validate_usd.py export/usd`（IsaacLab venv．pxr，任意でNewton読込）と
+`scripts/validate_mjcf.py export/mjcf`（MuJoCo読込・ステップ実行・レンダリング）で行う．
+
+**アセットの共有** `export/`はgit管理外（`.gitignore`）．再生成せず公開済みアセットをダウンロードして使い，
+再生成後は再度公開する．
+
+```bash
+python3 scripts/download_sim_assets.py --formats usd --worlds rcw2026_arena --models rcw26_shelf
+python3 scripts/publish_sim_assets.py --tag v1      # HF_TOKENまたは`hf auth login`が必要．--dry-runで一覧のみ
+```
+
+どちらも既定のデータセットは`team-sobits/sobits_sim_assets`（`--repo-id`）．公開時は
+`export/MANIFEST.json`（日付・gitのSHA・実行コマンド・個数・サイズ）を書き出し，`_renders/`とログは除外する．
+ダウンロードは`--formats usd,mjcf,sdf`，`--worlds`，`--models`で絞り込め，`--revision`（ブランチ/タグ）と
+`--force`も指定できる．公開リポジトリならトークン不要．
+
+**既知の制限**
+- MuJoCo：衝突メッシュはCoACDで凸分解される（既定．`--no-convex-decomposition`で単一凸包，`--coacd-threshold F`で調整）．プラグインは
+  破棄されるためドア（`JointPositionController`）は駆動されない．テクスチャは拡散色のみ．
+- Isaac Sim：Gazebo相当の明るさにするためライトを×1000／×30000にスケールする．
+  metalness 0.5は未設定として扱う．
+- `person_walking`（アクター）はエクスポート不可．
+
+**慣性の警告** 変換前に，`<mass>`があるのに`<inertia>`がない非静的リンクごとに
+`WARNING: <model> link <link>: mass without <inertia>; identity tensor assumed`を表示する
+（sdformatは各軸1 kg m^2の単位テンソルを使うため，Gazebo・Isaac・MuJoCoいずれでも非現実的な
+挙動になる）．`<inertial>`自体がないリンクにも同様に警告する．現在の該当モデルは
+`book_shelf`，`chair`，`sofa`，`wrc_long_table`，`wrc_tall_table`（慣性なし），
+`rcw26_door`（`door_link`．`hinge_link`は`<inertial>`なし），`floor_plane`．対処は
+各モデルの`model.sdf`に`<inertia>`を記述すること．
+
 ## マイルストーン
 
 - [x] 固定家具をベースにしたランダムYCB配置
