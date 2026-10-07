@@ -443,7 +443,8 @@ python3 scripts/download_sim_assets.py --formats usd --worlds rcw2026_arena --mo
 python3 scripts/publish_sim_assets.py --tag v1      # needs HF_TOKEN or `hf auth login`; --dry-run lists files
 ```
 
-Both default to the dataset `team-sobits/sobits_sim_assets` (`--repo-id`). Publishing writes
+Both default to the dataset `team-sobits/sobits_sim_assets` (`--repo-id`). Publishing copies the dataset card [docs/hf_dataset_card.md](docs/hf_dataset_card.md) to
+`export/README.md` and writes
 `export/MANIFEST.json` (date, git SHAs, driver command, counts, size) and skips `_renders/` and logs.
 Download narrows by `--formats usd,mjcf,sdf`, `--worlds`, `--models`, takes `--revision`
 (branch or tag) and `--force`, and needs no token for public repos.

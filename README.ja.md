@@ -437,7 +437,8 @@ python3 scripts/download_sim_assets.py --formats usd --worlds rcw2026_arena --mo
 python3 scripts/publish_sim_assets.py --tag v1      # HF_TOKENまたは`hf auth login`が必要．--dry-runで一覧のみ
 ```
 
-どちらも既定のデータセットは`team-sobits/sobits_sim_assets`（`--repo-id`）．公開時は
+どちらも既定のデータセットは`team-sobits/sobits_sim_assets`（`--repo-id`）．公開時はデータセットカード[docs/hf_dataset_card.md](docs/hf_dataset_card.md)を
+`export/README.md`にコピーし，
 `export/MANIFEST.json`（日付・gitのSHA・実行コマンド・個数・サイズ）を書き出し，`_renders/`とログは除外する．
 ダウンロードは`--formats usd,mjcf,sdf`，`--worlds`，`--models`で絞り込め，`--revision`（ブランチ/タグ）と
 `--force`も指定できる．公開リポジトリならトークン不要．
