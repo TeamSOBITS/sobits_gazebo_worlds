@@ -8,6 +8,7 @@ Example:
 import argparse
 import datetime
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -16,6 +17,7 @@ from huggingface_hub import HfApi, get_token
 from huggingface_hub.utils import filter_repo_objects
 
 PKG = Path(__file__).resolve().parent.parent
+CARD = PKG / 'docs' / 'hf_dataset_card.md'
 IGNORE = ['*_renders/*', '*.log', '*/__pycache__/*', '.cache/*']
 
 
@@ -39,7 +41,8 @@ def driver_command(export):
 
 
 def select_files(export, formats):
-    allow = ['%s/*' % f for f in formats] + ['sdf/*', 'MANIFEST.json']
+    allow = (['%s/*' % f for f in formats]
+             + ['sdf/*', 'MANIFEST.json', 'README.md'])
     files = [p.relative_to(export).as_posix()
              for p in export.rglob('*') if p.is_file()]
     return sorted(filter_repo_objects(
@@ -84,10 +87,15 @@ def main(argv=None):
     if not export.is_dir():
         sys.exit('error: %s does not exist' % export)
 
+    if CARD.is_file() and not args.dry_run:
+        shutil.copyfile(CARD, export / 'README.md')
     files = select_files(export, formats)
+    if CARD.is_file() and 'README.md' not in files:
+        files.append('README.md')  # dry-run: card is copied at upload
     manifest = build_manifest(export, files)
     for f in files:
-        print('%10d  %s' % ((export / f).stat().st_size, f))
+        src = export / f if (export / f).exists() else CARD
+        print('%10d  %s' % (src.stat().st_size, f))
     print('%d files, %.1f MB -> %s' % (
         len(files), manifest['total_bytes'] / 1e6, args.repo_id))
     print(json.dumps(manifest, indent=2))
@@ -105,7 +113,7 @@ def main(argv=None):
     api.upload_large_folder(
         repo_id=args.repo_id, repo_type='dataset', folder_path=export,
         allow_patterns=['%s/*' % f for f in formats + ['sdf']]
-        + ['MANIFEST.json'], ignore_patterns=IGNORE)
+        + ['MANIFEST.json', 'README.md'], ignore_patterns=IGNORE)
     if args.tag:
         api.create_tag(args.repo_id, tag=args.tag, repo_type='dataset')
     print('uploaded: https://huggingface.co/datasets/%s' % args.repo_id)
