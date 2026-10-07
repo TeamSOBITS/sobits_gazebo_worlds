@@ -22,7 +22,9 @@ def patterns(formats, worlds, models):
         return ['%s/*' % f for f in formats] + ['MANIFEST.json']
     pats = ['MANIFEST.json']
     for fmt in formats:
-        for w in worlds:
+        if fmt == 'usd' and worlds:  # shared textures of all world USDs
+            pats.append('usd/materials/*')
+        for w in worlds:  # mjcf assets live in mjcf/<w>/assets/
             pats += {'usd': ['usd/%s*' % w],
                      'mjcf': ['mjcf/%s/*' % w, 'mjcf/%s_closed/*' % w],
                      'sdf': ['sdf/%s*' % w]}[fmt]
@@ -42,6 +44,8 @@ def main(argv=None):
                     help='comma list of usd,mjcf,sdf')
     ap.add_argument('--worlds', nargs='+', default=[], metavar='NAME')
     ap.add_argument('--models', nargs='+', default=[], metavar='NAME')
+    ap.add_argument('--show-patterns', action='store_true',
+                    help='print the allow_patterns and exit')
     ap.add_argument('--force', action='store_true',
                     help='overwrite existing files')
     args = ap.parse_args(argv)
@@ -50,10 +54,14 @@ def main(argv=None):
     if bad:
         ap.error('unknown format(s): %s' % ', '.join(bad))
 
+    pats = patterns(formats, args.worlds, args.models)
+    if args.show_patterns:
+        print('\n'.join(pats))
+        return 0
     dest = snapshot_download(
         repo_id=args.repo_id, repo_type='dataset', revision=args.revision,
         local_dir=args.dest, force_download=args.force,
-        allow_patterns=patterns(formats, args.worlds, args.models))
+        allow_patterns=pats)
     root = Path(dest)
     files = [p for p in root.rglob('*')
              if p.is_file() and '.cache' not in p.parts]
