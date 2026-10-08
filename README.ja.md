@@ -443,6 +443,18 @@ python3 scripts/publish_sim_assets.py --tag v1      # HF_TOKENまたは`hf auth 
 ダウンロードは`--formats usd,mjcf,sdf`，`--worlds`，`--models`で絞り込め，`--revision`（ブランチ/タグ）と
 `--force`も指定できる．公開リポジトリならトークン不要．
 
+**ロボットアセット** データセットにはロボットごとのアセットも含まれる．ロボット記述リポジトリから
+[urdf2usd_ros](https://github.com/TeamSOBITS/urdf2usd_ros)（USD）と`scripts/usd2mjcf.py`（MJCF）で生成したものを，
+`import_robot_assets.py`が`export/usd/robots/<robot>/`・`export/mjcf/robots/<robot>/`にコピーし，
+`export/robots/<robot>.json`（記述リポジトリのcommit，descriptorのsha256，urdf2usd_rosのcommit，Isaac Simバージョン，日付）を書き出す．
+公開時は`MANIFEST.json`の`robots`に追加され，`--robots`で公開・ダウンロードを絞り込める．
+
+```bash
+python3 scripts/import_robot_assets.py --robot sobit_home     # urdf2usd_ros/output -> export/ + robots/<robot>.json
+python3 scripts/publish_sim_assets.py --dry-run --robots sobit_home --formats usd,mjcf
+python3 scripts/download_sim_assets.py --formats usd,mjcf --robots sobit_home
+```
+
 **既知の制限**
 - MuJoCo：衝突メッシュはCoACDで凸分解される（既定．`--no-convex-decomposition`で単一凸包，`--coacd-threshold F`で調整）．プラグインは
   破棄されるためドア（`JointPositionController`）は駆動されない．テクスチャは拡散色のみ．

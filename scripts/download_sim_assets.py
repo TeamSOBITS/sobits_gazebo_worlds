@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Download exported USD / MJCF / SDF assets from a Hugging Face dataset.
+"""Download exported USD / MJCF / SDF / robot assets from a Hugging Face dataset.
 
 Public repos need no token; HF_TOKEN is used if set. Examples:
   python3 scripts/download_sim_assets.py --formats usd
   python3 scripts/download_sim_assets.py --worlds rcw2026_arena \\
       --models rcw26_shelf
+  python3 scripts/download_sim_assets.py --formats usd,mjcf --robots sobit_home
 """
 import argparse
 import sys
@@ -16,11 +17,23 @@ PKG = Path(__file__).resolve().parent.parent
 FORMATS = ('usd', 'mjcf', 'sdf')
 
 
-def patterns(formats, worlds, models):
-    """allow_patterns narrowing formats to the given worlds/models."""
+def robot_patterns(formats, robots):
+    pats = ['usd/robots/%s/*' % r for r in robots if 'usd' in formats]
+    pats += ['mjcf/robots/%s/*' % r for r in robots if 'mjcf' in formats]
+    return pats + ['robots/%s.json' % r for r in robots]
+
+
+def patterns(formats, worlds, models, robots=()):
+    """allow_patterns narrowing formats to the given worlds/models/robots.
+
+    --robots alone fetches only those robots (worlds/models are skipped).
+    """
+    if robots and not worlds and not models:
+        return ['MANIFEST.json'] + robot_patterns(formats, robots)
     if not worlds and not models:
-        return ['%s/*' % f for f in formats] + ['MANIFEST.json']
-    pats = ['MANIFEST.json']
+        return ['%s/*' % f for f in formats] + ['robots/*.json',
+                                                'MANIFEST.json']
+    pats = ['MANIFEST.json'] + robot_patterns(formats, robots)
     for fmt in formats:
         if fmt == 'usd' and worlds:  # shared textures of all world USDs
             pats.append('usd/materials/*')
@@ -44,6 +57,8 @@ def main(argv=None):
                     help='comma list of usd,mjcf,sdf')
     ap.add_argument('--worlds', nargs='+', default=[], metavar='NAME')
     ap.add_argument('--models', nargs='+', default=[], metavar='NAME')
+    ap.add_argument('--robots', nargs='+', default=[], metavar='NAME',
+                    help='robot assets (usd/mjcf per --formats + provenance)')
     ap.add_argument('--show-patterns', action='store_true',
                     help='print the allow_patterns and exit')
     ap.add_argument('--force', action='store_true',
@@ -54,7 +69,7 @@ def main(argv=None):
     if bad:
         ap.error('unknown format(s): %s' % ', '.join(bad))
 
-    pats = patterns(formats, args.worlds, args.models)
+    pats = patterns(formats, args.worlds, args.models, args.robots)
     if args.show_patterns:
         print('\n'.join(pats))
         return 0

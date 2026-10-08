@@ -27,7 +27,10 @@ usd/models/<model>/<model>.usda  45 standalone furniture / object models
 mjcf/<world>/<world>.xml         one MJCF per world, assets in mjcf/<world>/assets/
 mjcf/models/<model>/<model>.xml  standalone models
 sdf/<world>.sdf                  xacro-expanded SDF the exports were generated from
-MANIFEST.json                    date, source commits (sobits_gazebo_worlds, gz-usd, gz-mujoco), counts
+usd/robots/<robot>/<robot>.usd   robot wrapper stage (+ <robot>/ package dir: payloads/, Textures/)
+mjcf/robots/<robot>/<robot>.xml  robot MJCF
+robots/<robot>.json              robot provenance (see Robots)
+MANIFEST.json                    date, source commits (sobits_gazebo_worlds, gz-usd, gz-mujoco), counts, robots
 ```
 
 Worlds: `precomp2025_arena`, `rcjo2025_arena`, `rcjo2026_arena`, `rcjo2026_data_collection`,
@@ -71,10 +74,47 @@ Files use quaternions (no `compiler eulerseq`), so they compose with robot MJCFs
 meshes are CoACD convex pieces, so shelf plates are usable for placement. Plugins are not exported:
 the door hinge is a plain `hinge` joint without an actuator.
 
+## Robots
+
+Per-robot assets (`sobit_home`, `sobit_light`) live under `usd/robots/`, `mjcf/robots/` and `robots/`:
+
+```
+usd/robots/<robot>/<robot>.usd      wrapper; references ./<robot>/<robot>_robot_*.usda (keep the folder next to it)
+usd/robots/<robot>/<robot>/         package dir: payloads/ (physics variants, geometry), Textures/
+mjcf/robots/<robot>/<robot>.xml     MuJoCo model, keyframe `home`
+robots/<robot>.json                 provenance
+```
+
+Isaac Sim (the robot is a Z-up articulation with `defaultPrim` `/<robot>`):
+
+```python
+from isaacsim.core.utils.stage import add_reference_to_stage
+add_reference_to_stage("export/usd/robots/sobit_home/sobit_home.usd", "/World/sobit_home")
+```
+
+MuJoCo:
+
+```python
+import mujoco
+m = mujoco.MjModel.from_xml_path("export/mjcf/robots/sobit_home/sobit_home.xml")
+d = mujoco.MjData(m)
+mujoco.mj_resetDataKeyframe(m, d, mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_KEY, "home"))
+```
+
+`robots/<robot>.json` records `robot_id`, the description repo (`repo`, `sha`, `describe`), the sha256 of the
+`<robot>.robot.yaml` descriptor, the `urdf2usd_ros` commit, the Isaac Sim version the USD was built with (if
+known) and the export date; the same blocks are collected in `MANIFEST.json` under `robots`.
+
+Sources: the robot description repos ([sobit_home](https://github.com/TeamSOBITS/sobit_home),
+[sobit_light](https://github.com/TeamSOBITS/sobit_light)) converted with
+[urdf2usd_ros](https://github.com/TeamSOBITS/urdf2usd_ros) (USD) and `scripts/usd2mjcf.py` (MJCF).
+Download only a robot: `python3 download_sim_assets.py --formats usd,mjcf --robots sobit_home`.
+
 ## Regenerate
 
 ```bash
 python3 scripts/export_sim_formats.py --closed both --models   # in sobits_gazebo_worlds
+python3 scripts/import_robot_assets.py --robot sobit_home        # robots, from urdf2usd_ros/output
 python3 scripts/publish_sim_assets.py --tag vX.Y.Z
 ```
 
