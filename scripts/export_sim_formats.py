@@ -222,6 +222,18 @@ def export_models(args, out, paths, env, results):
         convert(mdir.name, sdf, args, out, paths, env, results, model=True)
 
 
+def postprocess_usd(usd_dir):
+    """PhysX-only settings (postprocess_usd.py); needs a pxr python, else tell the user to run it."""
+    try:
+        import postprocess_usd
+    except ImportError:
+        print('note: pxr not importable; run  python3 scripts/postprocess_usd.py %s  '
+              'with the IsaacLab venv before validating or publishing' % usd_dir)
+        return
+    n = sum(len(postprocess_usd.process(f) or []) for f in postprocess_usd.find_usd([usd_dir]))
+    print('postprocess: articulation sleep disabled on %d prim(s)' % n)
+
+
 def parse_args(argv):
     ap = argparse.ArgumentParser(
         description=__doc__,
@@ -284,6 +296,8 @@ def main(argv=None):
             export_world(name, closed, args, out, paths, env, results)
     if args.models is not None:
         export_models(args, out, paths, env, results)
+    if 'usd' in args.formats and not args.dry_run:
+        postprocess_usd(out / 'usd')
 
     print('\n%-36s %-5s %-5s %8s' % ('target', 'fmt', 'ok', 'seconds'))
     for name, fmt, ok, secs in results:
