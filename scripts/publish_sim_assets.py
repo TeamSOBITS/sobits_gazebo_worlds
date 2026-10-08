@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upload export/ (USD, MJCF, SDF) to a Hugging Face dataset repo.
+"""Upload export/ (USD, MJCF, SDF, robots) to a Hugging Face dataset repo.
 
 Writes export/MANIFEST.json first. Token: env HF_TOKEN or the hf cache.
 Example:
@@ -40,18 +40,34 @@ def driver_command(export):
     return 'unknown'
 
 
-def select_files(export, formats):
+def robot_names(export):
+    return sorted(p.stem for p in (export / 'robots').glob('*.json'))
+
+
+def select_files(export, formats, robots=None):
+    """Files to upload; robots=None keeps all robots, else only those."""
     allow = (['%s/*' % f for f in formats]
-             + ['sdf/*', 'MANIFEST.json', 'README.md'])
+             + ['sdf/*', 'robots/*.json', 'MANIFEST.json', 'README.md'])
+    ignore = list(IGNORE)
+    for r in robot_names(export):
+        if robots is not None and r not in robots:
+            ignore += ['usd/robots/%s/*' % r, 'mjcf/robots/%s/*' % r,
+                       'robots/%s.json' % r]
     files = [p.relative_to(export).as_posix()
              for p in export.rglob('*') if p.is_file()]
     return sorted(filter_repo_objects(
-        files, allow_patterns=allow, ignore_patterns=IGNORE))
+        files, allow_patterns=allow, ignore_patterns=ignore))
 
 
 def build_manifest(export, files):
+    robots = {}
+    for f in files:
+        if f.startswith('robots/') and f.endswith('.json'):
+            robots[Path(f).stem] = json.loads((export / f).read_text())
     models = {Path(f).parts[2] for f in files
               if f.split('/')[1:2] == ['models'] and len(Path(f).parts) > 3}
+    robot_files = [f for f in files if '/robots/' in f
+                   or f.startswith('robots/')]
     return {
         'date': datetime.datetime.now().astimezone().isoformat(
             timespec='seconds'),
@@ -63,6 +79,9 @@ def build_manifest(export, files):
         'command': driver_command(export),
         'worlds': len([f for f in files if f.startswith('sdf/')]),
         'models': len(models),
+        'robots': robots,
+        'robot_count': len(robots),
+        'robot_files': len(robot_files),
         'files': len(files),
         'total_bytes': sum((export / f).stat().st_size for f in files
                            if (export / f).exists()),
@@ -81,6 +100,8 @@ def main(argv=None):
     ap.add_argument('--dry-run', action='store_true',
                     help='list files and sizes; no manifest, no upload')
     ap.add_argument('--formats', default='usd,mjcf')
+    ap.add_argument('--robots', nargs='+', metavar='NAME',
+                    help='only these robots (default: all in export/robots)')
     args = ap.parse_args(argv)
     export = args.export_dir.resolve()
     formats = [f for f in args.formats.split(',') if f]
@@ -89,7 +110,11 @@ def main(argv=None):
 
     if CARD.is_file() and not args.dry_run:
         shutil.copyfile(CARD, export / 'README.md')
-    files = select_files(export, formats)
+    unknown = set(args.robots or []) - set(robot_names(export))
+    if unknown:
+        sys.exit('error: no export/robots/<name>.json for: %s'
+                 % ', '.join(sorted(unknown)))
+    files = select_files(export, formats, args.robots)
     if CARD.is_file() and 'README.md' not in files:
         files.append('README.md')  # dry-run: card is copied at upload
     manifest = build_manifest(export, files)
@@ -112,8 +137,7 @@ def main(argv=None):
                     private=args.private)
     api.upload_large_folder(
         repo_id=args.repo_id, repo_type='dataset', folder_path=export,
-        allow_patterns=['%s/*' % f for f in formats + ['sdf']]
-        + ['MANIFEST.json', 'README.md'], ignore_patterns=IGNORE)
+        allow_patterns=files + ['MANIFEST.json'])
     if args.tag:
         api.create_tag(args.repo_id, tag=args.tag, repo_type='dataset')
     print('uploaded: https://huggingface.co/datasets/%s' % args.repo_id)
