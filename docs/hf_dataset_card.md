@@ -28,6 +28,7 @@ mjcf/<world>/<world>.xml         one MJCF per world, assets in mjcf/<world>/asse
 mjcf/models/<model>/<model>.xml  standalone models
 sdf/<world>.sdf                  xacro-expanded SDF the exports were generated from
 usd/robots/<robot>/<robot>.usd   robot wrapper stage (+ <robot>/ package dir: payloads/, Textures/)
+usd/robots/<robot>/<robot>_ros2_control.yaml   controller_manager config of the USD's ROS2_Control graph
 mjcf/robots/<robot>/<robot>.xml  robot MJCF
 robots/<robot>.json              robot provenance (see Robots)
 MANIFEST.json                    date, source commits (sobits_gazebo_worlds, gz-usd, gz-mujoco), counts, robots
@@ -61,6 +62,9 @@ Each stage is Z-up, 1 m units, has a `defaultPrim` and a `UsdPhysicsScene`, so i
 referenced or payloaded under another prim (`/World/arena`) together with a robot USD.
 Static furniture uses exact triangle-mesh colliders; dynamic objects use convex decomposition.
 Lights are scaled for RTX (sun ×1000, room lights ×30000). In Isaac Lab, point `UsdFileCfg` at the `.usda`.
+Articulation roots (doors) carry `physxArticulation:sleepThreshold = 0` since v0.3.0: PhysX 110.3 (Isaac Sim 6.1)
+freezes the GPU articulation solver when an articulation falls asleep while a tensor-API view (ros2_control,
+IMU, Isaac Lab) is active. Keep it when you edit the worlds, or use CPU dynamics.
 
 ## Use in MuJoCo
 
@@ -103,7 +107,9 @@ mujoco.mj_resetDataKeyframe(m, d, mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_KEY, 
 
 `robots/<robot>.json` records `robot_id`, the description repo (`repo`, `sha`, `describe`), the sha256 of the
 `<robot>.robot.yaml` descriptor, the `urdf2usd_ros` commit, the Isaac Sim version the USD was built with (if
-known) and the export date; the same blocks are collected in `MANIFEST.json` under `robots`.
+known), the `ros2_control` YAML path and the export date; the same blocks are collected in `MANIFEST.json` under `robots`.
+The robot USD's `ROS2_Control/ControlManager.inputs:controllerConfig` holds the absolute path of that YAML on the
+machine that converted it; point it at your copy (`usd/robots/<robot>/<robot>_ros2_control.yaml`) before Play.
 
 Sources: the robot description repos ([sobit_home](https://github.com/TeamSOBITS/sobit_home),
 [sobit_light](https://github.com/TeamSOBITS/sobit_light)) converted with
@@ -114,6 +120,7 @@ Download only a robot: `python3 download_sim_assets.py --formats usd,mjcf --robo
 
 ```bash
 python3 scripts/export_sim_formats.py --closed both --models   # in sobits_gazebo_worlds
+python3 scripts/postprocess_usd.py export/usd                    # pxr python; PhysX-only settings (sleep)
 python3 scripts/import_robot_assets.py --robot sobit_home        # robots, from urdf2usd_ros/output
 python3 scripts/publish_sim_assets.py --tag vX.Y.Z
 ```

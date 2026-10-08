@@ -426,6 +426,11 @@ export/mjcf/<world>[_closed]/<world>.xml   （+ assets/）
 export/usd/models/<m>/<m>.usda, export/mjcf/models/<m>/<m>.xml   （--models指定時）
 ```
 
+変換後，`pxr`が使える環境では`scripts/postprocess_usd.py`が`export/usd`に自動適用される（使えない場合はIsaacLab venvで
+手動実行）．全articulation root（ドア）に`physxArticulation:sleepThreshold = 0`を書き込む．PhysX 110.3／Isaac Sim 6.1は
+tensor APIのview（ros2_control，IMU，Isaac Lab）がある状態でarticulationがスリープするとGPUソルバが停止する
+（`urdf2usd_ros/docs/isaac_gpu_articulation_sleep_stall.md`）．未設定のrootは`validate_usd.py`が失敗にする．
+
 検証は`scripts/validate_usd.py export/usd`（IsaacLab venv．pxr，任意でNewton読込）と
 `scripts/validate_mjcf.py export/mjcf`（MuJoCo読込・ステップ実行・レンダリング）で行う．
 
@@ -445,7 +450,7 @@ python3 scripts/publish_sim_assets.py --tag v1      # HF_TOKENまたは`hf auth 
 
 **ロボットアセット** データセットにはロボットごとのアセットも含まれる．ロボット記述リポジトリから
 [urdf2usd_ros](https://github.com/TeamSOBITS/urdf2usd_ros)（USD）と`scripts/usd2mjcf.py`（MJCF）で生成したものを，
-`import_robot_assets.py`が`export/usd/robots/<robot>/`・`export/mjcf/robots/<robot>/`にコピーし，
+`import_robot_assets.py`が`export/usd/robots/<robot>/`（USDの`ROS2_Control`グラフが読む`<robot>_ros2_control.yaml`を含む）・`export/mjcf/robots/<robot>/`にコピーし，
 `export/robots/<robot>.json`（記述リポジトリのcommit，descriptorのsha256，urdf2usd_rosのcommit，Isaac Simバージョン，日付）を書き出す．
 公開時は`MANIFEST.json`の`robots`に追加され，`--robots`で公開・ダウンロードを絞り込める．
 
