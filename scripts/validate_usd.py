@@ -108,7 +108,7 @@ def check_file(path, sdf_dir=None):
         fail('metersPerUnit != 1 (%s)' % UsdGeom.GetStageMetersPerUnit(stage))
 
     counts = dict.fromkeys(TYPES, 0)
-    counts.update(RigidBody=0, Joint=0, Collision=0)
+    counts.update(RigidBody=0, Joint=0, Collision=0, Articulation=0)
     prims = [p for p in stage.Traverse()]
     layer_dir = Path(stage.GetRootLayer().realPath).parent
     collision_bad, mesh_bad, tex_bad, mat_bad, joint_bad = [], [], [], [], []
@@ -120,6 +120,12 @@ def check_file(path, sdf_dir=None):
             counts[t] += 1
         if p.IsA(UsdPhysics.Joint):
             counts['Joint'] += 1
+        if p.HasAPI(UsdPhysics.ArticulationRootAPI):
+            counts['Articulation'] += 1
+            sleep = p.GetAttribute('physxArticulation:sleepThreshold')
+            # PhysX GPU stalls on sleeping articulations (postprocess_usd.py authors 0).
+            if not sleep or sleep.Get() != 0.0:
+                fail('%s: physxArticulation:sleepThreshold != 0 (run postprocess_usd.py)' % p.GetPath())
         if p.HasAPI(UsdPhysics.RigidBodyAPI):
             counts['RigidBody'] += 1
             parts = p.GetPath().pathString.split('/')
