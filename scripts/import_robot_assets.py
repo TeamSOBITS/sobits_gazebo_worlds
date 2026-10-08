@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Copy urdf2usd_ros robot USD / MJCF into export/ and write provenance.
 
-Layout: export/usd/robots/<robot>/<robot>.usd + <robot>/ (package dir),
+Layout: export/usd/robots/<robot>/<robot>.usd + <robot>/ (package dir)
++ <robot>_ros2_control.yaml (controller_manager config the USD's ROS2_Control graph loads),
 export/mjcf/robots/<robot>/<robot>.xml, export/robots/<robot>.json.
 Example (IsaacLab venv python gives pxr for the reference check):
   python3 scripts/import_robot_assets.py --robot sobit_home
@@ -156,6 +157,12 @@ def main(argv=None):
         prov['usd'] = 'usd/robots/%s/%s' % (robot, usd.name)
         prov['isaac_sim'] = isaac_version(usd)
         print('usd:  %s' % prov['usd'])
+        yaml = usd.parent / ('%s_ros2_control.yaml' % robot)
+        if yaml.is_file():
+            shutil.copyfile(yaml, export / 'usd' / 'robots' / robot / yaml.name)
+            prov['ros2_control'] = 'usd/robots/%s/%s' % (robot, yaml.name)
+            print('ros2_control: %s (the USD bakes the absolute source path; '
+                  'retarget ControlManager.inputs:controllerConfig on other machines)' % prov['ros2_control'])
     else:
         print('warning: %s missing, USD skipped' % usd)
     if mjcf.is_file():
