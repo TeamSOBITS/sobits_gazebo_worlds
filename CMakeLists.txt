@@ -23,6 +23,7 @@ install(DIRECTORY
 install(PROGRAMS
   scripts/random_world_manager.py
   scripts/door_demo.py
+  scripts/isaac_sim_control.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

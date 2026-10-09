@@ -21,6 +21,7 @@
   <exec_depend>tmc_wrs_gz_worlds</exec_depend>
   <exec_depend>std_srvs</exec_depend>
   <exec_depend>sobits_interfaces</exec_depend>
+  <exec_depend>simulation_interfaces</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
