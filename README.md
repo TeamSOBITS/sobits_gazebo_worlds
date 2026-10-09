@@ -513,11 +513,12 @@ Start the runner by hand on the host and leave it running. It enables the ROS 2 
 The default domain is 69 (not the shell's `ROS_DOMAIN_ID`), RMW is CycloneDDS, and the CycloneDDS URI is `sobit_home/cyclonedds_local.xml` (loopback).
 
 ```sh
-$ scripts/isaac_sim.sh [--headless] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
+$ scripts/isaac_sim.sh [--headless | --viewer] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
 $ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --pose -6 1.5 0 0 --play
 ```
 
 `--world` and `--robot` are for a quick host-only check without the container. The runner prints `READY …` when idle.
+`--viewer` keeps only the viewport (no Stage/Property/Console panels) and frames the camera on each spawned robot.
 
 | Variable | Default | Description |
 | --- | --- | --- |
