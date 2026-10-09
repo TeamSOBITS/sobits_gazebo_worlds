@@ -24,7 +24,8 @@ def parse_args():
     p.add_argument("--cyclonedds-uri", default=None, help="default: $CYCLONEDDS_URI, else sobit_home/cyclonedds_local.xml")
     p.add_argument("--headless", action="store_true")
     p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned robot")
-    p.add_argument("--cpu-physics", action="store_true", help="CPU dynamics + MBP broadphase on every stage's physics scene")
+    p.add_argument("--gpu-physics", action="store_true", help="keep GPU dynamics (learning workloads); default is CPU "
+                   "dynamics + MBP broadphase, twice the frame rate for one robot in an arena and no GPU sleep stall")
     p.add_argument("--off", default="", help="comma list of robot graphs (ROS2_Lidar_lidar_back) or graph/node "
                    "(ROS2_Camera_head_camera/HelperDepth) to deactivate on every spawned robot; the container "
                    "overrides it per launch through the graphs_off parameter of node /isaac_sim")
@@ -234,7 +235,7 @@ def run(app, args):
             state["listener"].Revoke()
         state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
         state["paths"].clear()
-        prepare_stage(stage, args.cpu_physics)
+        prepare_stage(stage, cpu_physics=not args.gpu_physics)
         if args.viewer and not args.headless:
             viewer_layout()
         return stage
