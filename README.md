@@ -486,6 +486,65 @@ links without any `<inertial>`. Currently affected: `book_shelf`, `chair`, `sofa
 `hinge_link` has no inertial) and `floor_plane`. Fix by authoring an `<inertia>` block in the
 model's `model.sdf`.
 
+## Isaac Sim
+
+Isaac Sim 6.1 runs on the host, not in the ROS container. The container drives it through the
+`simulation_interfaces` services of the `isaacsim.ros2.sim_control` extension. Nothing from Isaac is installed in the container.
+
+### Host Prerequisites
+
+- Isaac Sim 6.1 (pip) in the IsaacLab uv venv `~/Documents/IsaacLab/.venv`, and `uv` on `PATH`.
+- Once, install the Jazzy position/velocity controller plugins that Isaac does not bundle into `~/.cache/urdf2usd_ros/ros2_jazzy_extra`
+  (`<src>` is the workspace `src` directory):
+  ```sh
+  $ cd ~/Documents/IsaacLab && uv run --no-sync python <src>/urdf2usd_ros/scripts/fetch_ros2_controllers.py
+  ```
+- Link the workspace so the asset paths sent by the container (`~/colcon_ws/src/sobits_gazebo_worlds/export/...`) also resolve on the host:
+  ```sh
+  $ ln -s ~/docker_containers/jazzy_sobit_home_2_moveit_ws ~/colcon_ws
+  ```
+  Alternatively, pass `asset_root:=<host path to export>` to the launch file.
+- Assets from `scripts/download_sim_assets.py` (v0.4.0 or later for Isaac) or a local export.
+- `urdf2usd_ros` next to this package (`URDF2USD_ROS` overrides it); the runner imports its `utils/`.
+
+### Start the Runner
+
+Start the runner by hand on the host and leave it running. It enables the ROS 2 bridge and `isaacsim.ros2.sim_control`, then idles.
+The default domain is 69 (not the shell's `ROS_DOMAIN_ID`), RMW is CycloneDDS, and the CycloneDDS URI is `sobit_home/cyclonedds_local.xml` (loopback).
+
+```sh
+$ scripts/isaac_sim.sh [--headless] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
+$ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --pose -6 1.5 0 0 --play
+```
+
+`--world` and `--robot` are for a quick host-only check without the container. The runner prints `READY …` when idle.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `ISAACSIM_PYTHON` | (unset) | Python with `isaacsim` installed. Takes precedence over `ISAACLAB_DIR`. |
+| `ISAACLAB_DIR` | `~/Documents/IsaacLab` | IsaacLab checkout whose `.venv` is used through `uv run --no-sync`. |
+| `URDF2USD_ROS` | `../urdf2usd_ros` | `urdf2usd_ros` checkout. |
+
+### Service Cheat-Sheet
+
+Run in the container as `ros2 run sobits_gazebo_worlds isaac_sim_control.py <command>`.
+Exit codes: 0 ok, 1 service error, 2 service unavailable. Every command accepts `--timeout S`.
+
+| Command | Description |
+| --- | --- |
+| `wait` | Wait until the simulator answers. |
+| `state {play,pause,stop}` | Set the simulation state. |
+| `load-world URI [--if-different]` | Load a USD world (stops the sim first). `--if-different` skips it when the same world is already loaded. |
+| `spawn NAME URI [--pose X Y Z YAW] [--namespace NS] [--allow-renaming] [--replace]` | Spawn a USD entity at prim `/NAME`. `--replace` deletes an existing `NAME` first. |
+| `delete NAME [--ignore-missing]` | Delete the entity at `/NAME`. |
+| `reset` | Remove only service-spawned entities. |
+| `entities [--filter REGEX]` | List entity prim paths, filtered by a regex on the prim path. |
+
+The runner adds a physics scene to every opened stage that has none on its root layer, and a `/clock` graph.
+On each spawned robot it rewrites the baked absolute `controllerConfig` path to the `<robot>_ros2_control.yaml` next to the USD.
+
+For the robot bringup command, see [Run on Isaac Sim](../sobit_home/README.md#run-on-isaac-sim) in the sobit_home README.
+
 ## Milestones
 
 - [x] Random YCB placement on top of fixed furniture
