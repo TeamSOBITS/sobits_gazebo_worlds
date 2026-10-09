@@ -96,6 +96,12 @@ from isaacsim.core.utils.stage import add_reference_to_stage
 add_reference_to_stage("export/usd/robots/sobit_home/sobit_home.usd", "/World/sobit_home")
 ```
 
+Since v0.4.0 every `ROS2Context` node takes the domain from the Isaac process' `ROS_DOMAIN_ID`
+(`useDomainIDEnvVar`), so a spawned robot and Isaac's in-process `controller_manager` agree without editing
+the stage; the SOBIT HOME wheel steer drives carry the gains that let the swerve base drive. The USD can also be
+spawned through the `simulation_interfaces` services (`isaacsim.ros2.sim_control`), see the
+`sobits_gazebo_worlds` README "Isaac Sim".
+
 MuJoCo:
 
 ```python
