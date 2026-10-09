@@ -538,6 +538,8 @@ Exit codes: 0 ok, 1 service error, 2 service unavailable. Every command accepts 
 | `spawn NAME URI [--pose X Y Z YAW] [--namespace NS] [--allow-renaming] [--replace]` | Spawn a USD entity at prim `/NAME`. `--replace` deletes an existing `NAME` first. |
 | `delete NAME [--ignore-missing]` | Delete the entity at `/NAME`. |
 | `reset` | Remove only service-spawned entities. |
+
+`delete` and `reset` do not tear a robot down cleanly: its sensor writers and in-process controller_manager outlive the prim and keep re-authoring it, so a respawn under the same name fails. Reload the world instead (`isaac_minimal.launch.py` does).
 | `entities [--filter REGEX]` | List entity prim paths, filtered by a regex on the prim path. |
 
 The runner adds a physics scene to every opened stage that has none on its root layer, and a `/clock` graph.

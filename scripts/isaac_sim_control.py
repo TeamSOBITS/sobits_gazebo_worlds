@@ -97,11 +97,24 @@ def set_state(name, t):
           ok_codes=(SetSimulationState.Response.ALREADY_IN_TARGET_STATE,))
 
 
-def delete(name, t, ignore_missing):
+def entity_exists(path, t):
+    req = GetEntities.Request()
+    req.filters.filter = '^' + path + '$'
+    return path in check(call(GetEntities, '/get_entities', req, t), 'get_entities').entities
+
+
+def delete(name, t, ignore_missing, stop=False):
+    # Isaac removes the prim on a later frame: wait until it is gone so a spawn right after cannot clash.
     req = DeleteEntity.Request()
     req.entity = prim_path(name)
+    if stop:
+        set_state('stop', t)
     ok = (Result.RESULT_NOT_FOUND,) if ignore_missing else ()
     check(call(DeleteEntity, '/delete_entity', req, t), f'delete {req.entity}', ok)
+    end = time.monotonic() + min(t, 10.0)
+    while entity_exists(req.entity, t) and time.monotonic() < end:
+        time.sleep(0.2)
+    time.sleep(0.5)  # the runner drops Isaac's ghost of the entity a frame later
 
 
 def cmd_wait(a):
@@ -127,7 +140,7 @@ def cmd_load_world(a):
 
 def cmd_spawn(a):
     if a.replace:
-        delete(a.name, a.timeout, True)
+        delete(a.name, a.timeout, True, a.stop)
     pose = make_pose(*a.pose)
     client = NODE.create_client(SpawnEntities, '/spawn_entities')
     if client.wait_for_service(timeout_sec=min(5.0, a.timeout)):
@@ -152,7 +165,7 @@ def cmd_spawn(a):
 
 
 def cmd_delete(a):
-    delete(a.name, a.timeout, a.ignore_missing)
+    delete(a.name, a.timeout, a.ignore_missing, a.stop)
 
 
 def cmd_reset(a):
@@ -195,9 +208,12 @@ def build_parser():
     s.add_argument('--allow-renaming', action='store_true')
     s.add_argument('--replace', action='store_true',
                    help='delete an existing entity NAME first')
+    s.add_argument('--stop', action='store_true',
+                   help='with --replace: stop the sim before deleting (a playing robot keeps live physics views)')
     s = add('delete', cmd_delete, 'delete an entity (NAME -> prim path /NAME)')
     s.add_argument('name')
     s.add_argument('--ignore-missing', action='store_true')
+    s.add_argument('--stop', action='store_true', help='stop the sim before deleting')
     add('reset', cmd_reset, 'reset the simulation')
     s = add('entities', cmd_entities, 'list entity prim paths')
     s.add_argument('--filter', default='', help='regex on the prim path')

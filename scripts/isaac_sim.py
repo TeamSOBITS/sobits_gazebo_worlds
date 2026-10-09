@@ -111,6 +111,16 @@ def fix_subtree(prim, domain, noted):
                 dom.Set(domain)
 
 
+def report_entity(path, prim):
+    """One line per top-level prim change (spawn / delete / world reload), the operator's trace of the services.
+    A deleted robot is not respawnable: its sensor writers and controller_manager outlive the prim; reload the world."""
+    if not prim or not prim.IsValid():
+        print(f"entity {path}: removed", flush=True)
+        return
+    layers = sorted({os.path.basename(s.layer.identifier) for s in prim.GetPrimStack()})
+    print(f"entity {path}: {'active' if prim.IsActive() else 'INACTIVE'} layers={layers}", flush=True)
+
+
 def spawn_local(stage, robot, name, pose):
     """Mimic /spawn_entities: referenced Xform, pose, and the marker /reset_simulation removes."""
     from pxr import Gf, Sdf, UsdGeom
@@ -177,6 +187,8 @@ def run(app, args):
         state["paths"] = set()
         for path in paths:
             prim = stage.GetPrimAtPath(path) if path.IsPrimPath() or path.IsAbsoluteRootPath() else None
+            if path.IsPrimPath() and path.GetParentPath().IsAbsoluteRootPath():
+                report_entity(path, prim)
             if prim:
                 fix_subtree(prim, args.domain, state["noted"])
 

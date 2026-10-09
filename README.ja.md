@@ -527,6 +527,8 @@ $ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/
 | `spawn NAME URI [--pose X Y Z YAW] [--namespace NS] [--allow-renaming] [--replace]` | USDエンティティを`/NAME`のprimとして生成する．`--replace`は既存の`NAME`を先に削除する． |
 | `delete NAME [--ignore-missing]` | `/NAME`のエンティティを削除する． |
 | `reset` | サービスで生成したエンティティのみ削除する． |
+
+`delete`と`reset`ではロボットを完全には片付けられない．センサのwriterとプロセス内のcontroller_managerがprimより長生きしてprimを書き戻すため，同名での再生成は失敗する．代わりにワールドを読み直す（`isaac_minimal.launch.py`はそうしている）．
 | `entities [--filter REGEX]` | エンティティのprimパスを一覧表示する．`--filter`はprimパスに対する正規表現． |
 
 ランナーは，開いたすべてのステージにルートレイヤーで物理シーンがなければ物理シーンを追加し，`/clock`グラフも追加する．
