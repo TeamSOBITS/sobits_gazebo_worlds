@@ -537,6 +537,15 @@ PhysXは既定でCPUで動く（MBPブロードフェーズ）．ロボット1�
 ランナーは，開いたすべてのステージにルートレイヤーで物理シーンがなければ物理シーンを追加し，`/clock`グラフも追加する．
 生成したロボットごとに，USDの隣の`<robot>_ros2_control.yaml`を指すように，焼き込まれた絶対パスの`controllerConfig`を書き換える．
 
+#### 性能メモ
+
+`rcw2026_arena`＋SOBIT HOME，全センサ，ヘッドレス，RTX 3080 Ti，20コアで計測（ステップ1/60 sでの`/clock` Hz，60が実時間）．
+GPU PhysX: 24．CPU PhysX（既定）: 49，さらに物理をメインスレッドに（`numThreads=0`，既定）: 53．
+RT2の`retrace=0.1`，テクスチャストリーミング無効，ヘルパの`frameSkipCount`（レンダプロダクトは毎フレーム描画され，配信だけ半減）は効果なし．
+非同期レンダリングはROSグラフが止まる．残るのはセンサ描画（レンダプロダクト5つで約12 ms/フレーム）なので，タスクに不要なものを
+`--off`や launch の`enable_*`で切るか，記述子の解像度を下げる．`--kit-arg=--/path=value`，`--cpu-threads N`，`--set GLOB:attr=value`は
+各自の実験用．
+
 ロボットの起動コマンドは，sobit_homeのREADMEの[Run on Isaac Sim](../sobit_home/README.md#run-on-isaac-sim)を参照すること．
 
 ## マイルストーン

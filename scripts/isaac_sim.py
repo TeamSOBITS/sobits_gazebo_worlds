@@ -26,6 +26,12 @@ def parse_args():
     p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned robot")
     p.add_argument("--gpu-physics", action="store_true", help="keep GPU dynamics (learning workloads); default is CPU "
                    "dynamics + MBP broadphase, twice the frame rate for one robot in an arena and no GPU sleep stall")
+    p.add_argument("--kit-arg", action="append", default=[], metavar="--/path=value",
+                   help="Kit setting passed through (repeatable), written --kit-arg=--/rtx/pathtracing/cached/retrace=0.1")
+    p.add_argument("--cpu-threads", type=int, default=16, help="SimulationApp limit_cpu_threads (default 16)")
+    p.add_argument("--set", action="append", default=[], metavar="GLOB:attr=value",
+                   help="attribute on matching prims of every spawned robot (repeatable), e.g. "
+                   "'ROS2_Camera_*/Helper*:inputs:frameSkipCount=1'")
     p.add_argument("--off", default="", help="comma list of robot graphs (ROS2_Lidar_lidar_back) or graph/node "
                    "(ROS2_Camera_head_camera/HelperDepth) to deactivate on every spawned robot; the container "
                    "overrides it per launch through the graphs_off parameter of node /isaac_sim")
@@ -149,6 +155,30 @@ def graphs_off(prim, patterns):
             print(f"off {target.GetPath()}", flush=True)
 
 
+def set_attrs(prim, specs):
+    """--set GLOB:attr=value on the prims under a spawned robot (value parsed as bool/int/float/str)."""
+    import fnmatch
+    from pxr import Usd
+    for spec in specs:
+        pat, _, rest = spec.partition(":")
+        name, _, raw = rest.partition("=")
+        value = {"true": True, "false": False}.get(raw.lower())
+        if value is None:
+            try:
+                value = int(raw)
+            except ValueError:
+                try:
+                    value = float(raw)
+                except ValueError:
+                    value = raw
+        root = str(prim.GetPath())
+        hits = [q for q in Usd.PrimRange(prim) if fnmatch.fnmatch(str(q.GetPath())[len(root) + 1:], pat)
+                and q.GetAttribute(name)]
+        for q in hits:
+            q.GetAttribute(name).Set(value)
+        print(f"set {spec}: {len(hits)} prim(s)", flush=True)
+
+
 def param_node(default):
     """rclpy node /isaac_sim with the string parameter graphs_off (set from the container before a spawn)."""
     import rclpy
@@ -193,7 +223,11 @@ def main():
     args = parse_args()
     setup_env(args)
     from isaacsim import SimulationApp
-    cfg = {"headless": args.headless, "renderer": "RayTracedLighting"}
+    extra = list(args.kit_arg)
+    if not args.gpu_physics and not any("physics/numThreads" in a for a in extra):
+        extra.append("--/persistent/physics/numThreads=0")  # one robot: physics on the main thread is ~6% faster
+    cfg = {"headless": args.headless, "renderer": "RayTracedLighting", "extra_args": extra,
+           "limit_cpu_threads": args.cpu_threads}
     if args.headless:
         cfg["disable_viewport_updates"] = True  # sensors render through their own render products
     if args.viewer:
@@ -252,6 +286,7 @@ def run(app, args):
             if path.IsPrimPath() and path.GetParentPath().IsAbsoluteRootPath():
                 if report_entity(path, prim):
                     graphs_off(prim, node.get_parameter("graphs_off").value)
+                    set_attrs(prim, args.set)
                     if args.viewer and not args.headless:
                         frame_robot(prim)
             if prim:
@@ -272,6 +307,7 @@ def run(app, args):
     if args.robot:
         prim = spawn_local(stage, args.robot, args.name or os.path.splitext(os.path.basename(args.robot))[0], args.pose)
         graphs_off(prim, args.off)
+        set_attrs(prim, args.set)
         if args.viewer and not args.headless:
             frame_robot(prim)
     if args.world or args.robot:
