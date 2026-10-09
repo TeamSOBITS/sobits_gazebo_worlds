@@ -513,12 +513,13 @@ Start the runner by hand on the host and leave it running. It enables the ROS 2 
 The default domain is 69 (not the shell's `ROS_DOMAIN_ID`), RMW is CycloneDDS, and the CycloneDDS URI is `sobit_home/cyclonedds_local.xml` (loopback).
 
 ```sh
-$ scripts/isaac_sim.sh [--headless | --viewer] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
+$ scripts/isaac_sim.sh [--headless | --viewer] [--cpu-physics] [--off GRAPH,...] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
 $ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --pose -6 1.5 0 0 --play
 ```
 
 `--world` and `--robot` are for a quick host-only check without the container. The runner prints `READY …` when idle.
 `--viewer` keeps only the viewport (no Stage/Property/Console panels) and frames the camera on each spawned robot.
+`--cpu-physics` runs PhysX on the CPU (MBP broadphase): for one robot plus a few door articulations the GPU pipeline's fixed cost dominates, measured 22 → 41 Hz `/clock` in the GUI with all sensors (RTX 3080 Ti), and the GPU articulation sleep stall cannot occur. `--headless` also stops the hidden viewport from rendering.
 
 | Variable | Default | Description |
 | --- | --- | --- |

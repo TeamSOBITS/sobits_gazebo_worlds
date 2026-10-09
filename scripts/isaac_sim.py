@@ -24,6 +24,7 @@ def parse_args():
     p.add_argument("--cyclonedds-uri", default=None, help="default: $CYCLONEDDS_URI, else sobit_home/cyclonedds_local.xml")
     p.add_argument("--headless", action="store_true")
     p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned robot")
+    p.add_argument("--cpu-physics", action="store_true", help="CPU dynamics + MBP broadphase on every stage's physics scene")
     p.add_argument("--off", default="", help="comma list of robot graphs (ROS2_Lidar_lidar_back) or graph/node "
                    "(ROS2_Camera_head_camera/HelperDepth) to deactivate on every spawned robot; the container "
                    "overrides it per launch through the graphs_off parameter of node /isaac_sim")
@@ -67,15 +68,21 @@ def setup_env(args):
     print("ROS env:", {k: os.environ.get(k) for k in keys}, flush=True)
 
 
-def prepare_stage(stage):
+def prepare_stage(stage, cpu_physics=False):
     """One root-layer physics scene (referenced-only scenes double sim time) and one /clock per stage."""
-    from pxr import UsdPhysics
+    from pxr import Sdf, UsdPhysics
     from utils import isaac_world
     scenes = [p.GetPath() for p in stage.Traverse() if p.IsA(UsdPhysics.Scene)]
     root = stage.GetRootLayer()
     if not scenes or all(root.GetPrimAtPath(p) is None for p in scenes):
         isaac_world.ensure_root_physics_scene(stage)
         print("stage: root physics scene at /World/physicsScene", flush=True)
+    if cpu_physics:
+        for p in stage.Traverse():
+            if p.IsA(UsdPhysics.Scene) and p.IsActive():
+                p.CreateAttribute("physxScene:enableGPUDynamics", Sdf.ValueTypeNames.Bool).Set(False)
+                p.CreateAttribute("physxScene:broadphaseType", Sdf.ValueTypeNames.Token).Set("MBP")
+                print(f"stage: CPU dynamics on {p.GetPath()}", flush=True)
     if not stage.GetPrimAtPath(CLOCK_PATH):
         isaac_world.add_clock_graph(stage, CLOCK_PATH, use_domain_id_env=True)
         print(f"stage: /clock graph at {CLOCK_PATH}", flush=True)
@@ -186,6 +193,8 @@ def main():
     setup_env(args)
     from isaacsim import SimulationApp
     cfg = {"headless": args.headless, "renderer": "RayTracedLighting"}
+    if args.headless:
+        cfg["disable_viewport_updates"] = True  # sensors render through their own render products
     if args.viewer:
         cfg.update({"window_width": 1280, "window_height": 800})
     app = SimulationApp(cfg)
@@ -225,7 +234,7 @@ def run(app, args):
             state["listener"].Revoke()
         state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
         state["paths"].clear()
-        prepare_stage(stage)
+        prepare_stage(stage, args.cpu_physics)
         if args.viewer and not args.headless:
             viewer_layout()
         return stage
