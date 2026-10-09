@@ -23,6 +23,7 @@ def parse_args():
     p.add_argument("--rmw", default="rmw_cyclonedds_cpp")
     p.add_argument("--cyclonedds-uri", default=None, help="default: $CYCLONEDDS_URI, else sobit_home/cyclonedds_local.xml")
     p.add_argument("--headless", action="store_true")
+    p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned robot")
     p.add_argument("--urdf2usd-ros", default=os.environ.get("URDF2USD_ROS", os.path.join(SRC, "urdf2usd_ros")))
     p.add_argument("--world", help="open this USD at start (local test without the container)")
     p.add_argument("--robot", help="reference this robot USD under /World/<name>")
@@ -119,6 +120,24 @@ def report_entity(path, prim):
         return
     layers = sorted({os.path.basename(s.layer.identifier) for s in prim.GetPrimStack()})
     print(f"entity {path}: {'active' if prim.IsActive() else 'INACTIVE'} layers={layers}", flush=True)
+    return prim.HasAttribute("simulationInterfacesSpawned")
+
+
+def viewer_layout():
+    """Hide every editor panel but the viewport; Kit re-docks it full size."""
+    import omni.ui as ui
+    for w in ui.Workspace.get_windows():
+        if w.title != "Viewport" and w.visible:
+            w.visible = False
+
+
+def frame_robot(prim):
+    """Look at a freshly spawned robot from behind-left, as RViz would."""
+    import numpy as np
+    from pxr import UsdGeom
+    from isaacsim.core.utils.viewports import set_camera_view
+    pos = np.array(UsdGeom.XformCommonAPI(prim).GetXformVectors(0)[0])
+    set_camera_view(eye=pos + np.array([2.8, -2.8, 2.0]), target=pos + np.array([0.0, 0.0, 0.8]))
 
 
 def spawn_local(stage, robot, name, pose):
@@ -138,7 +157,10 @@ def main():
     args = parse_args()
     setup_env(args)
     from isaacsim import SimulationApp
-    app = SimulationApp({"headless": args.headless, "renderer": "RayTracedLighting"})
+    cfg = {"headless": args.headless, "renderer": "RayTracedLighting"}
+    if args.viewer:
+        cfg.update({"window_width": 1280, "window_height": 800})
+    app = SimulationApp(cfg)
     try:
         run(app, args)
     except KeyboardInterrupt:
@@ -176,6 +198,8 @@ def run(app, args):
         state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
         state["paths"].clear()
         prepare_stage(stage)
+        if args.viewer and not args.headless:
+            viewer_layout()
         return stage
 
     def drain():
@@ -188,7 +212,8 @@ def run(app, args):
         for path in paths:
             prim = stage.GetPrimAtPath(path) if path.IsPrimPath() or path.IsAbsoluteRootPath() else None
             if path.IsPrimPath() and path.GetParentPath().IsAbsoluteRootPath():
-                report_entity(path, prim)
+                if report_entity(path, prim) and args.viewer and not args.headless:
+                    frame_robot(prim)
             if prim:
                 fix_subtree(prim, args.domain, state["noted"])
 
@@ -204,7 +229,9 @@ def run(app, args):
         stage = handle_opened()
         print(f"opened {args.world}", flush=True)
     if args.robot:
-        spawn_local(stage, args.robot, args.name or os.path.splitext(os.path.basename(args.robot))[0], args.pose)
+        prim = spawn_local(stage, args.robot, args.name or os.path.splitext(os.path.basename(args.robot))[0], args.pose)
+        if args.viewer and not args.headless:
+            frame_robot(prim)
     if args.world or args.robot:
         state["paths"].clear()
         fix_subtree(stage.GetPseudoRoot(), args.domain, state["noted"])
