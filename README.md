@@ -548,6 +548,16 @@ Exit codes: 0 ok, 1 service error, 2 service unavailable. Every command accepts 
 The runner adds a physics scene to every opened stage that has none on its root layer, and a `/clock` graph.
 On each spawned robot it rewrites the baked absolute `controllerConfig` path to the `<robot>_ros2_control.yaml` next to the USD.
 
+#### Performance notes
+
+Measured with `rcw2026_arena` + SOBIT HOME, all sensors, headless, RTX 3080 Ti, 20 cores (`/clock` Hz at a 1/60 s step,
+60 = real time). GPU PhysX: 24. CPU PhysX (default): 49; plus physics on the main thread (`numThreads=0`, default): 53.
+No gain from RT2 `retrace=0.1`, texture streaming off, or helper `frameSkipCount` (render products still render every
+frame, only publishing halves); asynchronous rendering stops the ROS graphs. What remains is per-sensor rendering
+(~12 ms/frame for five render products): switch off what a task does not need (`--off`, the launch's `enable_*` flags)
+or lower the resolutions in the descriptor. `--kit-arg=--/path=value`, `--cpu-threads N` and `--set GLOB:attr=value`
+are there for your own experiments.
+
 For the robot bringup command, see [Run on Isaac Sim](../sobit_home/README.md#run-on-isaac-sim) in the sobit_home README.
 
 ## Milestones
