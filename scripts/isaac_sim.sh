@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Start the host-side Isaac Sim runner (see isaac_sim.py); the ROS 2 container then drives it.
-# Usage: scripts/isaac_sim.sh [--headless | --viewer] [--domain 69]
+# Usage: scripts/isaac_sim.sh [--headless | --viewer] [--cpu-physics] [--off GRAPH,...] [--domain 69]
 #          [--world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --play]
 # Env: ISAACSIM_PYTHON (python with isaacsim), else ISAACLAB_DIR (default ~/Documents/IsaacLab, uv venv).
 set -euo pipefail

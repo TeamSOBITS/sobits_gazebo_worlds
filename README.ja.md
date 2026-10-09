@@ -502,12 +502,13 @@ Isaac Sim 6.1はROSコンテナ内ではなくホスト上で動作する．コ�
 既定のドメインは69（シェルの`ROS_DOMAIN_ID`ではない），RMWはCycloneDDS，CycloneDDSのURIは`sobit_home/cyclonedds_local.xml`（ループバック）．
 
 ```sh
-$ scripts/isaac_sim.sh [--headless | --viewer] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
+$ scripts/isaac_sim.sh [--headless | --viewer] [--cpu-physics] [--off GRAPH,...] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
 $ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --pose -6 1.5 0 0 --play
 ```
 
 `--world`と`--robot`は，コンテナを使わずホストだけで動作を確認する場合に使う．待機状態になると`READY …`を表示する．
 `--viewer`はビューポートだけの最小ウィンドウにし（Stage／Property／Consoleなどのパネルを隠す），生成されたロボットにカメラを向ける．
+`--cpu-physics`はPhysXをCPUで動かす（MBPブロードフェーズ）．ロボット1台とドア数枚の規模ではGPUパイプラインの固定コストが支配的で，全センサ有効のGUIで`/clock`が22→41 Hzになった（RTX 3080 Ti）．GPUアーティキュレーションのスリープ停止も起きない．`--headless`では非表示ビューポートの描画も止める．
 
 | 変数 | 既定値 | 説明 |
 | --- | --- | --- |
