@@ -475,6 +475,65 @@ python3 scripts/download_sim_assets.py --formats usd,mjcf --robots sobit_home
 `rcw26_door`（`door_link`．`hinge_link`は`<inertial>`なし），`floor_plane`．対処は
 各モデルの`model.sdf`に`<inertia>`を記述すること．
 
+## Isaac Sim
+
+Isaac Sim 6.1はROSコンテナ内ではなくホスト上で動作する．コンテナは`isaacsim.ros2.sim_control`拡張が提供する
+`simulation_interfaces`のサービス経由で操作する．コンテナにIsaac関連のものはインストールしない．
+
+### ホストの前提条件
+
+- IsaacLabのuv venv `~/Documents/IsaacLab/.venv`にpipでIsaac Sim 6.1をインストールし，`uv`に`PATH`を通す．
+- 初回のみ，Isaacが同梱しないJazzy用の位置/速度コントローラプラグインを`~/.cache/urdf2usd_ros/ros2_jazzy_extra`に入れる
+  （`<src>`はワークスペースの`src`ディレクトリ）．
+  ```sh
+  $ cd ~/Documents/IsaacLab && uv run --no-sync python <src>/urdf2usd_ros/scripts/fetch_ros2_controllers.py
+  ```
+- コンテナが送るアセットパス（`~/colcon_ws/src/sobits_gazebo_worlds/export/...`）をホストでも解決できるようにリンクを張る．
+  ```sh
+  $ ln -s ~/docker_containers/jazzy_sobit_home_2_moveit_ws ~/colcon_ws
+  ```
+  代わりに，launchへ`asset_root:=<ホスト上のexportのパス>`を渡してもよい．
+- アセットは`scripts/download_sim_assets.py`（Isaac向けにはv0.4.0以降）またはローカルの`export`を使う．
+- 本パッケージと同じ階層に`urdf2usd_ros`を置く（`URDF2USD_ROS`で変更可）．ランナーはその`utils/`をimportする．
+
+### ランナーの起動
+
+ランナーはホストで手動起動し，そのまま起動したままにする．ROS 2ブリッジと`isaacsim.ros2.sim_control`を有効にしたあと，待機状態になる．
+既定のドメインは69（シェルの`ROS_DOMAIN_ID`ではない），RMWはCycloneDDS，CycloneDDSのURIは`sobit_home/cyclonedds_local.xml`（ループバック）．
+
+```sh
+$ scripts/isaac_sim.sh [--headless] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
+$ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --pose -6 1.5 0 0 --play
+```
+
+`--world`と`--robot`は，コンテナを使わずホストだけで動作を確認する場合に使う．待機状態になると`READY …`を表示する．
+
+| 変数 | 既定値 | 説明 |
+| --- | --- | --- |
+| `ISAACSIM_PYTHON` | （未設定） | `isaacsim`がインストールされたPython．`ISAACLAB_DIR`より優先される． |
+| `ISAACLAB_DIR` | `~/Documents/IsaacLab` | `.venv`を`uv run --no-sync`で使うIsaacLabのチェックアウト． |
+| `URDF2USD_ROS` | `../urdf2usd_ros` | `urdf2usd_ros`のチェックアウト． |
+
+### サービス一覧
+
+コンテナ内で`ros2 run sobits_gazebo_worlds isaac_sim_control.py <コマンド>`として実行する．
+終了コードは0が成功，1がサービスエラー，2がサービス利用不可．すべてのコマンドが`--timeout S`を受け付ける．
+
+| コマンド | 説明 |
+| --- | --- |
+| `wait` | シミュレータが応答するまで待つ． |
+| `state {play,pause,stop}` | シミュレーションの状態を設定する． |
+| `load-world URI [--if-different]` | USD worldを読み込む（先にシミュレーションを停止する）．`--if-different`は同じworldが既に読み込まれていればスキップする． |
+| `spawn NAME URI [--pose X Y Z YAW] [--namespace NS] [--allow-renaming] [--replace]` | USDエンティティを`/NAME`のprimとして生成する．`--replace`は既存の`NAME`を先に削除する． |
+| `delete NAME [--ignore-missing]` | `/NAME`のエンティティを削除する． |
+| `reset` | サービスで生成したエンティティのみ削除する． |
+| `entities [--filter REGEX]` | エンティティのprimパスを一覧表示する．`--filter`はprimパスに対する正規表現． |
+
+ランナーは，開いたすべてのステージにルートレイヤーで物理シーンがなければ物理シーンを追加し，`/clock`グラフも追加する．
+生成したロボットごとに，USDの隣の`<robot>_ros2_control.yaml`を指すように，焼き込まれた絶対パスの`controllerConfig`を書き換える．
+
+ロボットの起動コマンドは，sobit_homeのREADMEの[Run on Isaac Sim](../sobit_home/README.md#run-on-isaac-sim)を参照すること．
+
 ## マイルストーン
 
 - [x] 固定家具をベースにしたランダムYCB配置
