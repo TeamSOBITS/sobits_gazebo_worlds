@@ -24,6 +24,9 @@ def parse_args():
     p.add_argument("--cyclonedds-uri", default=None, help="default: $CYCLONEDDS_URI, else sobit_home/cyclonedds_local.xml")
     p.add_argument("--headless", action="store_true")
     p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned robot")
+    p.add_argument("--off", default="", help="comma list of robot graphs (ROS2_Lidar_lidar_back) or graph/node "
+                   "(ROS2_Camera_head_camera/HelperDepth) to deactivate on every spawned robot; the container "
+                   "overrides it per launch through the graphs_off parameter of node /isaac_sim")
     p.add_argument("--urdf2usd-ros", default=os.environ.get("URDF2USD_ROS", os.path.join(SRC, "urdf2usd_ros")))
     p.add_argument("--world", help="open this USD at start (local test without the container)")
     p.add_argument("--robot", help="reference this robot USD under /World/<name>")
@@ -123,6 +126,31 @@ def report_entity(path, prim):
     return prim.HasAttribute("simulationInterfacesSpawned")
 
 
+def graphs_off(prim, patterns):
+    """Switch sensors of a spawned robot off so Isaac neither renders nor publishes them: a graph is deactivated
+    (its render product never exists), a single helper node keeps the graph but gets inputs:enabled = False."""
+    for pat in [x.strip() for x in patterns.split(",") if x.strip()]:
+        target = prim.GetStage().GetPrimAtPath(prim.GetPath().AppendPath(pat))
+        if not target:
+            print(f"warning: no {pat} under {prim.GetPath()}", flush=True)
+        elif target.GetTypeName() == "OmniGraphNode":
+            target.GetAttribute("inputs:enabled").Set(False)
+            print(f"off {target.GetPath()} (inputs:enabled)", flush=True)
+        elif target.IsActive():
+            target.SetActive(False)
+            print(f"off {target.GetPath()}", flush=True)
+
+
+def param_node(default):
+    """rclpy node /isaac_sim with the string parameter graphs_off (set from the container before a spawn)."""
+    import rclpy
+    if not rclpy.ok():
+        rclpy.init()
+    node = rclpy.create_node("isaac_sim")
+    node.declare_parameter("graphs_off", default)
+    return node
+
+
 def viewer_layout():
     """Hide every editor panel but the viewport; Kit re-docks it full size."""
     import omni.ui as ui
@@ -212,11 +240,14 @@ def run(app, args):
         for path in paths:
             prim = stage.GetPrimAtPath(path) if path.IsPrimPath() or path.IsAbsoluteRootPath() else None
             if path.IsPrimPath() and path.GetParentPath().IsAbsoluteRootPath():
-                if report_entity(path, prim) and args.viewer and not args.headless:
-                    frame_robot(prim)
+                if report_entity(path, prim):
+                    graphs_off(prim, node.get_parameter("graphs_off").value)
+                    if args.viewer and not args.headless:
+                        frame_robot(prim)
             if prim:
                 fix_subtree(prim, args.domain, state["noted"])
 
+    node = param_node(args.off)
     sub = ctx.get_stage_event_stream().create_subscription_to_pop_by_type(  # noqa: F841  keep alive
         int(omni.usd.StageEventType.OPENED), on_opened)
     stage = handle_opened()
@@ -230,6 +261,7 @@ def run(app, args):
         print(f"opened {args.world}", flush=True)
     if args.robot:
         prim = spawn_local(stage, args.robot, args.name or os.path.splitext(os.path.basename(args.robot))[0], args.pose)
+        graphs_off(prim, args.off)
         if args.viewer and not args.headless:
             frame_robot(prim)
     if args.world or args.robot:
@@ -242,8 +274,10 @@ def run(app, args):
         omni.timeline.get_timeline_interface().play()
         print("playing", flush=True)
     print(f"READY domain={args.domain} rmw={args.rmw} services=simulation_interfaces", flush=True)
+    import rclpy
     while app.is_running():
         app.update()
+        rclpy.spin_once(node, timeout_sec=0)
         drain()
 
 

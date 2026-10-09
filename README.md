@@ -538,6 +538,7 @@ Exit codes: 0 ok, 1 service error, 2 service unavailable. Every command accepts 
 | `load-world URI [--if-different]` | Load a USD world (stops the sim first). `--if-different` skips it when the same world is already loaded. |
 | `spawn NAME URI [--pose X Y Z YAW] [--namespace NS] [--allow-renaming] [--replace]` | Spawn a USD entity at prim `/NAME`. `--replace` deletes an existing `NAME` first. |
 | `delete NAME [--ignore-missing]` | Delete the entity at `/NAME`. |
+| `graphs-off [PATTERN ...]` | Sensor graphs (`ROS2_Lidar_lidar_back`) or single helper nodes (`ROS2_Camera_head_camera/HelperDepth`) the runner deactivates on every robot spawned afterwards; no argument re-enables all. `isaac_minimal.launch.py` derives it from its `enable_*` flags. |
 | `reset` | Remove only service-spawned entities. |
 
 `delete` and `reset` do not tear a robot down cleanly: its sensor writers and in-process controller_manager outlive the prim and keep re-authoring it, so a respawn under the same name fails. Reload the world instead (`isaac_minimal.launch.py` does).
