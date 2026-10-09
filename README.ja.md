@@ -527,6 +527,7 @@ $ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/
 | `load-world URI [--if-different]` | USD worldを読み込む（先にシミュレーションを停止する）．`--if-different`は同じworldが既に読み込まれていればスキップする． |
 | `spawn NAME URI [--pose X Y Z YAW] [--namespace NS] [--allow-renaming] [--replace]` | USDエンティティを`/NAME`のprimとして生成する．`--replace`は既存の`NAME`を先に削除する． |
 | `delete NAME [--ignore-missing]` | `/NAME`のエンティティを削除する． |
+| `graphs-off [PATTERN ...]` | 以後生成するロボットで無効化するセンサグラフ（`ROS2_Lidar_lidar_back`）またはヘルパノード（`ROS2_Camera_head_camera/HelperDepth`）．引数なしで全て有効に戻す．`isaac_minimal.launch.py`は`enable_*`から決める． |
 | `reset` | サービスで生成したエンティティのみ削除する． |
 
 `delete`と`reset`ではロボットを完全には片付けられない．センサのwriterとプロセス内のcontroller_managerがprimより長生きしてprimを書き戻すため，同名での再生成は失敗する．代わりにワールドを読み直す（`isaac_minimal.launch.py`はそうしている）．

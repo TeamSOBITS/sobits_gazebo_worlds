@@ -168,6 +168,19 @@ def cmd_delete(a):
     delete(a.name, a.timeout, a.ignore_missing, a.stop)
 
 
+def cmd_graphs_off(a):
+    # Parameter of the host runner (scripts/isaac_sim.py); applied to every robot spawned afterwards.
+    from rcl_interfaces.msg import Parameter, ParameterValue, ParameterType
+    from rcl_interfaces.srv import SetParameters
+    req = SetParameters.Request()
+    req.parameters = [Parameter(name='graphs_off', value=ParameterValue(
+        type=ParameterType.PARAMETER_STRING, string_value=','.join(a.patterns)))]
+    resp = call(SetParameters, '/isaac_sim/set_parameters', req, a.timeout)
+    if not resp.results or not resp.results[0].successful:
+        raise Failed('graphs-off: ' + (resp.results[0].reason if resp.results else 'no result'))
+    print('graphs_off=' + (','.join(a.patterns) or '(none)'))
+
+
 def cmd_reset(a):
     check(call(ResetSimulation, '/reset_simulation', ResetSimulation.Request(), a.timeout),
           'reset_simulation')
@@ -214,6 +227,10 @@ def build_parser():
     s.add_argument('name')
     s.add_argument('--ignore-missing', action='store_true')
     s.add_argument('--stop', action='store_true', help='stop the sim before deleting')
+    s = add('graphs-off', cmd_graphs_off,
+            'sensor graphs (ROS2_Lidar_lidar_back) or graph/node (ROS2_Camera_head_camera/HelperDepth) the runner '
+            'deactivates on every robot spawned from now on; no argument re-enables all')
+    s.add_argument('patterns', nargs='*')
     add('reset', cmd_reset, 'reset the simulation')
     s = add('entities', cmd_entities, 'list entity prim paths')
     s.add_argument('--filter', default='', help='regex on the prim path')
