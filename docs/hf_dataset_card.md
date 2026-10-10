@@ -104,6 +104,8 @@ spawned through the `simulation_interfaces` services (`isaacsim.ros2.sim_control
 
 Since v0.5.0 the robot MJCFs carry `<position>`/`<velocity>` actuators named after the joints, one `<camera>` per descriptor camera and rangefinder fans (`<lidar>-<i>`) per 2D lidar, so `mujoco_ros2_control` drives them natively; `scripts/mujoco_scene.py` builds the world + robot scene.
 
+Since v0.5.7 robot colliders with `mu` 0 (SOBIT LIGHT `base_link`, resting on the floor) carry `priority="1"` and `condim="1"`: MuJoCo gives a contact the larger friction of its two geoms, so without it the floor pinned the base and the drive wheels spun in place. The `empty` world's floor collider is now 100 m (it was the SDF plane's 1 m size, which Gazebo ignores).
+
 MuJoCo:
 
 ```python
