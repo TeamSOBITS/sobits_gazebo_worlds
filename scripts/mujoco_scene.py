@@ -16,7 +16,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 ROBOT_FIRST = ("option", "visual", "equality", "actuator", "keyframe")  # one source: the robot
-MERGED = ("asset", "contact", "sensor", "tendon", "custom")
+MERGED = ("extension", "asset", "contact", "sensor", "tendon", "custom")  # extension: mujoco.plugin.lidar instances
 
 
 def _parse(path):
