@@ -102,6 +102,8 @@ the stage; the SOBIT HOME wheel steer drives carry the gains that let the swerve
 spawned through the `simulation_interfaces` services (`isaacsim.ros2.sim_control`), see the
 `sobits_gazebo_worlds` README "Isaac Sim".
 
+Since v0.5.0 the robot MJCFs carry `<position>`/`<velocity>` actuators named after the joints, one `<camera>` per descriptor camera and rangefinder fans (`<lidar>-<i>`) per 2D lidar, so `mujoco_ros2_control` drives them natively; `scripts/mujoco_scene.py` builds the world + robot scene.
+
 MuJoCo:
 
 ```python
