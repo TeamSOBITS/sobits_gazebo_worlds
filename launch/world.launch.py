@@ -1,7 +1,7 @@
 """Load a Gazebo world: resolve the file, expand xacro, run gz sim.
 
 Other packages should include this rather than re-deriving world paths and gz
-arguments (see sobit_home_bringup/launch/gz_minimal.launch.py).
+arguments (see sobit_home_bringup/launch/include/gz_minimal.launch.py, the Gazebo backend of sim_minimal.launch.py).
 """
 
 from launch import LaunchDescription

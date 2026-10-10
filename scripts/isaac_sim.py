@@ -3,7 +3,7 @@
 
 Opens Isaac Sim with the ROS 2 bridge and isaacsim.ros2.sim_control, then idles; the container loads the
 world and spawns robots with /load_world, /spawn_entities, /set_simulation_state, ... Start it with
-scripts/isaac_sim.sh, then in the container: ros2 launch sobit_home_bringup isaac_minimal.launch.py
+scripts/isaac_sim.sh, then in the container: ros2 launch sobit_home_bringup sim_minimal.launch.py simulator:=isaac
 """
 import argparse
 import math
