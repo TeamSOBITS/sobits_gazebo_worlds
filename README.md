@@ -107,7 +107,7 @@ First prepare the following environment, then proceed to the installation step.
    ```
 2. Clone this repository.
    ```sh
-   $ git clone -b humble-devel https://github.com/TeamSOBITS/sobits_gazebo_worlds.git
+   $ git clone -b jazzy-devel https://github.com/TeamSOBITS/sobits_gazebo_worlds.git
    ```
 3. Move into the repository.
    ```sh
