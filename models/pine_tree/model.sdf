@@ -1,18 +1,18 @@
 <sdf version="1.7">
-  <model name="Pine Tree">
+  <model name="pine_tree">
     <static>true</static>
     <link name="link">
       <collision name="collision">
         <geometry>
           <mesh>
-            <uri>model://Pine Tree/meshes/pine_tree.dae</uri>
+            <uri>model://pine_treemeshes/pine_tree.dae</uri>
           </mesh>
         </geometry>
       </collision>
       <visual name="branch">
         <geometry>
           <mesh>
-            <uri>model://Pine Tree/meshes/pine_tree.dae</uri>
+            <uri>model://pine_tree/meshes/pine_tree.dae</uri>
             <submesh>
               <name>Branch</name>
             </submesh>
@@ -22,14 +22,14 @@
           <double_sided>true</double_sided>
           <diffuse>1.0 1.0 1.0</diffuse>
           <script>
-            <uri>model://Pine Tree/materials/scripts/</uri>
-            <uri>model://Pine Tree/materials/textures/</uri>
+            <uri>model://pine_tree/materials/scripts/</uri>
+            <uri>model://pine_treematerials/textures/</uri>
             <name>PineTree/Branch</name>
           </script>
           
           <pbr>
             <metal>
-              <albedo_map>model://Pine Tree/materials/textures/branch_2_diffuse.png</albedo_map>
+              <albedo_map>model://pine_tree/materials/textures/branch_2_diffuse.png</albedo_map>
             </metal>
           </pbr>
         </material>
@@ -37,7 +37,7 @@
       <visual name="bark">
         <geometry>
           <mesh>
-            <uri>model://Pine Tree/meshes/pine_tree.dae</uri>
+            <uri>model://pine_tree/meshes/pine_tree.dae</uri>
             <submesh>
               <name>Bark</name>
             </submesh>
@@ -46,14 +46,14 @@
         <material>
           <diffuse>1.0 1.0 1.0</diffuse>
           <script>
-            <uri>model://Pine Tree/materials/scripts/</uri>
-            <uri>model://Pine Tree/materials/textures/</uri>
+            <uri>model://pine_tree/materials/scripts/</uri>
+            <uri>model://pine_tree/materials/textures/</uri>
             <name>PineTree/Bark</name>
           </script>
           
           <pbr>
             <metal>
-              <albedo_map>model://Pine Tree/materials/textures/bark_diffuse.png</albedo_map>
+              <albedo_map>model://pine_tree/materials/textures/bark_diffuse.png</albedo_map>
             </metal>
           </pbr>
         </material>

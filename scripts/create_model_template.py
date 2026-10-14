@@ -48,8 +48,11 @@ def create_model_directory(model_name, file_type):
     if os.path.exists(base_path):
         raise FileExistsError(f"モデルディレクトリ '{base_path}' は既に存在します。")
 
-    if "models" not in os.listdir():
-        raise FileNotFoundError("No 'model' directory found. Your pwd might be wrong.")
+    if not os.path.isdir("models"):
+        raise FileNotFoundError(
+            "No 'models' directory found. "
+            "Please run this script from the package root."
+            )
 
     try:
         # Create the base directory

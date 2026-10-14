@@ -247,7 +247,7 @@
     <include>
       <name>bedroom#arm_chair</name>
       <uri>model://arm_chair</uri>
-      <static>false</static>
+      <static>true</static>
       <pose relative_to=''>-2.0 3.25 0.0 0.0 0.0 0.0</pose>
     </include>
 

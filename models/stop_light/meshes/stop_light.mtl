@@ -12,5 +12,5 @@ newmtl StopLight
 	Kd 0.5882 0.5882 0.5882
 	Ks 0.0000 0.0000 0.0000
 	Ke 0.0000 0.0000 0.0000
-	map_Ka stop_light.png
-	map_Kd stop_light.png
+	map_Ka ../materials/textures/stop_light.png
+	map_Kd ../materials/textures/stop_light.png
