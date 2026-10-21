@@ -29,6 +29,8 @@ def parse_args():
     p.add_argument("--kit-arg", action="append", default=[], metavar="--/path=value",
                    help="Kit setting passed through (repeatable), written --kit-arg=--/rtx/pathtracing/cached/retrace=0.1")
     p.add_argument("--cpu-threads", type=int, default=16, help="SimulationApp limit_cpu_threads (default 16)")
+    p.add_argument("--physics-hz", type=float, default=None,
+                   help="physics steps per second of the active scene (default: the world's, PhysX 60)")
     p.add_argument("--set", action="append", default=[], metavar="GLOB:attr=value",
                    help="attribute on matching prims of every spawned robot (repeatable), e.g. "
                    "'ROS2_Camera_*/Helper*:inputs:frameSkipCount=1'")
@@ -75,7 +77,7 @@ def setup_env(args):
     print("ROS env:", {k: os.environ.get(k) for k in keys}, flush=True)
 
 
-def prepare_stage(stage, cpu_physics=False):
+def prepare_stage(stage, cpu_physics=False, physics_hz=None):
     """One root-layer physics scene (referenced-only scenes double sim time) and one /clock per stage."""
     from pxr import Sdf, UsdPhysics
     from utils import isaac_world
@@ -90,6 +92,11 @@ def prepare_stage(stage, cpu_physics=False):
                 p.CreateAttribute("physxScene:enableGPUDynamics", Sdf.ValueTypeNames.Bool).Set(False)
                 p.CreateAttribute("physxScene:broadphaseType", Sdf.ValueTypeNames.Token).Set("MBP")
                 print(f"stage: CPU dynamics on {p.GetPath()}", flush=True)
+    if physics_hz:
+        for p in stage.Traverse():
+            if p.IsA(UsdPhysics.Scene) and p.IsActive():
+                p.CreateAttribute("physxScene:timeStepsPerSecond", Sdf.ValueTypeNames.UInt).Set(int(physics_hz))
+                print(f"stage: {physics_hz:g} physics steps/s on {p.GetPath()}", flush=True)
     if not stage.GetPrimAtPath(CLOCK_PATH):
         isaac_world.add_clock_graph(stage, CLOCK_PATH, use_domain_id_env=True)
         print(f"stage: /clock graph at {CLOCK_PATH}", flush=True)
@@ -269,7 +276,7 @@ def run(app, args):
             state["listener"].Revoke()
         state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
         state["paths"].clear()
-        prepare_stage(stage, cpu_physics=not args.gpu_physics)
+        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz)
         if args.viewer and not args.headless:
             viewer_layout()
         return stage
