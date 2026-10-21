@@ -15,6 +15,15 @@ SRC = os.path.dirname(os.path.dirname(HERE))
 CONTROL_NODE = "isaacsim.ros2.control.ROS2ControlManager"
 CONTEXT_NODE = "isaacsim.ros2.bridge.ROS2Context"
 CLOCK_PATH = "/World/ROS2_Clock"
+# Isaac Lab's PhysxCfg defaults, so policies trained there meet the same contacts; with the worlds' own
+# settings the swerve base jolts (tray policy, sobits_isaaclab notes section 9.6)
+SOLVER_SCENE_ATTRS = (
+    "physxScene:solverType=TGS",
+    "physxScene:frictionOffsetThreshold=0.04",
+    "physxScene:frictionCorrelationDistance=0.025",
+    "physxScene:enableStabilization=true",
+    "physxScene:bounceThreshold=0.2",
+)
 
 
 def parse_args():
@@ -32,7 +41,10 @@ def parse_args():
     p.add_argument("--physics-hz", type=float, default=None,
                    help="physics steps per second of the active scene (default: the world's, PhysX 60)")
     p.add_argument("--scene-attr", action="append", default=[], metavar="attr=value",
-                   help="PhysX scene attribute on the active scenes (repeatable), e.g. physxScene:solverType=TGS")
+                   help="PhysX scene attribute on the active scenes (repeatable, applied after the solver defaults), "
+                   "e.g. physxScene:solverType=PGS")
+    p.add_argument("--world-solver", action="store_true",
+                   help="keep the world's solver settings instead of Isaac Lab's (SOLVER_SCENE_ATTRS)")
     p.add_argument("--set", action="append", default=[], metavar="GLOB:attr=value",
                    help="attribute on matching prims of every spawned robot (repeatable), e.g. "
                    "'ROS2_Camera_*/Helper*:inputs:frameSkipCount=1'")
@@ -77,6 +89,10 @@ def setup_env(args):
     os.environ["RMW_IMPLEMENTATION"] = args.rmw  # ensure_bundled_ros pins fastrtps
     keys = ("ROS_DOMAIN_ID", "RMW_IMPLEMENTATION", "CYCLONEDDS_URI", "ROS_AUTOMATIC_DISCOVERY_RANGE")
     print("ROS env:", {k: os.environ.get(k) for k in keys}, flush=True)
+
+
+def scene_attrs(args):
+    return [*(() if args.world_solver else SOLVER_SCENE_ATTRS), *args.scene_attr]
 
 
 def prepare_stage(stage, cpu_physics=False, physics_hz=None, scene_attrs=()):
@@ -289,7 +305,7 @@ def run(app, args):
             state["listener"].Revoke()
         state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
         state["paths"].clear()
-        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz, scene_attrs=args.scene_attr)
+        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz, scene_attrs=scene_attrs(args))
         if args.viewer and not args.headless:
             viewer_layout()
         return stage
