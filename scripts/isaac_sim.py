@@ -31,6 +31,8 @@ def parse_args():
     p.add_argument("--cpu-threads", type=int, default=16, help="SimulationApp limit_cpu_threads (default 16)")
     p.add_argument("--physics-hz", type=float, default=None,
                    help="physics steps per second of the active scene (default: the world's, PhysX 60)")
+    p.add_argument("--scene-attr", action="append", default=[], metavar="attr=value",
+                   help="PhysX scene attribute on the active scenes (repeatable), e.g. physxScene:solverType=TGS")
     p.add_argument("--set", action="append", default=[], metavar="GLOB:attr=value",
                    help="attribute on matching prims of every spawned robot (repeatable), e.g. "
                    "'ROS2_Camera_*/Helper*:inputs:frameSkipCount=1'")
@@ -77,7 +79,7 @@ def setup_env(args):
     print("ROS env:", {k: os.environ.get(k) for k in keys}, flush=True)
 
 
-def prepare_stage(stage, cpu_physics=False, physics_hz=None):
+def prepare_stage(stage, cpu_physics=False, physics_hz=None, scene_attrs=()):
     """One root-layer physics scene (referenced-only scenes double sim time) and one /clock per stage."""
     from pxr import Sdf, UsdPhysics
     from utils import isaac_world
@@ -97,6 +99,17 @@ def prepare_stage(stage, cpu_physics=False, physics_hz=None):
             if p.IsA(UsdPhysics.Scene) and p.IsActive():
                 p.CreateAttribute("physxScene:timeStepsPerSecond", Sdf.ValueTypeNames.UInt).Set(int(physics_hz))
                 print(f"stage: {physics_hz:g} physics steps/s on {p.GetPath()}", flush=True)
+    for spec in scene_attrs:
+        name, _, raw = spec.partition("=")
+        value = {"true": True, "false": False}.get(raw.lower(), raw)
+        for p in stage.Traverse():
+            if p.IsA(UsdPhysics.Scene) and p.IsActive():
+                attr = p.GetAttribute(name)
+                if not attr:
+                    kind = {bool: Sdf.ValueTypeNames.Bool, str: Sdf.ValueTypeNames.Token}[type(value)]
+                    attr = p.CreateAttribute(name, kind if not raw.replace(".", "", 1).isdigit() else Sdf.ValueTypeNames.Float)
+                attr.Set(value if attr.GetTypeName() in (Sdf.ValueTypeNames.Bool, Sdf.ValueTypeNames.Token, Sdf.ValueTypeNames.String) else float(raw))
+                print(f"stage: {name}={attr.Get()} on {p.GetPath()}", flush=True)
     if not stage.GetPrimAtPath(CLOCK_PATH):
         isaac_world.add_clock_graph(stage, CLOCK_PATH, use_domain_id_env=True)
         print(f"stage: /clock graph at {CLOCK_PATH}", flush=True)
@@ -276,7 +289,7 @@ def run(app, args):
             state["listener"].Revoke()
         state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
         state["paths"].clear()
-        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz)
+        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz, scene_attrs=args.scene_attr)
         if args.viewer and not args.headless:
             viewer_layout()
         return stage
