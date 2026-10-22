@@ -4,8 +4,8 @@
 - physxArticulation:sleepThreshold = 0 on every articulation root. PhysX 110.3 (Isaac Sim 6.1) spins a GPU
   articulation kernel forever when an articulation falls asleep while a tensor-API view is active
   (ros2_control, IMU, Isaac Lab); see urdf2usd_ros/docs/isaac_gpu_articulation_sleep_stall.md.
-- floor_plane* tiles are visual only; one infinite collision plane at their top surface carries the robots.
-  Wheels on the 10 m box tiles stick-slip (drive speed jitter 8x a ground plane's), Isaac Lab trains on a plane.
+- floor_plane* tiles and ground_plane are visual only; one infinite collision plane at their top carries the
+  robots. A 100 m box (empty world) lifts cylinder wheels 2 cm off its surface; Isaac Lab trains on a plane.
 Idempotent; run with a pxr python (IsaacLab venv) after export_sim_formats.py:
   python3 scripts/postprocess_usd.py export/usd
 """
@@ -16,7 +16,7 @@ from pathlib import Path
 from pxr import Sdf, Usd, UsdGeom, UsdPhysics, UsdShade
 
 SLEEP_ATTR = 'physxArticulation:sleepThreshold'
-FLOOR_PREFIX = 'floor_plane'
+FLOOR_PREFIXES = ('floor_plane', 'ground_plane')
 FLOOR_COLLIDER = 'floor_collision'
 
 
@@ -45,11 +45,11 @@ def disable_articulation_sleep(stage):
 
 
 def visual_only_floor(stage):
-    """Disable the floor tiles' collisions and add one collision plane at their top; return changed paths."""
+    """Disable the floor prims' collisions and add one collision plane at their top; return changed paths."""
     root = stage.GetDefaultPrim()
     if not root:
         return []
-    tiles = [p for p in root.GetChildren() if p.GetName().startswith(FLOOR_PREFIX)]
+    tiles = [p for p in root.GetChildren() if p.GetName().startswith(FLOOR_PREFIXES)]
     colliders = [p for t in tiles for p in Usd.PrimRange(t) if p.HasAPI(UsdPhysics.CollisionAPI)]
     plane_path = root.GetPath().AppendChild(FLOOR_COLLIDER)
     if not colliders or stage.GetPrimAtPath(plane_path):
