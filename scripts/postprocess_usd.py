@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Author Isaac Sim (PhysX) settings the SDF converter cannot express.
 
-Currently: physxArticulation:sleepThreshold = 0 on every articulation root. PhysX 110.3 (Isaac Sim 6.1)
-spins a GPU articulation kernel forever when an articulation falls asleep while a tensor-API view is active
-(ros2_control, IMU, Isaac Lab); see urdf2usd_ros/docs/isaac_gpu_articulation_sleep_stall.md.
+- physxArticulation:sleepThreshold = 0 on every articulation root. PhysX 110.3 (Isaac Sim 6.1) spins a GPU
+  articulation kernel forever when an articulation falls asleep while a tensor-API view is active
+  (ros2_control, IMU, Isaac Lab); see urdf2usd_ros/docs/isaac_gpu_articulation_sleep_stall.md.
+- floor_plane* tiles are visual only; one infinite collision plane at their top surface carries the robots.
+  Wheels on the 10 m box tiles stick-slip (drive speed jitter 8x a ground plane's), Isaac Lab trains on a plane.
 Idempotent; run with a pxr python (IsaacLab venv) after export_sim_formats.py:
   python3 scripts/postprocess_usd.py export/usd
 """
@@ -11,9 +13,11 @@ import argparse
 import sys
 from pathlib import Path
 
-from pxr import Sdf, Usd, UsdPhysics
+from pxr import Sdf, Usd, UsdGeom, UsdPhysics, UsdShade
 
 SLEEP_ATTR = 'physxArticulation:sleepThreshold'
+FLOOR_PREFIX = 'floor_plane'
+FLOOR_COLLIDER = 'floor_collision'
 
 
 def find_usd(paths):
@@ -40,15 +44,44 @@ def disable_articulation_sleep(stage):
     return changed
 
 
+def visual_only_floor(stage):
+    """Disable the floor tiles' collisions and add one collision plane at their top; return changed paths."""
+    root = stage.GetDefaultPrim()
+    if not root:
+        return []
+    tiles = [p for p in root.GetChildren() if p.GetName().startswith(FLOOR_PREFIX)]
+    colliders = [p for t in tiles for p in Usd.PrimRange(t) if p.HasAPI(UsdPhysics.CollisionAPI)]
+    plane_path = root.GetPath().AppendChild(FLOOR_COLLIDER)
+    if not colliders or stage.GetPrimAtPath(plane_path):
+        return []
+    cache = UsdGeom.BBoxCache(Usd.TimeCode.Default(), [UsdGeom.Tokens.default_, UsdGeom.Tokens.guide])
+    top = max(cache.ComputeWorldBound(p).ComputeAlignedRange().GetMax()[2] for p in colliders)
+    binding = UsdShade.MaterialBindingAPI(colliders[0])
+    # gz-usd binds the physics material without a purpose
+    material = binding.GetDirectBinding('physics').GetMaterial() or binding.GetDirectBinding().GetMaterial()
+    for p in colliders:
+        UsdPhysics.CollisionAPI(p).CreateCollisionEnabledAttr().Set(False)
+    plane = UsdGeom.Plane.Define(stage, plane_path)
+    plane.CreateAxisAttr(UsdGeom.Tokens.z)
+    plane.CreatePurposeAttr(UsdGeom.Tokens.guide)
+    UsdGeom.XformCommonAPI(plane).SetTranslate((0.0, 0.0, top))
+    UsdPhysics.CollisionAPI.Apply(plane.GetPrim())
+    if material:
+        UsdShade.MaterialBindingAPI.Apply(plane.GetPrim()).Bind(
+            material, UsdShade.Tokens.weakerThanDescendants, 'physics')
+    return [p.GetPath().pathString for p in colliders] + [plane_path.pathString]
+
+
 def process(path, dry_run=False):
     stage = Usd.Stage.Open(str(path))
     if not stage:
         print('error: cannot open %s' % path, file=sys.stderr)
         return None
     changed = disable_articulation_sleep(stage)
-    if changed and not dry_run:
+    floor = visual_only_floor(stage)
+    if (changed or floor) and not dry_run:
         stage.GetRootLayer().Save()
-    return changed
+    return changed, floor
 
 
 def main(argv=None):
@@ -59,11 +92,15 @@ def main(argv=None):
     a = ap.parse_args(argv)
     failed = 0
     for f in find_usd(a.paths):
-        changed = process(f, a.dry_run)
-        if changed is None:
+        result = process(f, a.dry_run)
+        if result is None:
             failed += 1
-        elif changed:
+            continue
+        changed, floor = result
+        if changed:
             print('%s: sleep disabled on %d articulation(s)' % (f, len(changed)))
+        if floor:
+            print('%s: floor visual only, %d tile collider(s) off, plane %s' % (f, len(floor) - 1, floor[-1]))
     return 1 if failed else 0
 
 
