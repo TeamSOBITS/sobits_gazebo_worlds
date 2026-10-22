@@ -42,6 +42,16 @@
 
   <world name='rcw2026_arena'>
 
+    <!-- closed:=true -> 2.5 m walls + solid ceiling + per-room lights (the
+         ceiling has collision, so it blocks upward LiDAR/depth rays). -->
+    <xacro:arg name="closed" default="false"/>
+    <xacro:property name="closed" value="$(arg closed)"/>
+    <xacro:property name="wall_h"  value="${2.5 if closed else 1.25}"/>
+    <xacro:property name="wall_cz" value="${wall_h/2.0}"/>
+    <!-- One colour for all structure (walls, ceiling, transoms, door frames);
+         matches the rcjo2025_frame macro so both arenas share a wall grey. -->
+    <xacro:property name="struct_c" value="0.75 0.75 0.75 1"/>
+
     <!-- ───────────────────────── Plugins (modern GZ) ───────────────────────── -->
     <plugin filename="gz-sim-physics-system"          name="gz::sim::systems::Physics"/>
     <plugin filename="gz-sim-user-commands-system"    name="gz::sim::systems::UserCommands"/>
@@ -134,28 +144,28 @@
 
       <!-- ── TOP wall (+Y), full span, no opening — shifted +0.5 ── -->
       <link name="wall_top">
-        <pose>0 4.925 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>9.00 0.15 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>9.00 0.15 1.25</size></box></geometry>
-          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        <pose>0 4.925 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>9.00 0.15 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>9.00 0.15 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
 
       <!-- ── BOTTOM wall (-Y), full span, no opening — shifted -1.0 ── -->
       <link name="wall_bottom">
-        <pose>0 -5.425 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>9.00 0.15 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>9.00 0.15 1.25</size></box></geometry>
-          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        <pose>0 -5.425 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>9.00 0.15 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>9.00 0.15 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
 
       <!-- ── RIGHT wall (+X), lengthened to 10.20 m, centre y=-0.25 ── -->
       <link name="wall_right">
-        <pose>4.425 -0.25 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.15 10.20 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.15 10.20 1.25</size></box></geometry>
-          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        <pose>4.425 -0.25 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 10.20 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 10.20 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
 
@@ -174,24 +184,24 @@
              mid   : y[-1.700,2.646] len 4.346 c  0.4729
              top   : y[3.596,4.850]  len 1.254 c  4.2229 -->
       <link name="wall_left_bottom">
-        <pose>-4.425 -4.0000 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.15 2.7000 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.15 2.7000 1.25</size></box></geometry>
-          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        <pose>-4.425 -4.0000 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 2.7000 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 2.7000 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
       <link name="wall_left_mid">
-        <pose>-4.425 0.4729 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.15 4.3458 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.15 4.3458 1.25</size></box></geometry>
-          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        <pose>-4.425 0.4729 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 4.3458 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 4.3458 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
       <link name="wall_left_top">
-        <pose>-4.425 4.2229 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.15 1.2542 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.15 1.2542 1.25</size></box></geometry>
-          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.9 0.9 0.9 1</diffuse></material>
+        <pose>-4.425 4.2229 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 1.2542 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 1.2542 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
 
@@ -224,24 +234,24 @@
              mid   : y[-2.487,3.509] len 5.995 centre  0.5111 (spans crossing)
              top   : y[4.459,4.85]   len 0.391 centre  4.6544 -->
       <link name="inner_vert_bottom">
-        <pose>0 -4.3933 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.15 1.9134 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.15 1.9134 1.25</size></box></geometry>
-          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        <pose>0 -4.3933 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 1.9134 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 1.9134 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
       <link name="inner_vert_mid">
-        <pose>0 0.5111 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.15 5.9954 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.15 5.9954 1.25</size></box></geometry>
-          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        <pose>0 0.5111 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 5.9954 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 5.9954 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
       <link name="inner_vert_top">
-        <pose>0 4.6544 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.15 0.3912 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.15 0.3912 1.25</size></box></geometry>
-          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        <pose>0 4.6544 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.15 0.3912 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.15 0.3912 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
 
@@ -252,32 +262,32 @@
              left_inner  : x[-1.935,-0.075] len 1.860 centre -1.0050
              left_outer  : x[-4.350,-2.885] len 1.465 centre -3.6175 -->
       <link name="inner_horiz_right_inner">
-        <pose>1.3950 0 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>2.640 0.15 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>2.640 0.15 1.25</size></box></geometry>
-          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        <pose>1.3950 0 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>2.640 0.15 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>2.640 0.15 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
       <link name="inner_horiz_right_outer">
-        <pose>4.0075 0 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>0.685 0.15 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>0.685 0.15 1.25</size></box></geometry>
-          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        <pose>4.0075 0 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>0.685 0.15 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>0.685 0.15 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
       <!-- -X arm doorway MOVED to x=-1.591 (was -2.41); gap [-2.066,-1.116] -->
       <link name="inner_horiz_left_inner">
-        <pose>-0.5955 0 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>1.041 0.15 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>1.041 0.15 1.25</size></box></geometry>
-          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        <pose>-0.5955 0 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>1.041 0.15 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>1.041 0.15 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
       <link name="inner_horiz_left_outer">
-        <pose>-3.2080 0 0.625 0 0 0</pose>
-        <collision name="c"><geometry><box><size>2.284 0.15 1.25</size></box></geometry></collision>
-        <visual name="v"><geometry><box><size>2.284 0.15 1.25</size></box></geometry>
-          <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+        <pose>-3.2080 0 ${wall_cz} 0 0 0</pose>
+        <collision name="c"><geometry><box><size>2.284 0.15 ${wall_h}</size></box></geometry></collision>
+        <visual name="v"><geometry><box><size>2.284 0.15 ${wall_h}</size></box></geometry>
+          <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
         </visual>
       </link>
     </model>
@@ -305,6 +315,8 @@
     <!--   int_hpos    (+3.190,  0.000)  along X                                -->
     <!--   int_hneg    (-1.591,   0.000) along X  (entrance moved in GUI)       -->
     <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- 2.0 m in both modes: a portal above 1.25 m walls, a normal doorway
+         inside 2.5 m ones. -->
     <xacro:property name="dfh" value="2.0"/>     <!-- door frame height -->
     <xacro:property name="dfd" value="0.15"/>    <!-- frame depth = wall thickness -->
     <xacro:property name="jt"  value="0.05"/>    <!-- jamb post cross-section -->
@@ -315,6 +327,9 @@
          centre (cx,cy); its 3 links (2 jambs + header) are posed RELATIVE to
          that origin, so dragging the model moves the whole casing together. -->
 
+    <!-- REQUIRES XACRO EXPANSION: gz sim skips <xacro:*> silently, so these
+         macros spawn nothing. Load via sobits_gazebo_worlds/world.launch.py. -->
+
     <!-- Frame whose opening runs along Y (jambs offset in Y; frame faces +/-X). -->
     <xacro:macro name="frame_y" params="name cx cy">
       <model name="door_frame_${name}">
@@ -324,21 +339,21 @@
           <pose>0 0.45 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry>
-            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
           </visual>
         </link>
         <link name="jamb_b">
           <pose>0 -0.45 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${dfd} ${jt} ${dfh}</size></box></geometry>
-            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
           </visual>
         </link>
         <link name="header">
           <pose>0 0 ${dfh - hh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${dfd} 0.95 ${hh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${dfd} 0.95 ${hh}</size></box></geometry>
-            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
           </visual>
         </link>
       </model>
@@ -353,21 +368,21 @@
           <pose>0.45 0 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry>
-            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
           </visual>
         </link>
         <link name="jamb_b">
           <pose>-0.45 0 ${dfh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>${jt} ${dfd} ${dfh}</size></box></geometry>
-            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
           </visual>
         </link>
         <link name="header">
           <pose>0 0 ${dfh - hh/2} 0 0 0</pose>
           <collision name="c"><geometry><box><size>0.95 ${dfd} ${hh}</size></box></geometry></collision>
           <visual name="v"><geometry><box><size>0.95 ${dfd} ${hh}</size></box></geometry>
-            <material><ambient>0.85 0.85 0.85 1</ambient><diffuse>0.85 0.85 0.85 1</diffuse></material>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
           </visual>
         </link>
       </model>
@@ -384,25 +399,24 @@
     <xacro:frame_x name="int_hpos"  cx="3.19"   cy="0.0"/>
     <xacro:frame_x name="int_hneg"  cx="-1.591" cy="0.0"/>
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!-- ARENA DOORS (entrance / exit) — CLOSED, blocking the 2 exterior         -->
-    <!-- openings on the left wall (x=-4.425). Now the rcw26_door GLB model.     -->
-    <!--                                                                        -->
-    <!-- RoboCup start condition: robot waits outside until the door opens.      -->
-    <!-- yaw=1.5708 aligns the door's ~0.93 m width with the 0.95 m opening      -->
-    <!-- (which runs along Y). To "open", delete/slide the model.               -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- ARENA DOORS: hinged, closed at start. The model origin is the HINGE
+         EDGE, so each pose sits on a jamb, not the opening centre. -->
+    <!-- x=-4.320, NOT the wall centreline: the wall slab spans x -4.500..-4.350,
+         and a panel inside it jams against the wall instead of swinging. This
+         puts the 0.06-deep panel just clear on the arena face. -->
+    <!-- Both yaw=+1.5708 so both swing INWARD (+X). The panel extends -X from
+         its hinge (knob at the free edge), which sets both the jamb and yaw.
+           gz topic -t /model/arena_door_lower/joint/hinge/0/cmd_pos \
+                    -m gz.msgs.Double -p 'data: 1.5708'   (0.0 to close) -->
     <include>
       <name>arena_door_lower</name>
       <uri>model://rcw26_door</uri>
-      <static>1</static>
-      <pose>-4.425 -2.175 0.0 0.0 0.0 -1.5708</pose>
+      <pose>-4.320 -1.7000 0.0 0.0 0.0 1.5708</pose>
     </include>
     <include>
       <name>arena_door_upper</name>
       <uri>model://rcw26_door</uri>
-      <static>1</static>
-      <pose>-4.425 3.1208 0.0 0.0 0.0 1.5708</pose>
+      <pose>-4.320 3.5958 0.0 0.0 0.0 1.5708</pose>
     </include>
 
     <!-- ════════════════════════════════════════════════════════════════════ -->
@@ -643,6 +657,104 @@
       <static>0</static>
       <pose>0.869 0.656 0.470 0.0 0.0 1.0472</pose>
     </include>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!-- CLOSED ENVIRONMENT: CEILING + PER-ROOM LIGHTING                        -->
+    <!--                                                                        -->
+    <!-- Only emitted when closed:=true. Walls are ${wall_h} = 2.5 m here.      -->
+    <!--                                                                        -->
+    <!-- Arena footprint from the outer walls:                                  -->
+    <!--   X: -4.5 .. +4.5   (wall centre-lines +/-4.425, half-thickness 0.075) -->
+    <!--   Y: -5.5 .. +5.0   (bottom wall y=-5.425, top wall y=+4.925)          -->
+    <!-- => 9.0 x 10.5 m slab centred at (0, -0.25).                            -->
+    <!--                                                                        -->
+    <!-- The ceiling sits ON the wall tops: slab is 0.1 thick, so its centre is -->
+    <!-- at wall_h + 0.05 and its underside is flush at wall_h exactly.         -->
+    <!--                                                                        -->
+    <!-- Lights are one per room, at the centroid of each quadrant, hung 0.15 m -->
+    <!-- below the ceiling. cast_shadows is false on all of them: four (five,   -->
+    <!-- with the hallway) shadow-casting point lights is a heavy render cost   -->
+    <!-- and they stack shadow acne where their cones overlap.                  -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <xacro:if value="${closed}">
+
+      <xacro:property name="ceil_t"  value="0.10"/>
+      <xacro:property name="ceil_cz" value="${wall_h + ceil_t/2.0}"/>
+      <xacro:property name="lamp_z"  value="${wall_h - 0.15}"/>
+
+      <model name="arena_ceiling">
+        <static>true</static>
+        <link name="ceiling">
+          <pose>0 -0.25 ${ceil_cz} 0 0 0</pose>
+          <collision name="c"><geometry><box><size>9.00 10.50 ${ceil_t}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>9.00 10.50 ${ceil_t}</size></box></geometry>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
+          </visual>
+        </link>
+      </model>
+
+      <!-- One light per quadrant centroid, plus a fifth over the centre
+           crossing, which the cross walls screen from all four. -->
+      <xacro:macro name="room_light" params="name x y">
+        <light type="point" name="room_light_${name}">
+          <pose>${x} ${y} ${lamp_z} 0 0 0</pose>
+          <cast_shadows>false</cast_shadows>
+          <diffuse>0.75 0.74 0.70 1.0</diffuse>
+          <specular>0.15 0.15 0.15 1.0</specular>
+          <attenuation>
+            <range>10.0</range>
+            <constant>0.35</constant>
+            <linear>0.08</linear>
+            <quadratic>0.008</quadratic>
+          </attenuation>
+        </light>
+      </xacro:macro>
+
+      <xacro:room_light name="kitchen" x="-2.2" y="2.4"/>
+      <xacro:room_light name="bedroom" x="2.2"  y="2.4"/>
+      <xacro:room_light name="dining"  x="-2.2" y="-2.7"/>
+      <xacro:room_light name="living"  x="2.2"  y="-2.7"/>
+      <xacro:room_light name="centre"  x="0.0"  y="-0.25"/>
+
+      <!-- Fills frame-top (2.0) to wall-top, closing the 0.95 x 0.5 hole each
+           doorway leaves. Centres must track the xacro:frame_* calls. -->
+      <xacro:property name="tr_h"  value="${wall_h - dfh}"/>
+      <xacro:property name="tr_cz" value="${dfh + tr_h/2.0}"/>
+
+      <!-- Opening runs along Y (in the -X outer wall and the x=0 cross wall):
+           span 0.95 in Y, wall thickness in X. -->
+      <xacro:macro name="transom_y" params="name cx cy">
+        <link name="transom_${name}">
+          <pose>${cx} ${cy} ${tr_cz} 0 0 0</pose>
+          <collision name="c"><geometry><box><size>0.15 0.95 ${tr_h}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>0.15 0.95 ${tr_h}</size></box></geometry>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
+          </visual>
+        </link>
+      </xacro:macro>
+
+      <!-- Opening runs along X (the y=0 cross wall): span 0.95 in X. -->
+      <xacro:macro name="transom_x" params="name cx cy">
+        <link name="transom_${name}">
+          <pose>${cx} ${cy} ${tr_cz} 0 0 0</pose>
+          <collision name="c"><geometry><box><size>0.95 0.15 ${tr_h}</size></box></geometry></collision>
+          <visual name="v"><geometry><box><size>0.95 0.15 ${tr_h}</size></box></geometry>
+            <material><ambient>${struct_c}</ambient><diffuse>${struct_c}</diffuse><specular>0.2 0.2 0.2 1.0</specular></material>
+          </visual>
+        </link>
+      </xacro:macro>
+
+      <model name="arena_transoms">
+        <static>true</static>
+        <xacro:transom_y name="ext_lower" cx="-4.425" cy="-2.175"/>
+        <xacro:transom_y name="ext_upper" cx="-4.425" cy="3.1208"/>
+        <xacro:transom_y name="int_vpos"  cx="0.0"    cy="3.98375"/>
+        <xacro:transom_y name="int_vneg"  cx="0.0"    cy="-2.9616"/>
+        <xacro:transom_x name="int_hpos"  cx="3.19"   cy="0.0"/>
+        <xacro:transom_x name="int_hneg"  cx="-1.591" cy="0.0"/>
+      </model>
+
+    </xacro:if>
 
   </world>
 </sdf>
