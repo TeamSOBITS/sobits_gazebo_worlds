@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="dishwasher">
+    <static>true</static>
+    
+    <link name="link">
+      <inertial>
+        <mass>1.0</mass>
+      </inertial>
+      
+      <!-- 衝突判定用ボックス（物理演算用） -->
+      <collision name="collision">
+        <pose>0 0 0.45 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.6 0.6 0.9</size>
+          </box>
+        </geometry>
+      </collision>
+      
+      <!-- 見た目（メッシュファイル） -->
+      <visual name="visual">
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://dishwasher/meshes/dishwasher.glb</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+  </model>
+</sdf>
