@@ -6,13 +6,13 @@ from scripts.spawn_model import spawn_model
 def replace_model(
     target: str, model_type: str, model_name: str
 ) -> None:
-    # 1. 既存のモデルの現在のPose（位置と姿勢）を取得
+    # 1. Get the current pose (position and orientation) of the existing model.
     pose = get_model_pose(target)
 
-    # 2. 古いモデルをワールドから削除
+    # 2. Remove the old model from the world.
     remove_model(target)
 
-    # 3. 同じPoseに、新しいモデルIDと名前で生成
+    # 3. Spawn a new model with the specified model ID and name at the same pose.
     spawn_model(model_type, model_name, pose)
 
     print(
@@ -24,38 +24,38 @@ if __name__ == "__main__":
     import argparse
     import subprocess
 
-    # パーサーの作成
+    # Create the argument parser.
     parser = argparse.ArgumentParser(
-        description="Gazebo内の既存モデルの座標を引き継いで、別のモデルに置き換えるスクリプト"
+        description="Replace an existing Gazebo model with another model, preserving its pose."
     )
 
-    # コマンドライン引数の定義
+    # Define command-line arguments.
     parser.add_argument(
         "--target",
         "-t",
         required=True,
         type=str,
-        help="消去・置き換え対象となる、現在ワールドにいるモデル名 (例: chair_left)",
+        help="Name of the model currently in the world to remove and replace (e.g., chair_left).",
     )
     parser.add_argument(
         "--new-id",
         "-i",
         required=True,
         type=str,
-        help="新しく配置するSDFモデルのID (例: chair_right)",
+        help="SDF model ID of the model to spawn (e.g., chair_right).",
     )
     parser.add_argument(
         "--new-name",
         "-n",
         required=True,
         type=str,
-        help="新しく配置するモデルの固有インスタンス名 (例: chair_left_v2)",
+        help="Unique instance name for the model to spawn (e.g., chair_left_v2).",
     )
 
-    # 引数の解析
+    # Parse the arguments.
     args = parser.parse_args()
 
-    # 関数の実行
+    # Run the function.
     try:
         replace_model(
             target=args.target,

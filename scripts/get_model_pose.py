@@ -6,26 +6,26 @@ from geometry_msgs.msg import Pose
 
 
 def get_model_pose_raw(target: str) -> list[float]:
-    """Gazeboコマンドを実行して、生の6つの数値 [x, y, z, r, p, y] を取得する関数"""
-    # 実行するGazeboコマンドの構築
+    """Run the Gazebo command and return the six raw values [x, y, z, r, p, y]."""
+    # Build the Gazebo command to run.
     command = ["gz", "model", "-m", target, "-p"]
 
-    # コマンドを実行し、標準出力を取得
+    # Run the command and capture standard output.
     result = subprocess.run(
         command, capture_output=True, text=True, check=True
     )
     output = result.stdout
 
-    # 正規表現を使って、[数値 数値 数値] の形式の行をすべて抽出する
-    # [-?0-9.]+ は「マイナス記号、数字、ドット」の連続（つまり実数）にマッチします
+    # Extract all lines in the form [number number number] using a regular expression.
+    # [-?0-9.]+ matches a sequence of minus signs, digits, and periods (i.e., a real number).
     numbers = re.findall(r"\[\s*([-?0-9.]+)\s+([-?0-9.]+)\s+([-?0-9.]+)\s*\]", output)
 
     if len(numbers) < 2:
         raise RuntimeError(
-            f"モデル '{target}' の位置・姿勢データをパースできませんでした。"
+            f"Could not parse position and orientation data for model '{target}'."
         )
 
-    # 1つ目のマッチが XYZ、2つ目のマッチが RPY (ラジアン)
+    # The first match is XYZ; the second is RPY (in radians).
     xyz = [float(n) for n in numbers[0]]
     rpy = [float(n) for n in numbers[1]]
 
@@ -33,19 +33,19 @@ def get_model_pose_raw(target: str) -> list[float]:
 
 
 def get_model_pose(target: str) -> Pose:
-    # 共通の共通処理（コマンド実行とパース）を呼び出す
+    # Call the shared command execution and parsing routine.
     xyzrpy = get_model_pose_raw(target)
 
-    # Poseオブジェクトの作成
+    # Create a Pose object.
     pose = Pose()
 
-    # 1. 位置 (position) の代入
+    # 1. Assign the position.
     pose.position.x = xyzrpy[0]
     pose.position.y = xyzrpy[1]
     pose.position.z = xyzrpy[2]
 
-    # 2. 姿勢 (orientation) の計算と代入
-    # 取得した RPY（ラジアン）をクォータニオンに変換
+    # 2. Calculate and assign the orientation.
+    # Convert the retrieved RPY angles (in radians) to a quaternion.
 
     roll, pitch, yaw = xyzrpy[3], xyzrpy[4], xyzrpy[5]
 
@@ -67,29 +67,29 @@ def get_model_pose(target: str) -> Pose:
 if __name__ == "__main__":
     import argparse
 
-    # パーサーの作成
+    # Create the argument parser.
     parser = argparse.ArgumentParser(
-        description="Gazebo内の指定したモデルの現在のPoseを取得するスクリプト"
+        description="Get the current pose of a specified model in Gazebo."
     )
 
-    # コマンドライン引数の定義
+    # Define command-line arguments.
     parser.add_argument(
         "--model-name",
         "-m",
         required=True,
         type=str,
-        help="座標を取得したいモデルの固有インスタンス名 (例: chair_left)",
+        help="Unique instance name of the model whose pose you want to retrieve (e.g., chair_left).",
     )
 
-    # 引数の解析
+    # Parse the arguments.
     args = parser.parse_args()
 
     try:
-        # 関数の実行
+        # Run the function.
         current_pose = get_model_pose(target=args.model_name)
 
-        # 結果を分かりやすく表示
-        print(f"--- {args.model_name} の現在のPose ---")
+        # Display the results in a readable format.
+        print(f"--- Current pose of {args.model_name} ---")
         print(
             f"Position:    x={current_pose.position.x:.4f}, y={current_pose.position.y:.4f}, z={current_pose.position.z:.4f}"
         )

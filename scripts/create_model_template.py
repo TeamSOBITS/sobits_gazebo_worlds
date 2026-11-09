@@ -1,35 +1,35 @@
 """
-.glb や .obj 形式のオブジェクトを追加する際のスクリプトです。
-※ world に出現させるには、xacro ファイルに記述する必要があります。
-※ このスクリプトはあくまで models/ にテンプレートを作成するものです。
-※ モデルがないというエラーが出る場合は、colcon build をしていない場合が多いです。
+Script for adding objects in .glb or .obj format.
+Note: To spawn the object in a world, add it to the xacro file.
+Note: This script only creates a template in models/.
+Note: If you get a "model not found" error, you may need to run colcon build.
 
-使い方：
+Usage:
 
-pkg のルートに移動します。
+Change to the package root.
 
 ```sh
 cd ~/colcon_ws/src/sobits_gazebo_world
 ```
 
-3D モデルの形式によって以下のスクリプトを実行します。
+Run the following script for the 3D model format you want to use.
 
 ```sh
 python3 scripts/create_model_template.py <model-name> <obj | glb>
 ```
 
-実行例
+Examples
 
 ```
-# chair を .obj 形式で使いたい場合
+# To use chair in .obj format
 python3 scripts/create_model_template.py chair obj
 
-# chair を .glb 形式で使いたい場合
+# To use chair in .glb format
 python3 scripts/create_model_template.py chair glb
 ```
 
-※ 今後 README に移行する予定です
-※ また、コメントアウトやプリント文の英語化も予定しています
+Note: This usage guide may be moved to the README in the future.
+Note: Comments and printed messages are also in English.
 """
 import os
 import argparse
@@ -46,7 +46,7 @@ def create_model_directory(new_model_type, file_type):
     base_path = os.path.join("models", new_model_type)
 
     if os.path.exists(base_path):
-        raise FileExistsError(f"モデルディレクトリ '{base_path}' は既に存在します。")
+        raise FileExistsError(f"Model directory '{base_path}' already exists.")
 
     if "models" not in os.listdir():
         raise FileNotFoundError("No 'model' directory found. Your pwd might be wrong.")
@@ -83,7 +83,7 @@ def create_model_directory(new_model_type, file_type):
   <model name="{new_model_type}">
     <static>false</static>
     <link name="link">
-      <!-- 90度回転を防止 -->
+      <!-- Prevent a 90-degree rotation -->
       <pose>0 0 0 1.5708 0 0</pose>
       <visual name="visual">
         <geometry>
@@ -104,10 +104,10 @@ def create_model_directory(new_model_type, file_type):
 </sdf>
 """)
 
-        print(f"'{base_path}' のテンプレートを作成しました。以下の作業を行ってください。")
-        print(f"1. 'models/{new_model_type}/meshes' フォルダに {new_model_type}.{file_type} を配置（ファイル名注意）")
-        print("2. colcon build を実行")
-        print(f"xacro に記述する uri は <uri>model://{new_model_type}</uri> です")
+        print(f"Created the template in '{base_path}'. Complete the following steps:")
+        print(f"1. Place {new_model_type}.{file_type} in 'models/{new_model_type}/meshes' (check the filename).")
+        print("2. Run colcon build.")
+        print(f"Use <uri>model://{new_model_type}</uri> as the URI in the xacro file.")
 
     except Exception as e:
         print(f"Error creating model directory: {e}")

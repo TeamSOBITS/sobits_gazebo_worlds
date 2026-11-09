@@ -2,7 +2,6 @@ import subprocess
 
 
 def remove_model(target: str) -> None:
-    # 削除用リクエスト文を綺麗に改行して構築
     req_string = f'name: "{target}" ' f"type: MODEL"
 
     command = [
@@ -20,7 +19,6 @@ def remove_model(target: str) -> None:
         req_string,
     ]
 
-    # コマンドの実行
     result = subprocess.run(
         command, capture_output=True, text=True, check=True
     )
@@ -30,24 +28,20 @@ def remove_model(target: str) -> None:
 if __name__ == "__main__":
     import argparse
 
-    # パーサーの作成
     parser = argparse.ArgumentParser(
-        description="Gazeboの指定ワールドからモデルを削除するスクリプト"
+        description="Remove a model from the Gazebo simulation environment."
     )
 
-    # コマンドライン引数の定義
     parser.add_argument(
         "--model-name",
         "-n",
         required=True,
         type=str,
-        help="削除したいモデルの固有インスタンス名 (例: customer_1)",
+        help="Name of the model to remove from the Gazebo simulation.",
     )
 
-    # 引数の解析
     args = parser.parse_args()
 
-    # 関数の実行
     try:
         remove_model(target=args.model_name)
     except subprocess.CalledProcessError as e:

@@ -4,10 +4,10 @@ from scripts.get_model_pose import get_model_pose_raw
 
 
 def get_model_pose_tag(target: str) -> str:
-    """モデル名から姿勢情報を取得して `<pose>` タグとして返す。
+    """Get a model's pose and return it as a `<pose>` tag.
 
     Args:
-        target: Gazebo のモデル名。
+        target: The Gazebo model name.
     """
     x, y, z, roll, pitch, yaw = get_model_pose_raw(target)
     tag = f"<pose>{x} {y} {z} {roll} {pitch} {yaw}</pose>"
@@ -16,44 +16,44 @@ def get_model_pose_tag(target: str) -> str:
 
 
 def copy_model_pose_tag(target: str) -> None:
-    """モデル名から姿勢情報を取得して `<pose>` タグとしてクリップボードにコピーする。
+    """Get a model's pose and copy it to the clipboard as a `<pose>` tag.
 
     Args:
-        target: Gazebo のモデル名。
+        target: The Gazebo model name.
 
     Memo:
-        今後，何かをコピーする機能として utils とかにしてもいいかも．
+        This may be moved to a utility module if more copy-related features are added.
     """
     tag = get_model_pose_tag(target)
 
     try:
-        # Linuxで最も一般的な xsel コマンドでのコピーを試みる
+        # Try copying with xsel, a commonly used clipboard command on Linux.
         subprocess.run(["xsel", "-bi"], input=tag, text=True, check=True)
     except FileNotFoundError:
-        # もし xsel が入っていなかったら、不親切にクラッシュせず、案内を出す
+        # If xsel is unavailable, show instructions instead of crashing without guidance.
         print("\n" + "="*50)
-        print(" [エラー] クリップボードへのコピーに失敗しました。")
-        print(" 原因: 'xsel' コマンドがシステムにインストールされていない可能性があります。")
-        print(" 対策: 以下のコマンドを実行してから、再度スクリプトを動かしてください。")
+        print(" [Error] Failed to copy to the clipboard.")
+        print(" Cause: The 'xsel' command may not be installed on your system.")
+        print(" Fix: Run the following command, then run the script again.")
         print("       sudo apt update && sudo apt install -y xsel")
         print("="*50 + "\n")
 
-        # 代わりにターミナルに文字列を表示して、最悪手動でコピペできるようにしておく
-        print(f"今回のポーズデータ: {tag}\n")
+        # Print the string in the terminal so it can be copied manually if needed.
+        print(f"Pose data: {tag}\n")
     else:
-        print(f"<pose> タグをクリップボードにコピーしました: {tag}")
+        print(f"Copied the <pose> tag to the clipboard: {tag}")
 
 
 def main() -> None:
     import argparse
     parser = argparse.ArgumentParser(
-        description="Gazebo モデルの pose を取得し、<pose> タグをクリップボードにコピーします。"
+        description="Get a Gazebo model's pose and copy it to the clipboard as a <pose> tag."
     )
     parser.add_argument(
         "--model-name",
         "-n",
         required=True,
-        help="Gazebo のモデル名を指定します。",
+        help="Name of the Gazebo model.",
     )
     args = parser.parse_args()
 

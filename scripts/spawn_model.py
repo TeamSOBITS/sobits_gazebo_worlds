@@ -4,7 +4,6 @@ from geometry_msgs.msg import Pose
 
 
 def spawn_model(model_type: str, new_model_name: str, pose: Pose) -> None:
-    """gz コマンドをラッパーして出現コマンドを実行"""
     req_string = (
         f'name: "{new_model_name}" '
         f'sdf_filename: "model://{model_type}" '
@@ -39,9 +38,7 @@ if __name__ == "__main__":
     import argparse
     import math
 
-    # クォータニオン変換関数のセットアップ
     def quaternion_from_euler(roll, pitch, yaw):
-        # 各角度（ラジアン）の半分を計算
         cr = math.cos(roll * 0.5)
         sr = math.sin(roll * 0.5)
         cp = math.cos(pitch * 0.5)
@@ -49,84 +46,74 @@ if __name__ == "__main__":
         cy = math.cos(yaw * 0.5)
         sy = math.sin(yaw * 0.5)
 
-        # クォータニオンの各成分を計算
         qx = sr * cp * cy - cr * sp * sy
         qy = cr * sp * cy + sr * cp * sy
         qz = cr * cp * sy - sr * sp * cy
         qw = cr * cp * cy + sr * sp * sy
         return qx, qy, qz, qw
 
-    # パーサーの作成
     parser = argparse.ArgumentParser(
-        description="Gazeboの指定ワールドにモデルを生成するスクリプト（3軸回転対応）"
+        description="Spawn a model in the specified Gazebo world (supports 3-axis rotation)"
     )
 
-    # コマンドライン引数の定義（位置情報）
     parser.add_argument(
         "--model-id",
         "-i",
         required=True,
         type=str,
-        help="SDFモデルのID (例: person_sitting)",
+        help="SDF model ID (e.g., person_sitting)",
     )
     parser.add_argument(
         "--model-name",
         "-n",
         required=True,
         type=str,
-        help="生成するモデルの固有インスタンス名 (例: customer_1)",
+        help="Unique instance name for the spawned model (e.g., customer_1)",
     )
     parser.add_argument(
-        "--x", type=float, default=0.0, help="生成位置のX座標（デフォルト: 0.0）"
+        "--x", type=float, default=0.0, help="X coordinate of the spawn position (default: 0.0)"
     )
     parser.add_argument(
-        "--y", type=float, default=0.0, help="生成位置のY座標（デフォルト: 0.0）"
+        "--y", type=float, default=0.0, help="Y coordinate of the spawn position (default: 0.0)"
     )
     parser.add_argument(
-        "--z", type=float, default=0.0, help="生成位置のZ座標（デフォルト: 0.0）"
+        "--z", type=float, default=0.0, help="Z coordinate of the spawn position (default: 0.0)"
     )
 
-    # コマンドライン引数の定義（姿勢・回転情報）
     parser.add_argument(
         "--roll",
         "-R",
         type=float,
         default=0.0,
-        help="X軸まわりの回転角度 [度単位]（デフォルト: 0.0）",
+        help="Rotation around the X axis in degrees (default: 0.0)",
     )
     parser.add_argument(
         "--pitch",
         "-P",
         type=float,
         default=0.0,
-        help="Y軸まわりの回転角度 [度単位]（デフォルト: 0.0）",
+        help="Rotation around the Y axis in degrees (default: 0.0)",
     )
     parser.add_argument(
         "--yaw",
         "-Y",
         type=float,
         default=0.0,
-        help="Z軸まわりの回転角度 [度単位]（デフォルト: 0.0）",
+        help="Rotation around the Z axis in degrees (default: 0.0)",
     )
 
-    # 引数の解析
     args = parser.parse_args()
 
-    # 引数から受け取った値を使って Pose 型のオブジェクトを作成
     target_pose = Pose()
 
-    # 1. 位置 (position) の代入
     target_pose.position.x = args.x
     target_pose.position.y = args.y
     target_pose.position.z = args.z
 
-    # 2. 姿勢 (orientation) の計算と代入
-    # 度数法（度）からラジアンに変換
     roll_rad = math.radians(args.roll)
     pitch_rad = math.radians(args.pitch)
     yaw_rad = math.radians(args.yaw)
 
-    # ロール、ピッチ、ヨーからクォータニオンに変換
     qx, qy, qz, qw = quaternion_from_euler(roll_rad, pitch_rad, yaw_rad)
 
     target_pose.orientation.x = qx
@@ -134,7 +121,6 @@ if __name__ == "__main__":
     target_pose.orientation.z = qz
     target_pose.orientation.w = qw
 
-    # 関数の実行
     try:
         spawn_model(
             model_type=args.model_id,
