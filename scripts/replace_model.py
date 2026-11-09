@@ -6,6 +6,7 @@ from scripts.spawn_model import spawn_model
 def replace_model(
     target: str, model_type: str, model_name: str
 ) -> None:
+    """TODO: Currently, this function does not check if the new model ID exists in Gazebo. It will just delete the old model if the model ID is invalid."""
     # 1. Get the current pose (position and orientation) of the existing model.
     pose = get_model_pose(target)
 
