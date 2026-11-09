@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="spawn_point_marker_01">
+    <static>true</static>
+    <pose>1.0 2.0 0.8 0 0 0</pose>
+    <link name="marker_link">
+      
+      <visual name="center_sphere">
+        <geometry>
+          <sphere><radius>0.05</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>1 1 1 0.7</ambient> <diffuse>1 1 1 0.7</diffuse>
+        </material>
+      </visual>
+
+      <visual name="x_arrow">
+        <pose>0.1 0 0 0 1.5708 0</pose> 
+        <geometry>
+          <cone>
+            <radius>0.015</radius>
+            <length>0.1</length>
+          </cone>
+        </geometry>
+        <material>
+          <ambient>1 0 0 0.7</ambient> <diffuse>1 0 0 0.7</diffuse>
+        </material>
+      </visual>
+
+      <visual name="y_arrow">
+        <pose>0 0.1 0 -1.5708 0 0</pose> 
+        <geometry>
+          <cone>
+            <radius>0.015</radius>
+            <length>0.1</length>
+          </cone>
+        </geometry>
+        <material>
+          <ambient>0 1 0 0.7</ambient> <diffuse>0 1 0 0.7</diffuse>
+        </material>
+      </visual>
+
+      <visual name="z_arrow">
+        <pose>0 0 0.1 0 0 0</pose> 
+        <geometry>
+          <cone>
+            <radius>0.015</radius>
+            <length>0.1</length>
+          </cone>
+        </geometry>
+        <material>
+          <ambient>0 0 1 0.7</ambient> <diffuse>0 0 1 0.7</diffuse>
+        </material>
+      </visual>
+
+    </link>
+  </model>
+</sdf>

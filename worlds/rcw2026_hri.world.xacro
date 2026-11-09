@@ -1,0 +1,449 @@
+<?xml version="1.0" ?>
+<sdf version="1.8" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:arg name="fast_physics" default="true" />
+  <xacro:arg name="trofast_knob" default="true" />
+  <xacro:arg name="highrtf" default="false" />
+
+  <world name='rcw2026_arena'>
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics" />
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands" />
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster" />
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors" />
+
+    <scene>
+      <grid>false</grid>
+      <ambient>1.0 1.0 1.0 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <physics name="4ms" type="ignored">
+      <max_step_size>0.004</max_step_size>
+      <real_time_update_rate>250</real_time_update_rate>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <gravity>0 0 -9.8</gravity>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <include>
+      <name>floor_plane_fl</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_fr</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>5 -5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_bl</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>-5 5 0 0 0 0</pose>
+    </include>
+    <include>
+      <name>floor_plane_br</name>
+      <uri>model://wrc_ground_plane</uri>
+      <static>1</static>
+      <pose>-5 -5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>rcjo2026_frame</name>
+      <uri>model://rcjo2025_frame</uri>
+      <static>1</static>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <model name="arena_door_right">
+      <static>true</static>
+      <pose>-5.44631 -3.26 1 0 0 -2.52716</pose>
+      <link name="panel">
+        <collision name="col">
+          <geometry><box><size>0.9 0.05 2.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.9 0.05 2.0</size></box></geometry>
+          <material>
+            <ambient>0.72 0.52 0.32 1</ambient>
+            <diffuse>0.72 0.52 0.32 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="arena_door_left">
+      <static>true</static>
+      <pose>-5.44631 0.73143 1 0 0 -2.52716</pose>
+      <link name="panel">
+        <collision name="col">
+          <geometry><box><size>0.9 0.05 2.0</size></box></geometry>
+        </collision>
+        <visual name="vis">
+          <geometry><box><size>0.9 0.05 2.0</size></box></geometry>
+          <material>
+            <ambient>0.72 0.52 0.32 1</ambient>
+            <diffuse>0.72 0.52 0.32 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <include>
+      <name>long_table</name>
+      <uri>model://wrc_long_table</uri>
+      <static>1</static>
+      <pose>-4.29162 3.71674 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>tall_table</name>
+      <uri>model://wrc_tall_table</uri>
+      <static>1</static>
+      <pose>0.32816 -0.32246 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>trash_box</name>
+      <uri>model://trash_box</uri>
+      <static>1</static>
+      <pose>0.69638 -3.50303 0 0 0 -1.57</pose>
+    </include>
+
+    <!-- <include>
+      <name>washing_machine</name>
+      <uri>model://washing_machine</uri>
+      <static>0</static>
+      <pose>3.42886 -3.5 0 0 0 1.5708</pose>
+    </include> -->
+
+    <include>
+      <name>laundry_basket</name>
+      <uri>model://laundry_basket</uri>
+      <static>0</static>
+      <pose>4.30848 -3.65584 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>pile_of_clothes</name>
+      <uri>model://pile_of_clothes</uri>
+      <static>1</static>
+      <pose>4.31702 -3.63669 0.15 0 0 0</pose>
+    </include>
+
+    <!-- <model name="laundry_in_drum">
+      <static>false</static>
+      <pose>3.41204 -3.5 0.55 0 0 0</pose>
+      <link name="link">
+        <inertial>
+          <mass>0.3</mass>
+          <inertia>
+            <ixx>0.001</ixx><ixy>0</ixy><ixz>0</ixz>
+            <iyy>0.001</iyy><iyz>0</iyz><izz>0.001</izz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <geometry><box><size>0.15 0.10 0.05</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.15 0.10 0.05</size></box></geometry>
+          <material>
+            <ambient>0.2 0.4 0.8 1</ambient>
+            <diffuse>0.2 0.4 0.8 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model> -->
+
+
+    <!--vvv 椅子と座る人の設定 vvv-->
+    <!-- コメントアウトで設定 -->
+
+    <include>
+      <name>sofa</name>
+      <uri>model://sofa</uri>
+      <static>1</static>
+      <pose>-0.57557 0.5 0 0 0 1.54078</pose>
+    </include>
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <static>false</static> -->
+      <!-- <pose>-0.57557 0.75 0 0 0 1.57</pose> -->
+    <!-- </include> -->
+
+    <include>
+      <name>chair_right</name>
+      <uri>model://chair_gray</uri>
+      <static>1</static>
+      <pose>-0.60042 3.49813 0 0 0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>person_sitting_on_chair_right</name>
+      <uri>model://uema_sitting</uri>
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <static>true</static>
+      <pose>-0.60042 3.25 0 0 0 -1.57</pose>
+    </include>
+
+    <include>
+      <name>chair_left</name>
+      <uri>model://chair_gray</uri>
+      <static>1</static>
+      <pose>-1.5532 3.49817 0 0 0 -1.57</pose>
+    </include>
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_chair_left</name> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <static>false</static> -->
+      <!-- <pose>-1.5532 3.25 0 0 0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>sofa_corner</name> -->
+      <!-- <uri>model://sofa_corner</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-1.16869 3.24935 0.0 0.0 0.0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_corner_left</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-1.74748 3.24889 -0.0 0.0 0.0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_corner_center</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-1.16869 3.24935 0.0 0.0 0.0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_corner_right</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-0.727792 2.83258 0.0 -0.0 0.0 -3.14</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_corner_corner</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-0.869205 3.16093 0.0 -0.0 1e-06 -2.4448</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>bench_modern</name> -->
+      <!-- <uri>model://bench_modern</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-0.708929 3.71263 0.0 0.0 -0.0 1.5894</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_bench_modern_left</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-1.0 3.56465 -0.0 0.0 0.0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_bench_modern_right</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-0.43 3.56505 0.0 0.0 -0.0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>sofa_2_seats</name> -->
+      <!-- <uri>model://sofa_2_seats</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-2.0458 3.52248 0.0 0.0 -0.0 0.0</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_2_seats_right</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-1.5232 3.25 0 0 0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- center に座る場合は１人がいいかもです -->
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_2_seats_center</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-2.0732 3.25 0 0 0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_2_seats_left</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-2.5332 3.25 0 0 0 -1.57</pose> -->
+    <!-- </include> -->
+
+    <include>
+      <name>sofa_leather</name>
+      <uri>model://sofa_leather</uri>
+      <static>true</static>
+      <pose>-3.86156 0.523637 0.0 0.0 -0.0 3.14</pose>
+    </include>
+
+    <!-- <include> -->
+      <!-- <name>person_sitting_on_sofa_leather_left</name> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <static>true</static> -->
+      <!-- <pose>-3.42188 0.793864 0.0 -0.0 0.0 1.57</pose> -->
+    <!-- </include> -->
+
+    <include>
+      <name>person_sitting_on_sofa_leather_right</name>
+      <!-- <uri>model://owada_sitting</uri> -->
+      <!-- <uri>model://person_sitting</uri> -->
+      <!-- <uri>model://sitting_woman</uri> -->
+      <!-- <uri>model://sitting_man_young</uri> -->
+      <!-- <uri>model://owada_right_hand_raising</uri> -->
+      <!-- <uri>model://owada_left_hand_raising</uri> -->
+      <uri>model://owada_sitting</uri>
+      <static>true</static>
+      <pose>-4.22188 0.793864 0.0 -0.0 0.0 1.57</pose>
+    </include>
+
+    <!--^^^ 椅子と座る人の設定 ^^^-->
+
+
+    <include>
+      <name>shelf</name>
+      <uri>model://shelf</uri>
+      <static>1</static>
+      <pose>-4.3926 -3.69171 0 0 0 -1.58599</pose>
+    </include>
+
+    <include>
+      <name>dining_table</name>
+      <uri>model://dining_table</uri>
+      <static>1</static>
+      <pose>2.43898 2.03801 0 0 0 1.58696</pose>
+    </include>
+
+    <include>
+      <name>bed</name>
+      <uri>model://bed</uri>
+      <static>1</static>
+      <pose>-3.90322 -0.79496 0 0 0 1.57</pose>
+    </include>
+
+    <include>
+      <name>person_standing_near_door</name>
+      <uri>model://owada_standing_2</uri>
+      <static>1</static>
+      <pose>-5.8 1.5 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <name>bag</name>
+      <!-- <uri>model://bag_black</uri> -->
+      <uri>model://bag_blue</uri>
+      <pose>-5.40941 2.5021 0.023547 0.0 0.0 -1.57</pose>
+    </include>
+
+  </world>
+</sdf>

@@ -1,0 +1,28 @@
+
+<?xml version="1.0"?>
+<sdf version="1.10">
+  <model name="sofa_leather">
+    <static>false</static>
+    <link name="link">
+      <!-- 90度回転を防止 -->
+      <pose>0 0 0 1.5708 0 0</pose>
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://sofa_leather/meshes/sofa_leather.glb</uri>
+            <!-- 高さが 75 cm になるように -->
+            <scale>0.8296 0.8296 0.8296</scale>
+          </mesh>
+        </geometry>
+      </visual>
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://sofa_leather/meshes/sofa_leather.glb</uri>
+            <scale>0.8296 0.8296 0.8296</scale>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

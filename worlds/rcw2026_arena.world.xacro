@@ -644,5 +644,12 @@
       <pose>0.869 0.656 0.470 0.0 0.0 1.0472</pose>
     </include>
 
+    <include>
+      <name>bag</name>
+      <!-- <uri>model://bag_black</uri> -->
+      <uri>model://bag_blue</uri>
+      <pose>-5.40941 2.5021 0.023547 0.0 0.0 -1.57</pose>
+    </include>
+
   </world>
 </sdf>
