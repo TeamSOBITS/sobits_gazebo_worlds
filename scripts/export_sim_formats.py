@@ -210,8 +210,18 @@ def export_world(name, closed, args, out, paths, env, results):
                 shutil.copyfile(sdf, d / sdf.name)
 
 
+def model_dirs(names=None):
+    """This package's models; named models are also looked up in the other resource dirs."""
+    found = {p.name: p for p in (PKG / 'models').iterdir() if p.is_dir()}
+    for d in resource_dirs():
+        for name in names or []:
+            if name not in found and (d / name).is_dir():
+                found[name] = d / name
+    return [found[n] for n in sorted(found)]
+
+
 def export_models(args, out, paths, env, results):
-    for mdir in sorted(p for p in (PKG / 'models').iterdir() if p.is_dir()):
+    for mdir in model_dirs(args.models):
         if args.models and mdir.name not in args.models:
             continue
         sdf = model_sdf(mdir)
@@ -264,8 +274,8 @@ def parse_args(argv):
     ap.add_argument('--keep-sdf', action='store_true',
                     help='also copy the expanded SDF next to the outputs')
     args = ap.parse_args(argv)
-    unknown = [m for m in args.models or []
-               if not (PKG / 'models' / m).is_dir()]
+    known = {d.name for d in model_dirs(args.models)}
+    unknown = [m for m in args.models or [] if m not in known]
     if unknown:
         ap.error('unknown model(s): %s' % ', '.join(unknown))
     args.formats = [f for f in args.formats.split(',') if f]
