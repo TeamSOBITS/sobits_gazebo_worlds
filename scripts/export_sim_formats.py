@@ -230,7 +230,7 @@ def postprocess_usd(usd_dir):
         print('note: pxr not importable; run  python3 scripts/postprocess_usd.py %s  '
               'with the IsaacLab venv before validating or publishing' % usd_dir)
         return
-    n = sum(len(postprocess_usd.process(f) or []) for f in postprocess_usd.find_usd([usd_dir]))
+    n = sum(len((postprocess_usd.process(f) or [[]])[0]) for f in postprocess_usd.find_usd([usd_dir]))
     print('postprocess: articulation sleep disabled on %d prim(s)' % n)
 
 
