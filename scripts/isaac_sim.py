@@ -288,9 +288,14 @@ def main():
 
 def run(app, args):
     from isaacsim.core.utils.extensions import enable_extension
-    for ext in ("isaacsim.ros2.bridge", "isaacsim.ros2.sim_control"):
+    # omni.physx.ui provides Shift+drag physics grab in the viewport; the python app does not load it.
+    exts = ("isaacsim.ros2.bridge", "isaacsim.ros2.sim_control") + (() if args.headless else ("omni.physx.ui",))
+    for ext in exts:
         if not enable_extension(ext):
             print(f"warning: could not enable {ext}", flush=True)
+    if not args.headless:
+        import carb.settings
+        carb.settings.get_settings().set_bool("/physics/mouseInteractionEnabled", True)
     from utils import ros2_control
     if not ros2_control.enable():
         print("warning: isaacsim.ros2.control not enabled/patched, robots with ros2_control will fail", flush=True)
