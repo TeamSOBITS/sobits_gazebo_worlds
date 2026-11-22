@@ -32,7 +32,10 @@ def parse_args():
     p.add_argument("--rmw", default="rmw_cyclonedds_cpp")
     p.add_argument("--cyclonedds-uri", default=None, help="default: $CYCLONEDDS_URI, else sobit_home/cyclonedds_local.xml")
     p.add_argument("--headless", action="store_true")
-    p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned robot")
+    p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned "
+                   "robot unless --camera is given")
+    p.add_argument("--camera", type=float, nargs=6, metavar=("EX", "EY", "EZ", "TX", "TY", "TZ"),
+                   help="viewport camera eye and target, applied after every world load (e.g. framing a table)")
     p.add_argument("--gpu-physics", action="store_true", help="keep GPU dynamics (learning workloads); default is CPU "
                    "dynamics + MBP broadphase, twice the frame rate for one robot in an arena and no GPU sleep stall")
     p.add_argument("--kit-arg", action="append", default=[], metavar="--/path=value",
@@ -233,6 +236,12 @@ def viewer_layout():
             w.visible = False
 
 
+def is_robot(prim):
+    """A spawned entity holding an articulation; YCB objects and containers are plain rigid bodies."""
+    from pxr import Usd, UsdPhysics
+    return any(p.HasAPI(UsdPhysics.ArticulationRootAPI) for p in Usd.PrimRange(prim))
+
+
 def frame_robot(prim):
     """Look at a freshly spawned robot from behind-left, as RViz would."""
     import numpy as np
@@ -308,6 +317,9 @@ def run(app, args):
         prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz, scene_attrs=scene_attrs(args))
         if args.viewer and not args.headless:
             viewer_layout()
+        if args.camera and not args.headless:
+            from isaacsim.core.utils.viewports import set_camera_view
+            set_camera_view(eye=args.camera[:3], target=args.camera[3:])
         return stage
 
     def drain():
@@ -323,7 +335,8 @@ def run(app, args):
                 if report_entity(path, prim):
                     graphs_off(prim, node.get_parameter("graphs_off").value)
                     set_attrs(prim, args.set)
-                    if args.viewer and not args.headless:
+                    # Objects spawned by world resets must not steal the view; --camera pins it.
+                    if args.viewer and not args.headless and not args.camera and is_robot(prim):
                         frame_robot(prim)
             if prim:
                 fix_subtree(prim, args.domain, state["noted"])
