@@ -6,15 +6,11 @@
   Body bounds (at scale 1.0): x∈[−360,360] y∈[−323,323] z∈[0,1060] mm
   Body at scale 0.001: 0.72m wide × 0.646m deep × 1.06m tall
 
-  Door joint (revolute, axis Z = vertical):
-    Hinge in body frame: (0.32, −0.22, 0.53)
-      x = front face of machine
-      y = left edge of porthole circle (porthole ⌀≈0.44m centred at y=0)
-      z = door centre height (1.06 / 2)
-    Open direction: +Z rotation (door swings to the robot's left when facing machine)
-    Limits: 0 rad (closed) → 1.745 rad (100°, fully open)
-
-  Tune the joint pose x/y/z values in this file if the door looks misaligned in Gazebo.
+  Door joint (revolute about the hinge z, tilted 8° with the front panel):
+    Hinge pose and limits from the source model, tork-a/3dmodeling-examples
+    models/urdf/washing-machine_links.urdf joint1 (same door/body meshes):
+      xyz (0.30658, −0.258, 0.67582), rpy (0, −0.1396, 0)
+    Limits: 0 rad (closed) → −1.8326 rad (105°, fully open)
 -->
 <sdf version="1.8">
   <model name="washing_machine">
@@ -62,11 +58,11 @@
       The door link's origin IS the hinge point.
       door.stl bounds at scale 0.001: x∈[−0.135, 0.046] y∈[−0.005, 0.498] z∈[−0.24, 0.24]
       When joint=0 (closed): door panel extends +y from hinge, covering porthole.
-      When joint=1.745 rad (open): door panel swings +x (away from machine front face).
+      When joint=-1.8326 rad (open): door panel swings out of the front face.
     -->
     <link name="door">
-      <!-- Initial pose = hinge position in model frame -->
-      <pose>0.32 -0.22 0.65 0 0 -1.5708</pose>
+      <!-- Link origin = hinge (tork-a joint1); door meshes are modelled about it -->
+      <pose>0.30658 -0.258 0.67582 0 -0.1396 0</pose>
 
       <inertial>
         <mass>3.0</mass>
@@ -108,11 +104,11 @@
       <!-- Joint frame coincides with door link origin → pose = 0 relative to child -->
       <pose>0 0 0 0 0 0</pose>
       <axis>
-        <!-- Rotate around Z (vertical) — door swings sideways (open away from robot) -->
-        <xyz expressed_in="__model__">0 0 1</xyz>
+        <!-- Hinge z in the joint (= door) frame, tilted with the front panel -->
+        <xyz>0 0 1</xyz>
         <limit>
-          <lower>0</lower>
-          <upper>1.7453</upper>  <!-- 100 degrees -->
+          <lower>-1.8326</lower>  <!-- 105 degrees open -->
+          <upper>0</upper>
           <effort>20.0</effort>
           <velocity>1.0</velocity>
         </limit>
@@ -125,9 +121,8 @@
       </axis>
     </joint>
 
-    <!-- Tray mesh imported from ROS1 asset set -->
+    <!-- Detergent tray; pose and slide from tork-a joint2 -->
     <link name="tray">
-      <!-- Place near front top-left of the body; tune after visual check -->
       <pose>0.0 -0.190 0.956 0 0 0</pose>
 
       <inertial>
@@ -158,9 +153,24 @@
       </visual>
     </link>
 
-    <joint name="tray_fixed" type="fixed">
+    <joint name="tray_slide" type="prismatic">
       <parent>body</parent>
       <child>tray</child>
+      <axis>
+        <!-- Pulls out of the front face (+x) -->
+        <xyz>1 0 0</xyz>
+        <limit>
+          <lower>0</lower>
+          <upper>0.200</upper>
+          <effort>20.0</effort>
+          <velocity>0.5</velocity>
+        </limit>
+        <dynamics>
+          <!-- Friction keeps it where it is left -->
+          <damping>5.0</damping>
+          <friction>2.0</friction>
+        </dynamics>
+      </axis>
     </joint>
 
     <!-- Prevent the whole model from sliding on the floor -->
