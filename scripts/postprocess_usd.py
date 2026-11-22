@@ -6,6 +6,8 @@
   (ros2_control, IMU, Isaac Lab); see urdf2usd_ros/docs/isaac_gpu_articulation_sleep_stall.md.
 - floor_plane* tiles and ground_plane are visual only; one infinite collision plane at their top carries the
   robots. A 100 m box (empty world) lifts cylinder wheels 2 cm off its surface; Isaac Lab trains on a plane.
+- a sky DomeLight on worlds (stages with a DistantLight sun, none yet): without one the background renders black
+  and shadowed sides go dark; Gazebo draws its own sky.
 Idempotent; run with a pxr python (IsaacLab venv) after export_sim_formats.py:
   python3 scripts/postprocess_usd.py export/usd
 """
@@ -13,11 +15,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from pxr import Sdf, Usd, UsdGeom, UsdPhysics, UsdShade
+from pxr import Gf, Sdf, Usd, UsdGeom, UsdLux, UsdPhysics, UsdShade
 
 SLEEP_ATTR = 'physxArticulation:sleepThreshold'
 FLOOR_PREFIXES = ('floor_plane', 'ground_plane')
 FLOOR_COLLIDER = 'floor_collision'
+SKY = 'sky'
+SKY_COLOR = (0.62, 0.75, 0.92)  # clear daytime blue; untextured, so no asset download
+SKY_INTENSITY = 600.0
 
 
 def find_usd(paths):
@@ -72,6 +77,18 @@ def visual_only_floor(stage):
     return [p.GetPath().pathString for p in colliders] + [plane_path.pathString]
 
 
+def add_sky(stage):
+    """Define <defaultPrim>/sky DomeLight on a world with a sun and no dome; return its path or None."""
+    lights = [p for p in stage.Traverse() if p.IsA(UsdLux.DistantLight) or p.IsA(UsdLux.DomeLight)]
+    if not any(p.IsA(UsdLux.DistantLight) for p in lights) or any(p.IsA(UsdLux.DomeLight) for p in lights):
+        return None
+    root = stage.GetDefaultPrim()
+    dome = UsdLux.DomeLight.Define(stage, root.GetPath().AppendChild(SKY))
+    dome.CreateColorAttr(Gf.Vec3f(*SKY_COLOR))
+    dome.CreateIntensityAttr(SKY_INTENSITY)
+    return dome.GetPath().pathString
+
+
 def process(path, dry_run=False):
     stage = Usd.Stage.Open(str(path))
     if not stage:
@@ -79,9 +96,10 @@ def process(path, dry_run=False):
         return None
     changed = disable_articulation_sleep(stage)
     floor = visual_only_floor(stage)
-    if (changed or floor) and not dry_run:
+    sky = add_sky(stage)
+    if (changed or floor or sky) and not dry_run:
         stage.GetRootLayer().Save()
-    return changed, floor
+    return changed, floor, sky
 
 
 def main(argv=None):
@@ -96,11 +114,13 @@ def main(argv=None):
         if result is None:
             failed += 1
             continue
-        changed, floor = result
+        changed, floor, sky = result
         if changed:
             print('%s: sleep disabled on %d articulation(s)' % (f, len(changed)))
         if floor:
             print('%s: floor visual only, %d tile collider(s) off, plane %s' % (f, len(floor) - 1, floor[-1]))
+        if sky:
+            print('%s: sky dome %s' % (f, sky))
     return 1 if failed else 0
 
 
