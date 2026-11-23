@@ -57,9 +57,40 @@ def deg_ranges_to_rad(root):
             raise SystemExit("error: euler attributes in the world need a conversion this script lacks")
 
 
+def merge_defaults(robot, world):
+    """One <default> tree: the robot's root default plus the world's named classes (sdf2mjcf emits only those)."""
+    rdef, wdef = robot.find("default"), world.find("default")
+    if wdef is None or rdef is None:
+        return rdef if rdef is not None else wdef
+    if any(c.tag != "default" for c in wdef):
+        raise SystemExit("error: both robot and world set root <default> values; merge them by hand")
+    taken = {d.get("class") for d in rdef.iter("default")}
+    for cls in wdef:
+        clash = taken & {d.get("class") for d in cls.iter("default")}
+        if clash:
+            raise SystemExit(f"error: default class(es) {sorted(clash)} defined by both robot and world")
+        rdef.append(cls)
+    return rdef
+
+
+def absolutize_robot_files(robot, robot_path):
+    """Robot asset files relative to its own meshdir/texturedir; absolute paths ignore the scene's (world) dirs."""
+    rdir = os.path.dirname(os.path.abspath(robot_path))
+    comp = robot.find("compiler")
+    get = (lambda k: comp.get(k)) if comp is not None else (lambda k: None)
+    asset = get("assetdir") or ""
+    dirs = {"mesh": get("meshdir") or asset, "hfield": get("meshdir") or asset,
+            "skin": get("meshdir") or asset, "texture": get("texturedir") or asset}
+    for e in robot.iter():
+        f = e.get("file")
+        if f and not os.path.isabs(f):
+            e.set("file", os.path.normpath(os.path.join(rdir, dirs.get(e.tag, ""), f)))
+
+
 def build(world_path, robot_path, pose, name, keyframe):
     world, robot = _parse(world_path), _parse(robot_path)
     deg_ranges_to_rad(world)
+    absolutize_robot_files(robot, robot_path)
     scene = ET.Element("mujoco", model=f"scene_{name}")
     wdir = os.path.dirname(os.path.abspath(world_path))
     wcomp = world.find("compiler")
@@ -71,8 +102,9 @@ def build(world_path, robot_path, pose, name, keyframe):
         src = robot.find(tag)
         if src is not None:
             scene.append(src)
-    if world.find("default") is not None:
-        scene.append(world.find("default"))
+    default = merge_defaults(robot, world)
+    if default is not None:
+        scene.append(default)
     for tag in MERGED:
         dst = None
         for src in (robot.find(tag), world.find(tag)):
