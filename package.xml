@@ -13,12 +13,15 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>rcl_interfaces</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>ros_gz_interfaces</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>gz_human_sim</exec_depend>
   <exec_depend>tmc_wrs_gz_worlds</exec_depend>
+  <exec_depend>aws_small_house_world</exec_depend>
+  <exec_depend>xacro</exec_depend>
   <exec_depend>std_srvs</exec_depend>
   <exec_depend>sobits_interfaces</exec_depend>
   <exec_depend>simulation_interfaces</exec_depend>
