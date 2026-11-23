@@ -152,23 +152,48 @@ def converter_cmd(fmt, paths, src, dst, args):
     return cmd + [str(src), str(dst)]
 
 
-def run(cmd, cwd, env, dry):
-    """Run one conversion; return (ok, seconds)."""
-    print('$ (cd %s && %s)' % (cwd, ' '.join(cmd)), flush=True)
+def run(job, dry, capture):
+    """Run one conversion job in place: sets job['ok'], job['secs'] (and job['log'] when capture)."""
+    cmd, cwd = job['cmd'], job['dst'].parent
+    line = '$ (cd %s && %s)' % (cwd, ' '.join(cmd))
     if dry:
-        return True, 0.0
+        print(line, flush=True)
+        job.update(ok=True, secs=0.0)
+        return
+    if not capture:
+        print(line, flush=True)
     cwd.mkdir(parents=True, exist_ok=True)
     start = time.monotonic()
     try:
-        ok = subprocess.run(cmd, cwd=cwd, env=env).returncode == 0
+        proc = subprocess.run(cmd, cwd=cwd, env=job['env'], text=True,
+                              **(dict(stdout=subprocess.PIPE, stderr=subprocess.STDOUT) if capture else {}))
+        ok, log = proc.returncode == 0, proc.stdout
     except OSError as err:
-        print('error: %s' % err, file=sys.stderr)
-        ok = False
-    return ok, time.monotonic() - start
+        ok, log = False, 'error: %s\n' % err
+        if not capture:
+            print(log, end='', file=sys.stderr)
+    job.update(ok=ok, secs=time.monotonic() - start)
+    if capture:  # one block per job so parallel converters do not interleave
+        print(line + '\n' + (log or ''), end='' if (log or '').endswith('\n') else '\n', flush=True)
+
+
+def run_jobs(jobs, n, dry):
+    """USD jobs run one after another (all world USDs write the shared usd/materials/); MJCF jobs use n workers."""
+    usd = [j for j in jobs if j['fmt'] == 'usd']
+    mjcf = [j for j in jobs if j['fmt'] != 'usd']
+    if n <= 1 or dry:
+        for j in jobs:
+            run(j, dry, capture=False)
+        return
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(n) as pool:
+        lane = pool.submit(lambda: [run(j, dry, True) for j in usd])
+        for f in [pool.submit(run, j, dry, True) for j in mjcf] + [lane]:
+            f.result()
 
 
 def convert(name, src, args, out, paths, env, results, model=False):
-    """Convert src SDF into each format under out; append result rows."""
+    """Queue src SDF -> each format under out; the job dicts are the result rows (filled by run_jobs)."""
     for fmt in args.formats:
         if model:
             usd_dir = out / 'usd' / 'models' / name
@@ -178,14 +203,13 @@ def convert(name, src, args, out, paths, env, results, model=False):
             mjcf_dir = out / 'mjcf' / name
         dst = (usd_dir / (name + '.usda') if fmt == 'usd'
                else mjcf_dir / (name + '.xml'))
-        cmd = converter_cmd(fmt, paths, src, dst, args)
         cenv = env
         if fmt == 'usd' and os.environ.get('USD_PATH'):
             lib = os.path.join(os.environ['USD_PATH'], 'lib')
             cenv = dict(env, LD_LIBRARY_PATH=os.pathsep.join(
                 filter(None, [lib, env.get('LD_LIBRARY_PATH', '')])))
-        ok, secs = run(cmd, dst.parent, cenv, args.dry_run)
-        results.append((name, fmt, ok, secs))
+        results.append({'name': name, 'fmt': fmt, 'dst': dst, 'env': cenv,
+                        'cmd': converter_cmd(fmt, paths, src, dst, args)})
 
 
 def export_world(name, closed, args, out, paths, env, results):
@@ -196,22 +220,22 @@ def export_world(name, closed, args, out, paths, env, results):
     expanded = Path(expand_world(str(path), xacro_args))
     if str(path).endswith('.xacro') and expanded == path:
         print('error: xacro expansion failed for %s' % path, file=sys.stderr)
-        results.append((tag, 'sdf', False, time.monotonic() - start))
+        results.append({'name': tag, 'fmt': 'sdf', 'ok': False, 'secs': time.monotonic() - start})
         return
     sdf = out / 'sdf' / (tag + '.sdf')
     sdf.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(expanded, sdf)
     if expanded != path:
         os.unlink(expanded)
-    results.append((tag, 'sdf', True, time.monotonic() - start))
+    results.append({'name': tag, 'fmt': 'sdf', 'ok': True, 'secs': time.monotonic() - start})
     lint_inertia(sdf, paths)
     print('expanded %s -> %s' % (path.name, sdf), flush=True)
     convert(tag, sdf, args, out, paths, env, results)
-    if args.keep_sdf:
+    if args.keep_sdf and not args.dry_run:
         for fmt in args.formats:
             d = out / fmt / (tag if fmt == 'mjcf' else '')
-            if not args.dry_run:
-                shutil.copyfile(sdf, d / sdf.name)
+            d.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(sdf, d / sdf.name)
 
 
 def model_dirs(names=None):
@@ -230,7 +254,7 @@ def export_models(args, out, paths, env, results):
             continue
         sdf = model_sdf(mdir)
         if sdf is None:
-            results.append((mdir.name, 'sdf', False, 0.0))
+            results.append({'name': mdir.name, 'fmt': 'sdf', 'ok': False, 'secs': 0.0})
             continue
         lint_inertia(sdf, paths)
         convert(mdir.name, sdf, args, out, paths, env, results, model=True)
@@ -279,6 +303,9 @@ def parse_args(argv):
     ap.add_argument('--out', type=Path, default=PKG / 'export')
     ap.add_argument('--dry-run', action='store_true',
                     help='print converter commands; only expand xacro')
+    ap.add_argument('--jobs', '-j', type=int, default=min(4, os.cpu_count() or 1),
+                    help='parallel MJCF conversions (USD always runs one at a time: '
+                    'worlds share usd/materials/); default %(default)s')
     ap.add_argument('--keep-sdf', action='store_true',
                     help='also copy the expanded SDF next to the outputs')
     args = ap.parse_args(argv)
@@ -314,14 +341,14 @@ def main(argv=None):
             export_world(name, closed, args, out, paths, env, results)
     if args.models is not None:
         export_models(args, out, paths, env, results)
+    run_jobs([r for r in results if 'cmd' in r], args.jobs, args.dry_run)
     if 'usd' in args.formats and not args.dry_run:
         postprocess_usd(out / 'usd')
 
     print('\n%-36s %-5s %-5s %8s' % ('target', 'fmt', 'ok', 'seconds'))
-    for name, fmt, ok, secs in results:
-        status = 'ok' if ok else 'FAIL'
-        print('%-36s %-5s %-5s %8.1f' % (name, fmt, status, secs))
-    return 0 if all(r[2] for r in results) else 1
+    for r in results:
+        print('%-36s %-5s %-5s %8.1f' % (r['name'], r['fmt'], 'ok' if r['ok'] else 'FAIL', r['secs']))
+    return 0 if all(r['ok'] for r in results) else 1
 
 
 if __name__ == '__main__':
