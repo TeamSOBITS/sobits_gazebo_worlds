@@ -50,13 +50,13 @@ def static_checks(path):
 
 
 def check(path, steps):
-    """Load, step and inspect one model; return result dict."""
+    """Load, step and inspect one model; return (result dict, compiled model or None)."""
     r = {'file': str(path), 'ok': False, 'issues': static_checks(path)}
     try:
         m = mujoco.MjModel.from_xml_path(str(path))
     except Exception as e:  # noqa: BLE001
         r['error'] = str(e)[:300]
-        return r
+        return r, None
     d = mujoco.MjData(m)
     r.update(nbody=m.nbody, ngeom=m.ngeom, nmesh=m.nmesh, ntex=m.ntex,
              njnt=m.njnt, nq=m.nq)
@@ -79,13 +79,14 @@ def check(path, steps):
                 bad.append(g)
     r['bad_aabb'] = len(bad)
     r['ok'] = not (r['issues'] or warns or r['fell'] or bad)
-    return r
+    return r, m
 
 
-def render(path, out_dir):
-    """Render a 640x480 PNG from above-front at ~8 m."""
+def render(path, out_dir, m=None):
+    """Render a 640x480 PNG from above-front at ~8 m (m: the model check() already compiled)."""
     import imageio.v3 as iio
-    m = mujoco.MjModel.from_xml_path(str(path))
+    if m is None:
+        m = mujoco.MjModel.from_xml_path(str(path))
     d = mujoco.MjData(m)
     mujoco.mj_forward(m, d)
     rend = mujoco.Renderer(m, 480, 640)
@@ -120,10 +121,10 @@ def main():
     print('mujoco', mujoco.__version__, 'GL', os.environ.get('MUJOCO_GL'))
     rc = 0
     for x in collect_xmls(a.paths):
-        r = check(x, a.steps)
+        r, model = check(x, a.steps)
         if a.render and (a.render_only is None or x.stem in a.render_only):
             try:
-                r['png'], r['img_std'] = render(x, a.render)
+                r['png'], r['img_std'] = render(x, a.render, model)
             except Exception as e:  # noqa: BLE001
                 r['render_error'] = str(e)[:200]
         print(json.dumps(r) if a.json else
