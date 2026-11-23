@@ -479,6 +479,18 @@ python3 scripts/download_sim_assets.py --formats usd,mjcf --robots sobit_home
 `rcw26_door`（`door_link`．`hinge_link`は`<inertial>`なし），`floor_plane`．対処は
 各モデルの`model.sdf`に`<inertia>`を記述すること．
 
+### ツールの実行環境
+
+エクスポート用ツールはワールドの実行には不要で，3つのPython環境を使い分ける．pipパッケージは
+[requirements-tools.txt](requirements-tools.txt)にまとめてある．
+
+| 環境 | スクリプト | 必要なもの |
+| ------------- | ------------- | ------------- |
+| ROSのpython | `export_sim_formats.py`，`mujoco_scene.py`，`download_sim_assets.py`，`publish_sim_assets.py` | ROS Jazzy + `xacro`．download/publishには`huggingface_hub` |
+| IsaacLab venv | `postprocess_usd.py`，`validate_usd.py`，`import_robot_assets.py`，`isaac_sim.py` | `pxr`（Isaac Sim 6.1）．任意で`newton`，`warp-lang` |
+| MuJoCoを入れた任意のvenv | `validate_mjcf.py` | `mujoco`，`numpy`，`imageio` |
+| 変換器 | `export_sim_formats.py` | `sdf2usd`（gz-usd，`SDF2USD_BIN`），`sdf2mjcf`（CoACD付きgz-mujoco，`SDF2MJCF_BIN`） |
+
 ## Isaac Sim
 
 Isaac Sim 6.1はROSコンテナ内ではなくホスト上で動作する．コンテナは`isaacsim.ros2.sim_control`拡張が提供する

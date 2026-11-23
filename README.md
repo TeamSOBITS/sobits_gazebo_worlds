@@ -491,6 +491,18 @@ links without any `<inertial>`. Currently affected: `book_shelf`, `chair`, `sofa
 `hinge_link` has no inertial) and `floor_plane`. Fix by authoring an `<inertia>` block in the
 model's `model.sdf`.
 
+### Tool environments
+
+The export tools are not needed to run the worlds and use three Python environments; the pip packages are listed in
+[requirements-tools.txt](requirements-tools.txt).
+
+| Environment | Scripts | Needs |
+| ------------- | ------------- | ------------- |
+| ROS python | `export_sim_formats.py`, `mujoco_scene.py`, `download_sim_assets.py`, `publish_sim_assets.py` | ROS Jazzy + `xacro`; `huggingface_hub` for download/publish |
+| IsaacLab venv | `postprocess_usd.py`, `validate_usd.py`, `import_robot_assets.py`, `isaac_sim.py` | `pxr` (Isaac Sim 6.1); optional `newton`, `warp-lang` |
+| any venv with MuJoCo | `validate_mjcf.py` | `mujoco`, `numpy`, `imageio` |
+| converters | `export_sim_formats.py` | `sdf2usd` (gz-usd, `SDF2USD_BIN`), `sdf2mjcf` (gz-mujoco with CoACD, `SDF2MJCF_BIN`) |
+
 ## Isaac Sim
 
 Isaac Sim 6.1 runs on the host, not in the ROS container. The container drives it through the
