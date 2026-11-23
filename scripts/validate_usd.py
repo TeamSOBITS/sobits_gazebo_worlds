@@ -32,29 +32,35 @@ def _is_static(elem):
     return (elem.findtext('static') or '').strip().lower() in ('true', '1')
 
 
-def model_static(uri, search_dirs):
-    """Static flag of a model:// uri from its model.sdf, None if unknown."""
+def included_model(uri, search_dirs):
+    """<model> element of a model:// uri's model.sdf, None if not found."""
     name = uri.replace('model://', '').strip('/')
     for d in search_dirs:
         f = Path(d) / name / 'model.sdf'
         if f.exists():
-            m = ET.parse(f).getroot().find('model')
-            return _is_static(m) if m is not None else None
+            return ET.parse(f).getroot().find('model')
     return None
 
 
 def sdf_stats(sdf, search_dirs):
-    """Return ({name: is_static}, names containing '#')."""
+    """Return ({name: is_static}, names containing '#').
+
+    An <include> without <name> takes the included model's name (gz does the same).
+    """
     world = ET.parse(sdf).getroot().find('world')
     stat = {}
     for m in world.findall('model'):
         stat[m.get('name')] = _is_static(m)
     for inc in world.findall('include'):
+        uri = inc.findtext('uri') or ''
+        model = included_model(uri, search_dirs)
         if inc.find('static') is not None:
             st = _is_static(inc)
         else:
-            st = bool(model_static(inc.findtext('uri') or '', search_dirs))
-        stat[inc.findtext('name')] = st
+            st = model is not None and bool(_is_static(model))
+        name = inc.findtext('name') or (model.get('name') if model is not None else None) \
+            or uri.rstrip('/').rsplit('/', 1)[-1]
+        stat[name] = st
     return stat, [n for n in stat if n and '#' in n]
 
 
