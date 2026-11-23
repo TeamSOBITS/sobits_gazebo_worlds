@@ -238,15 +238,14 @@ def check_file(path, sdf_dir=None):
 def _is_collision_scope(prim):
     """Collision geometry sits under a guide-purpose / collision-named xform.
 
-    The converter marks SDF <collision> xforms purpose=guide.
+    The converter marks SDF <collision> xforms purpose=guide; postprocess_usd's
+    floor_collision plane carries the guide purpose itself.
     """
     for a in _chain(prim):
-        if a == prim:
-            continue
         pa = UsdGeom.Imageable(a).GetPurposeAttr()
         if pa and pa.HasAuthoredValue() and pa.Get() == 'guide':
             return True
-        if re.search(r'col', a.GetName().lower()):
+        if a != prim and re.search(r'col', a.GetName().lower()):
             return True
     return False
 
