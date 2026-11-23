@@ -79,10 +79,11 @@ def setup_env(args):
         sys.exit(f"error: urdf2usd_ros not found at {repo} (set --urdf2usd-ros or URDF2USD_ROS)")
     sys.path.insert(0, repo)
     env_domain = os.environ.get("ROS_DOMAIN_ID")
-    if not os.environ.get("URDF2USD_ROS_REEXEC") and env_domain not in (None, str(args.domain)):
+    reexec = os.environ.get("URDF2USD_ROS_REEXEC")
+    if not reexec and env_domain not in (None, str(args.domain)):
         print(f"warning: ROS_DOMAIN_ID={env_domain} in env ignored, using --domain {args.domain}", file=sys.stderr)
     uri, src = resolve_cyclonedds_uri(args.cyclonedds_uri)
-    if not os.environ.get("URDF2USD_ROS_REEXEC"):
+    if not reexec:
         print(f"CYCLONEDDS_URI from {src}: {uri}", flush=True)
     os.environ.update({"ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST", "OMNI_KIT_ACCEPT_EULA": "yes"})
     if uri:
@@ -94,10 +95,6 @@ def setup_env(args):
     print("ROS env:", {k: os.environ.get(k) for k in keys}, flush=True)
 
 
-def scene_attrs(args):
-    return [*(() if args.world_solver else SOLVER_SCENE_ATTRS), *args.scene_attr]
-
-
 def prepare_stage(stage, cpu_physics=False, physics_hz=None, scene_attrs=()):
     """One root-layer physics scene (referenced-only scenes double sim time) and one /clock per stage."""
     from pxr import Sdf, UsdPhysics
@@ -107,28 +104,28 @@ def prepare_stage(stage, cpu_physics=False, physics_hz=None, scene_attrs=()):
     if not scenes or all(root.GetPrimAtPath(p) is None for p in scenes):
         isaac_world.ensure_root_physics_scene(stage)
         print("stage: root physics scene at /World/physicsScene", flush=True)
-    if cpu_physics:
-        for p in stage.Traverse():
-            if p.IsA(UsdPhysics.Scene) and p.IsActive():
-                p.CreateAttribute("physxScene:enableGPUDynamics", Sdf.ValueTypeNames.Bool).Set(False)
-                p.CreateAttribute("physxScene:broadphaseType", Sdf.ValueTypeNames.Token).Set("MBP")
-                print(f"stage: CPU dynamics on {p.GetPath()}", flush=True)
-    if physics_hz:
-        for p in stage.Traverse():
-            if p.IsA(UsdPhysics.Scene) and p.IsActive():
-                p.CreateAttribute("physxScene:timeStepsPerSecond", Sdf.ValueTypeNames.UInt).Set(int(physics_hz))
-                print(f"stage: {physics_hz:g} physics steps/s on {p.GetPath()}", flush=True)
+    active = [p for p in stage.Traverse() if p.IsA(UsdPhysics.Scene) and p.IsActive()]
+    for p in active:
+        if cpu_physics:
+            p.CreateAttribute("physxScene:enableGPUDynamics", Sdf.ValueTypeNames.Bool).Set(False)
+            p.CreateAttribute("physxScene:broadphaseType", Sdf.ValueTypeNames.Token).Set("MBP")
+            print(f"stage: CPU dynamics on {p.GetPath()}", flush=True)
+        if physics_hz:
+            p.CreateAttribute("physxScene:timeStepsPerSecond", Sdf.ValueTypeNames.UInt).Set(int(physics_hz))
+            print(f"stage: {physics_hz:g} physics steps/s on {p.GetPath()}", flush=True)
+    text_types = (Sdf.ValueTypeNames.Bool, Sdf.ValueTypeNames.Token, Sdf.ValueTypeNames.String)
     for spec in scene_attrs:
+        # true/false -> Bool, digits -> Float, else Token; existing attrs keep their type.
         name, _, raw = spec.partition("=")
         value = {"true": True, "false": False}.get(raw.lower(), raw)
-        for p in stage.Traverse():
-            if p.IsA(UsdPhysics.Scene) and p.IsActive():
-                attr = p.GetAttribute(name)
-                if not attr:
-                    kind = {bool: Sdf.ValueTypeNames.Bool, str: Sdf.ValueTypeNames.Token}[type(value)]
-                    attr = p.CreateAttribute(name, kind if not raw.replace(".", "", 1).isdigit() else Sdf.ValueTypeNames.Float)
-                attr.Set(value if attr.GetTypeName() in (Sdf.ValueTypeNames.Bool, Sdf.ValueTypeNames.Token, Sdf.ValueTypeNames.String) else float(raw))
-                print(f"stage: {name}={attr.Get()} on {p.GetPath()}", flush=True)
+        if raw.replace(".", "", 1).isdigit():
+            kind = Sdf.ValueTypeNames.Float
+        else:
+            kind = Sdf.ValueTypeNames.Bool if isinstance(value, bool) else Sdf.ValueTypeNames.Token
+        for p in active:
+            attr = p.GetAttribute(name) or p.CreateAttribute(name, kind)
+            attr.Set(value if attr.GetTypeName() in text_types else float(raw))
+            print(f"stage: {name}={attr.Get()} on {p.GetPath()}", flush=True)
     if not stage.GetPrimAtPath(CLOCK_PATH):
         isaac_world.add_clock_graph(stage, CLOCK_PATH, use_domain_id_env=True)
         print(f"stage: /clock graph at {CLOCK_PATH}", flush=True)
@@ -194,6 +191,18 @@ def graphs_off(prim, patterns):
             print(f"off {target.GetPath()}", flush=True)
 
 
+def parse_value(raw):
+    """--set value: true/false, then int, then float, else the string itself."""
+    if raw.lower() in ("true", "false"):
+        return raw.lower() == "true"
+    for conv in (int, float):
+        try:
+            return conv(raw)
+        except ValueError:
+            pass
+    return raw
+
+
 def set_attrs(prim, specs):
     """--set GLOB:attr=value on the prims under a spawned robot (value parsed as bool/int/float/str)."""
     import fnmatch
@@ -201,15 +210,7 @@ def set_attrs(prim, specs):
     for spec in specs:
         pat, _, rest = spec.partition(":")
         name, _, raw = rest.partition("=")
-        value = {"true": True, "false": False}.get(raw.lower())
-        if value is None:
-            try:
-                value = int(raw)
-            except ValueError:
-                try:
-                    value = float(raw)
-                except ValueError:
-                    value = raw
+        value = parse_value(raw)
         root = str(prim.GetPath())
         hits = [q for q in Usd.PrimRange(prim) if fnmatch.fnmatch(str(q.GetPath())[len(root) + 1:], pat)
                 and q.GetAttribute(name)]
@@ -302,8 +303,10 @@ def run(app, args):
     for _ in range(10):  # omni.graph.core crashes if a stage opens right after enabling
         app.update()
     import omni.usd
-    from pxr import Tf, Usd
+    from pxr import Sdf, Tf, Usd
     ctx = omni.usd.get_context()
+    viewer = args.viewer and not args.headless
+    solver_attrs = [*(() if args.world_solver else SOLVER_SCENE_ATTRS), *args.scene_attr]
     state = {"opened": False, "paths": set(), "listener": None, "noted": set()}
 
     def on_changed(notice, _stage):
@@ -319,8 +322,8 @@ def run(app, args):
             state["listener"].Revoke()
         state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
         state["paths"].clear()
-        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz, scene_attrs=scene_attrs(args))
-        if args.viewer and not args.headless:
+        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz, scene_attrs=solver_attrs)
+        if viewer:
             viewer_layout()
         if args.camera and not args.headless:
             from isaacsim.core.utils.viewports import set_camera_view
@@ -334,14 +337,15 @@ def run(app, args):
             return
         stage, paths = ctx.get_stage(), state["paths"]
         state["paths"] = set()
-        for path in paths:
+        # A resynced ancestor already covers its descendants in fix_subtree.
+        for path in Sdf.Path.RemoveDescendentPaths(list(paths)):
             prim = stage.GetPrimAtPath(path) if path.IsPrimPath() or path.IsAbsoluteRootPath() else None
             if path.IsPrimPath() and path.GetParentPath().IsAbsoluteRootPath():
                 if report_entity(path, prim):
                     graphs_off(prim, node.get_parameter("graphs_off").value)
                     set_attrs(prim, args.set)
                     # Objects spawned by world resets must not steal the view; --camera pins it.
-                    if args.viewer and not args.headless and not args.camera and is_robot(prim):
+                    if viewer and not args.camera and is_robot(prim):
                         frame_robot(prim)
             if prim:
                 fix_subtree(prim, args.domain, state["noted"])
@@ -362,7 +366,7 @@ def run(app, args):
         prim = spawn_local(stage, args.robot, args.name or os.path.splitext(os.path.basename(args.robot))[0], args.pose)
         graphs_off(prim, args.off)
         set_attrs(prim, args.set)
-        if args.viewer and not args.headless:
+        if viewer:
             frame_robot(prim)
     if args.world or args.robot:
         state["paths"].clear()
@@ -375,6 +379,7 @@ def run(app, args):
         print("playing", flush=True)
     print(f"READY domain={args.domain} rmw={args.rmw} services=simulation_interfaces", flush=True)
     import rclpy
+    stage = prim = None  # drain() reads ctx.get_stage(); don't pin the setup stage across /load_world
     while app.is_running():
         app.update()
         rclpy.spin_once(node, timeout_sec=0)

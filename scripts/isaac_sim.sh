@@ -4,8 +4,7 @@
 #          [--world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --play]
 # Env: ISAACSIM_PYTHON (python with isaacsim), else ISAACLAB_DIR (default ~/Documents/IsaacLab, uv venv).
 set -euo pipefail
-script="$(cd "$(dirname "$0")" && pwd)/isaac_sim.py"
-export OMNI_KIT_ACCEPT_EULA=yes
+script="$(cd "$(dirname "$0")" && pwd)/isaac_sim.py"  # it accepts the Kit EULA itself
 if [[ -n "${ISAACSIM_PYTHON:-}" ]]; then
   exec "$ISAACSIM_PYTHON" "$script" "$@"
 fi
