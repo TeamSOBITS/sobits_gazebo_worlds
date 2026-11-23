@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Upload export/ (USD, MJCF, SDF, robots) to a Hugging Face dataset repo.
+
+Writes export/MANIFEST.json first. Token: env HF_TOKEN or the hf cache.
+Example:
+  python3 scripts/publish_sim_assets.py --tag v1 --dry-run
+"""
+import argparse
+import datetime
+import json
+import shutil
+import sys
+from pathlib import Path
+
+from huggingface_hub import HfApi, get_token
+from huggingface_hub.utils import filter_repo_objects
+
+import sim_assets
+from sim_assets import git
+
+CARD = sim_assets.PKG / 'docs' / 'hf_dataset_card.md'
+IGNORE = ['*_renders/*', '*.log', '*/__pycache__/*', '.cache/*']
+
+
+def driver_command(export):
+    """First 'command:' line of the newest export*.log, else 'unknown'."""
+    logs = sorted(export.glob('export*.log'), key=lambda p: p.stat().st_mtime)
+    for log in reversed(logs):
+        for line in log.read_text(errors='replace').splitlines()[:3]:
+            if line.startswith('command:'):
+                return line[len('command:'):].strip()
+    return 'unknown'
+
+
+def robot_names(export):
+    return sorted(p.stem for p in (export / 'robots').glob('*.json'))
+
+
+def upload_patterns(export, formats, robots=None):
+    """(allow, ignore) patterns of the upload; robots=None keeps all robots, else only those."""
+    allow = (['%s/*' % f for f in formats]
+             + ['sdf/*', 'robots/*.json', sim_assets.MANIFEST, 'README.md'])
+    ignore = list(IGNORE)
+    for r in robot_names(export):
+        if robots is not None and r not in robots:
+            ignore += sim_assets.robot_patterns(r)
+    return allow, ignore
+
+
+def select_files(export, allow, ignore):
+    """Files under export matching the upload patterns."""
+    files = [p.relative_to(export).as_posix()
+             for p in export.rglob('*') if p.is_file()]
+    return sorted(filter_repo_objects(
+        files, allow_patterns=allow, ignore_patterns=ignore))
+
+
+def build_manifest(export, files):
+    robots = {}
+    for f in files:
+        if f.startswith('robots/') and f.endswith('.json'):
+            robots[Path(f).stem] = json.loads((export / f).read_text())
+    models = {Path(f).parts[2] for f in files
+              if f.split('/')[1:2] == ['models'] and len(Path(f).parts) > 3}
+    robot_files = [f for f in files if '/robots/' in f
+                   or f.startswith('robots/')]
+    return {
+        'date': datetime.datetime.now().astimezone().isoformat(
+            timespec='seconds'),
+        'sobits_gazebo_worlds': {
+            'describe': git(sim_assets.PKG, 'describe', '--always', '--dirty'),
+            'sha': git(sim_assets.PKG, 'rev-parse', 'HEAD')},
+        'gz-usd': git(sim_assets.PKG.parent / 'gz-usd', 'rev-parse', 'HEAD'),
+        'gz-mujoco': git(sim_assets.PKG.parent / 'gz-mujoco', 'rev-parse', 'HEAD'),
+        'command': driver_command(export),
+        'worlds': len([f for f in files if f.startswith('sdf/')]),
+        'models': len(models),
+        'robots': robots,
+        'robot_count': len(robots),
+        'robot_files': len(robot_files),
+        'files': len(files),
+        'total_bytes': sum((export / f).stat().st_size for f in files
+                           if (export / f).exists()),
+    }
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('--repo-id', default=sim_assets.REPO_ID)
+    ap.add_argument('--export-dir', type=Path, default=sim_assets.EXPORT_DIR)
+    ap.add_argument('--tag', '--revision', dest='tag',
+                    help='create this tag after the upload')
+    ap.add_argument('--private', action='store_true')
+    ap.add_argument('--dry-run', action='store_true',
+                    help='list files and sizes; no manifest, no upload')
+    ap.add_argument('--formats', default='usd,mjcf')
+    ap.add_argument('--robots', nargs='+', metavar='NAME',
+                    help='only these robots (default: all in export/robots)')
+    args = ap.parse_args(argv)
+    export = args.export_dir.resolve()
+    formats = [f for f in args.formats.split(',') if f]
+    if not export.is_dir():
+        sys.exit('error: %s does not exist' % export)
+
+    if CARD.is_file() and not args.dry_run:
+        shutil.copyfile(CARD, export / 'README.md')
+    unknown = set(args.robots or []) - set(robot_names(export))
+    if unknown:
+        sys.exit('error: no export/robots/<name>.json for: %s'
+                 % ', '.join(sorted(unknown)))
+    allow, ignore = upload_patterns(export, formats, args.robots)
+    files = select_files(export, allow, ignore)
+    if CARD.is_file() and 'README.md' not in files:
+        files.append('README.md')  # dry-run: card is copied at upload
+    manifest = build_manifest(export, files)
+    for f in files:
+        src = export / f if (export / f).exists() else CARD
+        print('%10d  %s' % (src.stat().st_size, f))
+    print('%d files, %.1f MB -> %s' % (
+        len(files), manifest['total_bytes'] / 1e6, args.repo_id))
+    print(json.dumps(manifest, indent=2))
+    if args.dry_run:
+        return 0
+
+    token = get_token()
+    if not token:
+        sys.exit('error: no Hugging Face token; set HF_TOKEN or run '
+                 '`hf auth login`')
+    (export / sim_assets.MANIFEST).write_text(json.dumps(manifest, indent=2))
+    api = HfApi(token=token)
+    api.create_repo(args.repo_id, repo_type='dataset', exist_ok=True,
+                    private=args.private)
+    api.upload_large_folder(
+        repo_id=args.repo_id, repo_type='dataset', folder_path=export,
+        allow_patterns=allow, ignore_patterns=ignore)  # the same filter as select_files, not one pattern per file
+    if args.tag:
+        api.create_tag(args.repo_id, tag=args.tag, repo_type='dataset')
+    print('uploaded: https://huggingface.co/datasets/%s' % args.repo_id)
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

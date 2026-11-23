@@ -1,6 +1,11 @@
-from scripts.get_model_pose import get_model_pose
-from scripts.remove_model import remove_model
-from scripts.spawn_model import spawn_model
+#!/usr/bin/env python3
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # sibling scripts
+from get_model_pose import get_model_pose  # noqa: E402
+from remove_model import remove_model  # noqa: E402
+from spawn_model import spawn_model  # noqa: E402
 
 
 def replace_model(

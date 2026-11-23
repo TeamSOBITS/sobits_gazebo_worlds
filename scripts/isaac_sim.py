@@ -1,0 +1,400 @@
+#!/usr/bin/env python3
+"""Host-side Isaac Sim 6.1 runner driven by a ROS 2 container through simulation_interfaces.
+
+Opens Isaac Sim with the ROS 2 bridge and isaacsim.ros2.sim_control, then idles; the container loads the
+world and spawns robots with /load_world, /spawn_entities, /set_simulation_state, ... Start it with
+scripts/isaac_sim.sh, then in the container: ros2 launch sobit_home_bringup sim_minimal.launch.py simulator:=isaac
+"""
+import argparse
+import math
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.dirname(os.path.dirname(HERE))
+CONTROL_NODE = "isaacsim.ros2.control.ROS2ControlManager"
+CONTEXT_NODE = "isaacsim.ros2.bridge.ROS2Context"
+CLOCK_PATH = "/World/ROS2_Clock"
+# Isaac Lab's PhysxCfg defaults, so policies trained there meet the same contacts; with the worlds' own
+# settings the swerve base jolts (tray policy, sobits_isaaclab notes section 9.6)
+SOLVER_SCENE_ATTRS = (
+    "physxScene:solverType=TGS",
+    "physxScene:frictionOffsetThreshold=0.04",
+    "physxScene:frictionCorrelationDistance=0.025",
+    "physxScene:enableStabilization=true",
+    "physxScene:bounceThreshold=0.2",
+)
+
+
+def parse_args():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--domain", type=int, default=69)
+    p.add_argument("--rmw", default="rmw_cyclonedds_cpp")
+    p.add_argument("--cyclonedds-uri", default=None, help="default: $CYCLONEDDS_URI, else sobit_home/cyclonedds_local.xml")
+    p.add_argument("--headless", action="store_true")
+    p.add_argument("--viewer", action="store_true", help="minimal window: viewport only, camera framed on each spawned "
+                   "robot unless --camera is given")
+    p.add_argument("--camera", type=float, nargs=6, metavar=("EX", "EY", "EZ", "TX", "TY", "TZ"),
+                   help="viewport camera eye and target, applied after every world load (e.g. framing a table)")
+    p.add_argument("--gpu-physics", action="store_true", help="keep GPU dynamics (learning workloads); default is CPU "
+                   "dynamics + MBP broadphase, twice the frame rate for one robot in an arena and no GPU sleep stall")
+    p.add_argument("--kit-arg", action="append", default=[], metavar="--/path=value",
+                   help="Kit setting passed through (repeatable), written --kit-arg=--/rtx/pathtracing/cached/retrace=0.1")
+    p.add_argument("--cpu-threads", type=int, default=16, help="SimulationApp limit_cpu_threads (default 16)")
+    p.add_argument("--physics-hz", type=float, default=None,
+                   help="physics steps per second of the active scene (default: the world's, PhysX 60)")
+    p.add_argument("--scene-attr", action="append", default=[], metavar="attr=value",
+                   help="PhysX scene attribute on the active scenes (repeatable, applied after the solver defaults), "
+                   "e.g. physxScene:solverType=PGS")
+    p.add_argument("--world-solver", action="store_true",
+                   help="keep the world's solver settings instead of Isaac Lab's (SOLVER_SCENE_ATTRS)")
+    p.add_argument("--set", action="append", default=[], metavar="GLOB:attr=value",
+                   help="attribute on matching prims of every spawned robot (repeatable), e.g. "
+                   "'ROS2_Camera_*/Helper*:inputs:frameSkipCount=1'")
+    p.add_argument("--off", default="", help="comma list of robot graphs (ROS2_Lidar_lidar_back) or graph/node "
+                   "(ROS2_Camera_head_camera/HelperDepth) to deactivate on every spawned robot; the container "
+                   "overrides it per launch through the graphs_off parameter of node /isaac_sim")
+    p.add_argument("--urdf2usd-ros", default=os.environ.get("URDF2USD_ROS", os.path.join(SRC, "urdf2usd_ros")))
+    p.add_argument("--world", help="open this USD at start (local test without the container)")
+    p.add_argument("--robot", help="reference this robot USD under /World/<name>")
+    p.add_argument("--name", help="entity name (default: robot USD stem)")
+    p.add_argument("--pose", type=float, nargs=4, default=[0.0, 0.0, 0.0, 0.0], metavar=("X", "Y", "Z", "YAW"))
+    p.add_argument("--play", action="store_true", help="play after the local load")
+    return p.parse_args()
+
+
+def resolve_cyclonedds_uri(arg):
+    if arg:
+        return arg, "--cyclonedds-uri"
+    if os.environ.get("CYCLONEDDS_URI"):
+        return os.environ["CYCLONEDDS_URI"], "env"
+    xml = os.path.join(SRC, "sobit_home", "cyclonedds_local.xml")
+    return (f"file://{xml}", "sobit_home default") if os.path.isfile(xml) else (None, "unset")
+
+
+def setup_env(args):
+    """Set the ROS env, then re-exec with Isaac's bundled Jazzy libs (inherits everything set before)."""
+    repo = os.path.abspath(args.urdf2usd_ros)
+    if not os.path.isfile(os.path.join(repo, "utils", "ros_env.py")):
+        sys.exit(f"error: urdf2usd_ros not found at {repo} (set --urdf2usd-ros or URDF2USD_ROS)")
+    sys.path.insert(0, repo)
+    env_domain = os.environ.get("ROS_DOMAIN_ID")
+    reexec = os.environ.get("URDF2USD_ROS_REEXEC")
+    if not reexec and env_domain not in (None, str(args.domain)):
+        print(f"warning: ROS_DOMAIN_ID={env_domain} in env ignored, using --domain {args.domain}", file=sys.stderr)
+    uri, src = resolve_cyclonedds_uri(args.cyclonedds_uri)
+    if not reexec:
+        print(f"CYCLONEDDS_URI from {src}: {uri}", flush=True)
+    os.environ.update({"ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST", "OMNI_KIT_ACCEPT_EULA": "yes"})
+    if uri:
+        os.environ["CYCLONEDDS_URI"] = uri
+    from utils.ros_env import ensure_bundled_ros
+    ensure_bundled_ros(domain_id=args.domain)
+    os.environ["RMW_IMPLEMENTATION"] = args.rmw  # ensure_bundled_ros pins fastrtps
+    keys = ("ROS_DOMAIN_ID", "RMW_IMPLEMENTATION", "CYCLONEDDS_URI", "ROS_AUTOMATIC_DISCOVERY_RANGE")
+    print("ROS env:", {k: os.environ.get(k) for k in keys}, flush=True)
+
+
+def prepare_stage(stage, cpu_physics=False, physics_hz=None, scene_attrs=()):
+    """One root-layer physics scene (referenced-only scenes double sim time) and one /clock per stage."""
+    from pxr import Sdf, UsdPhysics
+    from utils import isaac_world
+    scenes = [p.GetPath() for p in stage.Traverse() if p.IsA(UsdPhysics.Scene)]
+    root = stage.GetRootLayer()
+    if not scenes or all(root.GetPrimAtPath(p) is None for p in scenes):
+        isaac_world.ensure_root_physics_scene(stage)
+        print("stage: root physics scene at /World/physicsScene", flush=True)
+    active = [p for p in stage.Traverse() if p.IsA(UsdPhysics.Scene) and p.IsActive()]
+    for p in active:
+        if cpu_physics:
+            p.CreateAttribute("physxScene:enableGPUDynamics", Sdf.ValueTypeNames.Bool).Set(False)
+            p.CreateAttribute("physxScene:broadphaseType", Sdf.ValueTypeNames.Token).Set("MBP")
+            print(f"stage: CPU dynamics on {p.GetPath()}", flush=True)
+        if physics_hz:
+            p.CreateAttribute("physxScene:timeStepsPerSecond", Sdf.ValueTypeNames.UInt).Set(int(physics_hz))
+            print(f"stage: {physics_hz:g} physics steps/s on {p.GetPath()}", flush=True)
+    T = Sdf.ValueTypeNames
+    text_types = (T.Bool, T.Token, T.String)
+    int_types = (T.Int, T.UInt, T.Int64, T.UInt64, T.UChar)
+    for spec in scene_attrs:
+        # true/false -> Bool, numbers (also negative) -> Float, else Token; existing attrs keep their type.
+        name, _, raw = spec.partition("=")
+        value = {"true": True, "false": False}.get(raw.lower(), raw)
+        try:
+            number = float(raw)
+        except ValueError:
+            number = None
+        if number is not None:
+            kind = T.Float
+        else:
+            kind = T.Bool if isinstance(value, bool) else T.Token
+        for p in active:
+            attr = p.GetAttribute(name) or p.CreateAttribute(name, kind)
+            t = attr.GetTypeName()
+            if t in text_types or number is None:
+                attr.Set(value)
+            else:
+                attr.Set(int(number) if t in int_types else number)
+            print(f"stage: {name}={attr.Get()} on {p.GetPath()}", flush=True)
+    if not stage.GetPrimAtPath(CLOCK_PATH):
+        isaac_world.add_clock_graph(stage, CLOCK_PATH, use_domain_id_env=True)
+        print(f"stage: /clock graph at {CLOCK_PATH}", flush=True)
+
+
+def fix_control_config(prim):
+    attr = prim.GetAttribute("inputs:controllerConfig")
+    value = attr.Get() if attr else None
+    if not value or os.path.isfile(value):
+        return
+    name = os.path.basename(value)
+    for spec in prim.GetPrimStack():
+        real = spec.layer.realPath
+        cand = os.path.join(os.path.dirname(real), name) if real else None
+        if cand and os.path.isfile(cand):
+            attr.Set(cand)
+            print(f"controllerConfig {prim.GetPath()}: {value} -> {cand}", flush=True)
+            return
+    print(f"warning: controllerConfig {value} missing and no {name} next to the layers of {prim.GetPath()}", flush=True)
+
+
+def fix_subtree(prim, domain, noted):
+    """Repair asset-baked values on the OmniGraph nodes under prim (only resynced subtrees, never per frame)."""
+    from pxr import Usd
+    for p in Usd.PrimRange(prim):
+        if p.GetTypeName() != "OmniGraphNode":
+            continue
+        kind = p.GetAttribute("node:type").Get()
+        if kind == CONTROL_NODE:
+            fix_control_config(p)
+        elif kind == CONTEXT_NODE:
+            env, dom = p.GetAttribute("inputs:useDomainIDEnvVar"), p.GetAttribute("inputs:domain_id")
+            if not (env and env.Get()) and dom and dom.Get() != domain:
+                if p.GetPath() not in noted:
+                    noted.add(p.GetPath())
+                    print(f"ROS2Context {p.GetPath()}: domain_id {dom.Get()} -> {domain}", flush=True)
+                dom.Set(domain)
+
+
+def report_entity(path, prim):
+    """One line per top-level prim change (spawn / delete / world reload), the operator's trace of the services.
+    A deleted robot is not respawnable: its sensor writers and controller_manager outlive the prim; reload the world."""
+    if not prim or not prim.IsValid():
+        print(f"entity {path}: removed", flush=True)
+        return
+    layers = sorted({os.path.basename(s.layer.identifier) for s in prim.GetPrimStack()})
+    print(f"entity {path}: {'active' if prim.IsActive() else 'INACTIVE'} layers={layers}", flush=True)
+    return prim.HasAttribute("simulationInterfacesSpawned")
+
+
+def graphs_off(prim, patterns):
+    """Switch sensors of a spawned robot off so Isaac neither renders nor publishes them: a graph is deactivated
+    (its render product never exists), a single helper node keeps the graph but gets inputs:enabled = False."""
+    for pat in [x.strip() for x in patterns.split(",") if x.strip()]:
+        target = prim.GetStage().GetPrimAtPath(prim.GetPath().AppendPath(pat))
+        if not target:
+            print(f"warning: no {pat} under {prim.GetPath()}", flush=True)
+        elif target.GetTypeName() == "OmniGraphNode":
+            target.GetAttribute("inputs:enabled").Set(False)
+            print(f"off {target.GetPath()} (inputs:enabled)", flush=True)
+        elif target.IsActive():
+            target.SetActive(False)
+            print(f"off {target.GetPath()}", flush=True)
+
+
+def parse_value(raw):
+    """--set value: true/false, then int, then float, else the string itself."""
+    if raw.lower() in ("true", "false"):
+        return raw.lower() == "true"
+    for conv in (int, float):
+        try:
+            return conv(raw)
+        except ValueError:
+            pass
+    return raw
+
+
+def set_attrs(prim, specs):
+    """--set GLOB:attr=value on the prims under a spawned robot (value parsed as bool/int/float/str)."""
+    import fnmatch
+    from pxr import Usd
+    for spec in specs:
+        pat, _, rest = spec.partition(":")
+        name, _, raw = rest.partition("=")
+        value = parse_value(raw)
+        root = str(prim.GetPath())
+        hits = [q for q in Usd.PrimRange(prim) if fnmatch.fnmatch(str(q.GetPath())[len(root) + 1:], pat)
+                and q.GetAttribute(name)]
+        for q in hits:
+            q.GetAttribute(name).Set(value)
+        print(f"set {spec}: {len(hits)} prim(s)", flush=True)
+
+
+def param_node(default):
+    """rclpy node /isaac_sim with the string parameter graphs_off (set from the container before a spawn)."""
+    import rclpy
+    if not rclpy.ok():
+        rclpy.init()
+    node = rclpy.create_node("isaac_sim")
+    node.declare_parameter("graphs_off", default)
+    return node
+
+
+def viewer_layout():
+    """Hide every editor panel but the viewport; Kit re-docks it full size."""
+    import omni.ui as ui
+    for w in ui.Workspace.get_windows():
+        if w.title != "Viewport" and w.visible:
+            w.visible = False
+
+
+def is_robot(prim):
+    """A spawned entity holding an articulation; YCB objects and containers are plain rigid bodies."""
+    from pxr import Usd, UsdPhysics
+    return any(p.HasAPI(UsdPhysics.ArticulationRootAPI) for p in Usd.PrimRange(prim))
+
+
+def frame_robot(prim):
+    """Look at a freshly spawned robot from behind-left, as RViz would."""
+    import numpy as np
+    from pxr import UsdGeom
+    from isaacsim.core.utils.viewports import set_camera_view
+    pos = np.array(UsdGeom.XformCommonAPI(prim).GetXformVectors(0)[0])
+    set_camera_view(eye=pos + np.array([2.8, -2.8, 2.0]), target=pos + np.array([0.0, 0.0, 0.8]))
+
+
+def spawn_local(stage, robot, name, pose):
+    """Mimic /spawn_entities: referenced Xform, pose, and the marker /reset_simulation removes."""
+    from pxr import Gf, Sdf, UsdGeom
+    prim = stage.DefinePrim(f"/World/{name}", "Xform")
+    prim.GetReferences().AddReference(os.path.abspath(robot))
+    xf = UsdGeom.XformCommonAPI(prim)
+    if not (xf.SetTranslate(Gf.Vec3d(*pose[:3])) and xf.SetRotate(Gf.Vec3f(0, 0, math.degrees(pose[3])))):
+        print(f"warning: could not set the pose of {prim.GetPath()}", flush=True)
+    prim.CreateAttribute("simulationInterfacesSpawned", Sdf.ValueTypeNames.Bool, custom=True).Set(True)
+    print(f"spawned {prim.GetPath()} <- {robot} at {pose}", flush=True)
+    return prim
+
+
+def main():
+    args = parse_args()
+    setup_env(args)
+    from isaacsim import SimulationApp
+    extra = list(args.kit_arg)
+    if not args.gpu_physics and not any("physics/numThreads" in a for a in extra):
+        extra.append("--/persistent/physics/numThreads=0")  # one robot: physics on the main thread is ~6% faster
+    cfg = {"headless": args.headless, "renderer": "RayTracedLighting", "extra_args": extra,
+           "limit_cpu_threads": args.cpu_threads}
+    if args.headless:
+        cfg["disable_viewport_updates"] = True  # sensors render through their own render products
+    if args.viewer:
+        cfg.update({"window_width": 1280, "window_height": 800})
+    app = SimulationApp(cfg)
+    try:
+        run(app, args)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        app.close()
+
+
+def run(app, args):
+    from isaacsim.core.utils.extensions import enable_extension
+    # omni.physx.ui provides Shift+drag physics grab in the viewport; the python app does not load it.
+    exts = ("isaacsim.ros2.bridge", "isaacsim.ros2.sim_control") + (() if args.headless else ("omni.physx.ui",))
+    for ext in exts:
+        if not enable_extension(ext):
+            print(f"warning: could not enable {ext}", flush=True)
+    if not args.headless:
+        import carb.settings
+        carb.settings.get_settings().set_bool("/physics/mouseInteractionEnabled", True)
+    from utils import ros2_control
+    if not ros2_control.enable():
+        print("warning: isaacsim.ros2.control not enabled/patched, robots with ros2_control will fail", flush=True)
+    for _ in range(10):  # omni.graph.core crashes if a stage opens right after enabling
+        app.update()
+    import omni.usd
+    from pxr import Sdf, Tf, Usd
+    ctx = omni.usd.get_context()
+    viewer = args.viewer and not args.headless
+    solver_attrs = [*(() if args.world_solver else SOLVER_SCENE_ATTRS), *args.scene_attr]
+    state = {"opened": False, "paths": set(), "listener": None, "noted": set()}
+
+    def on_changed(notice, _stage):
+        state["paths"].update(notice.GetResyncedPaths())
+
+    def on_opened(_event):
+        state["opened"] = True  # handled on the next frame, not inside the event
+
+    def handle_opened():
+        state["opened"] = False
+        stage = ctx.get_stage()
+        if state["listener"]:
+            state["listener"].Revoke()
+        state["listener"] = Tf.Notice.Register(Usd.Notice.ObjectsChanged, on_changed, stage)
+        state["paths"].clear()
+        prepare_stage(stage, cpu_physics=not args.gpu_physics, physics_hz=args.physics_hz, scene_attrs=solver_attrs)
+        if viewer:
+            viewer_layout()
+        if args.camera and not args.headless:
+            from isaacsim.core.utils.viewports import set_camera_view
+            set_camera_view(eye=args.camera[:3], target=args.camera[3:])
+        return stage
+
+    def drain():
+        if state["opened"]:
+            handle_opened()
+        if not state["paths"]:
+            return
+        stage, paths = ctx.get_stage(), state["paths"]
+        state["paths"] = set()
+        # A resynced ancestor already covers its descendants in fix_subtree.
+        for path in Sdf.Path.RemoveDescendentPaths(list(paths)):
+            prim = stage.GetPrimAtPath(path) if path.IsPrimPath() or path.IsAbsoluteRootPath() else None
+            if path.IsPrimPath() and path.GetParentPath().IsAbsoluteRootPath():
+                if report_entity(path, prim):
+                    graphs_off(prim, node.get_parameter("graphs_off").value)
+                    set_attrs(prim, args.set)
+                    # Objects spawned by world resets must not steal the view; --camera pins it.
+                    if viewer and not args.camera and is_robot(prim):
+                        frame_robot(prim)
+            if prim:
+                fix_subtree(prim, args.domain, state["noted"])
+
+    node = param_node(args.off)
+    sub = ctx.get_stage_event_stream().create_subscription_to_pop_by_type(  # noqa: F841  keep alive
+        int(omni.usd.StageEventType.OPENED), on_opened)
+    stage = handle_opened()
+    if args.world:
+        state["opened"] = False
+        if not ctx.open_stage(os.path.abspath(args.world)):
+            sys.exit(f"error: could not open {args.world}")
+        while not state["opened"] and app.is_running():
+            app.update()
+        stage = handle_opened()
+        print(f"opened {args.world}", flush=True)
+    if args.robot:
+        prim = spawn_local(stage, args.robot, args.name or os.path.splitext(os.path.basename(args.robot))[0], args.pose)
+        graphs_off(prim, args.off)
+        set_attrs(prim, args.set)
+        if viewer:
+            frame_robot(prim)
+    if args.world or args.robot:
+        state["paths"].clear()
+        fix_subtree(stage.GetPseudoRoot(), args.domain, state["noted"])
+    for _ in range(10):
+        app.update()
+    if args.play and (args.world or args.robot):
+        import omni.timeline
+        omni.timeline.get_timeline_interface().play()
+        print("playing", flush=True)
+    print(f"READY domain={args.domain} rmw={args.rmw} services=simulation_interfaces", flush=True)
+    import rclpy
+    stage = prim = None  # drain() reads ctx.get_stage(); don't pin the setup stage across /load_world
+    while app.is_running():
+        app.update()
+        rclpy.spin_once(node, timeout_sec=0)
+        drain()
+
+
+if __name__ == "__main__":
+    main()

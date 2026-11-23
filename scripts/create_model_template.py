@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Script for adding objects in .glb or .obj format.
 Note: To spawn the object in a world, add it to the xacro file.

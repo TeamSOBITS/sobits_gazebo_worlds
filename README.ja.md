@@ -57,7 +57,7 @@
 <!--レポジトリの概要-->
 ## 概要
 
-ignition Gazeboのファイルを複数含んだリポジトリ．
+Gazebo Harmonicのワールドファイルを複数含んだリポジトリ．
 特に，家具を自由にカスタマイズできるような構成となっている．
 
 現在は以下の機能に対応している．
@@ -94,7 +94,7 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 | ------------- | ------------- |
 | Ubuntu | 24.04 (Noble Numbat) |
 | ROS | Jazzy |
-| Gazebo | ignition |
+| Gazebo | Harmonic |
 
 > [!NOTE]
 > `Ubuntu`や`ROS`のインストール方法に関しては，[SOBIT Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)に参照してください．
@@ -396,6 +396,174 @@ WorldファイルはXacro（`.world.xacro`）として[worlds/](worlds/)に，�
 
 
 <!-- マイルストーン -->
+## USD（Isaac Sim）・MJCF（MuJoCo）へのエクスポート
+
+[scripts/export_sim_formats.py](scripts/export_sim_formats.py)は各`.world.xacro`
+（`closed:=false|true`）をSDFに展開し，本パッケージの`models/`，`tmc_wrs_gz_worlds/models`，
+`gz_human_sim/models`をリソースパスとして`sdf2usd`（gz-usd）と`sdf2mjcf`（gz-mujoco）を
+実行する．失敗しても処理は継続し，最後にサマリ表を表示する．失敗があれば終了コードは非ゼロ．
+
+```bash
+USD_PATH=/opt/openusd-24.08 SDF2USD_BIN=<path>/gz-usd/build/bin/sdf2usd \
+SDF2MJCF_BIN=~/venvs/sdf2mjcf/bin/sdf2mjcf \
+python3 scripts/export_sim_formats.py --closed both --models --out export
+```
+
+`--dry-run`ではxacro展開と変換コマンドの表示のみ行う（詳細は`--help`）．対象は次で絞れる．
+
+```bash
+... export_sim_formats.py --formats usd                   # USDのみ（--formats mjcfも可）
+... export_sim_formats.py --worlds rcw2026_arena          # 1つのWorldのみ
+... export_sim_formats.py --no-worlds --models rcw26_shelf rcw26_door   # 2モデルのみ
+```
+
+`--models`のみ指定で全モデル．存在しない名前はエラー．
+MJCF変換は並列実行（`--jobs N`，既定は最大4）．全ワールドのUSDが共有の`usd/materials/`に書き込むため，USD変換は常に1つずつ実行する．
+
+```
+export/sdf/<world>[_closed].sdf            展開済みSDF
+export/usd/<world>[_closed].usda           （+ materials/ テクスチャ）
+export/mjcf/<world>[_closed]/<world>.xml   （+ assets/）
+export/usd/models/<m>/<m>.usda, export/mjcf/models/<m>/<m>.xml   （--models指定時）
+```
+
+このレイアウト（とデータセットID）は`scripts/sim_assets.py`（標準ライブラリのみ）に一元化されており，export・import・
+publish・downloadの各スクリプトが共有する．
+
+変換後，`pxr`が使える環境では`scripts/postprocess_usd.py`が`export/usd`に自動適用される（使えない場合はIsaacLab venvで
+手動実行）．全articulation root（ドア）に`physxArticulation:sleepThreshold = 0`を書き込む．PhysX 110.3／Isaac Sim 6.1は
+tensor APIのview（ros2_control，IMU，Isaac Lab）がある状態でarticulationがスリープするとGPUソルバが停止する
+（`urdf2usd_ros/docs/isaac_gpu_articulation_sleep_stall.md`）．未設定のrootは`validate_usd.py`が失敗にする．
+
+検証は`scripts/validate_usd.py export/usd`（IsaacLab venv．pxr，任意でNewton読込）と
+`scripts/validate_mjcf.py export/mjcf`（MuJoCo読込・ステップ実行・レンダリング）で行う．
+
+**アセットの共有** `export/`はgit管理外（`.gitignore`）．再生成せず公開済みアセットをダウンロードして使い，
+再生成後は再度公開する．
+
+```bash
+python3 scripts/download_sim_assets.py --formats usd --worlds rcw2026_arena --models rcw26_shelf
+python3 scripts/publish_sim_assets.py --tag v1      # HF_TOKENまたは`hf auth login`が必要．--dry-runで一覧のみ
+```
+
+どちらも既定のデータセットは`team-sobits/sobits_sim_assets`（`--repo-id`）．公開時はデータセットカード[docs/hf_dataset_card.md](docs/hf_dataset_card.md)を
+`export/README.md`にコピーし，
+`export/MANIFEST.json`（日付・gitのSHA・実行コマンド・個数・サイズ）を書き出し，`_renders/`とログは除外する．
+ダウンロードは`--formats usd,mjcf,sdf`，`--worlds`，`--models`で絞り込め，`--revision`（ブランチ/タグ）と
+`--force`も指定できる．公開リポジトリならトークン不要．
+
+**ロボットアセット** データセットにはロボットごとのアセットも含まれる．ロボット記述リポジトリから
+[urdf2usd_ros](https://github.com/TeamSOBITS/urdf2usd_ros)（USD）と`scripts/usd2mjcf.py`（MJCF）で生成したものを，
+`import_robot_assets.py`が`export/usd/robots/<robot>/`（USDの`ROS2_Control`グラフが読む`<robot>_ros2_control.yaml`を含む）・`export/mjcf/robots/<robot>/`にコピーし，
+`export/robots/<robot>.json`（記述リポジトリのcommit，descriptorのsha256，urdf2usd_rosのcommit，Isaac Simバージョン，日付）を書き出す．
+公開時は`MANIFEST.json`の`robots`に追加され，`--robots`で公開・ダウンロードを絞り込める．
+
+```bash
+python3 scripts/import_robot_assets.py --robot sobit_home     # urdf2usd_ros/output -> export/ + robots/<robot>.json
+python3 scripts/publish_sim_assets.py --dry-run --robots sobit_home --formats usd,mjcf
+python3 scripts/download_sim_assets.py --formats usd,mjcf --robots sobit_home
+```
+
+**既知の制限**
+- MuJoCo：衝突メッシュはCoACDで凸分解される（既定．`--no-convex-decomposition`で単一凸包，`--coacd-threshold F`で調整）．プラグインは
+  破棄されるためドア（`JointPositionController`）は駆動されない．テクスチャは拡散色のみ．
+- Isaac Sim：Gazebo相当の明るさにするためライトを×1000／×30000にスケールする．
+  metalness 0.5は未設定として扱う．
+- `person_walking`（アクター）はエクスポート不可．
+
+**慣性の警告** 変換前に，`<mass>`があるのに`<inertia>`がない非静的リンクごとに
+`WARNING: <model> link <link>: mass without <inertia>; identity tensor assumed`を表示する
+（sdformatは各軸1 kg m^2の単位テンソルを使うため，Gazebo・Isaac・MuJoCoいずれでも非現実的な
+挙動になる）．`<inertial>`自体がないリンクにも同様に警告する．現在の該当モデルは
+`book_shelf`，`chair`，`sofa`，`wrc_long_table`，`wrc_tall_table`（慣性なし），
+`rcw26_door`（`door_link`．`hinge_link`は`<inertial>`なし），`floor_plane`．対処は
+各モデルの`model.sdf`に`<inertia>`を記述すること．
+
+### ツールの実行環境
+
+エクスポート用ツールはワールドの実行には不要で，3つのPython環境を使い分ける．pipパッケージは
+[requirements-tools.txt](requirements-tools.txt)にまとめてある．
+
+| 環境 | スクリプト | 必要なもの |
+| ------------- | ------------- | ------------- |
+| ROSのpython | `export_sim_formats.py`，`mujoco_scene.py`，`download_sim_assets.py`，`publish_sim_assets.py` | ROS Jazzy + `xacro`．download/publishには`huggingface_hub` |
+| IsaacLab venv | `postprocess_usd.py`，`validate_usd.py`，`import_robot_assets.py`，`isaac_sim.py` | `pxr`（Isaac Sim 6.1）．任意で`newton`，`warp-lang` |
+| MuJoCoを入れた任意のvenv | `validate_mjcf.py` | `mujoco`，`numpy`，`imageio` |
+| 変換器 | `export_sim_formats.py` | `sdf2usd`（gz-usd，`SDF2USD_BIN`），`sdf2mjcf`（CoACD付きgz-mujoco，`SDF2MJCF_BIN`） |
+
+## Isaac Sim
+
+Isaac Sim 6.1はROSコンテナ内ではなくホスト上で動作する．コンテナは`isaacsim.ros2.sim_control`拡張が提供する
+`simulation_interfaces`のサービス経由で操作する．コンテナにIsaac関連のものはインストールしない．
+
+### ホストの前提条件
+
+- IsaacLabのuv venv `~/Documents/IsaacLab/.venv`にpipでIsaac Sim 6.1をインストールし，`uv`に`PATH`を通す．
+- 初回のみ，Isaacが同梱しないJazzy用の位置/速度コントローラプラグインを`~/.cache/urdf2usd_ros/ros2_jazzy_extra`に入れる
+  （`<src>`はワークスペースの`src`ディレクトリ）．
+  ```sh
+  $ cd ~/Documents/IsaacLab && uv run --no-sync python <src>/urdf2usd_ros/scripts/fetch_ros2_controllers.py
+  ```
+- コンテナが送るアセットパス（`~/colcon_ws/src/sobits_gazebo_worlds/export/...`）をホストでも解決できるようにリンクを張る．
+  ```sh
+  $ ln -s ~/docker_containers/jazzy_sobit_home_2_moveit_ws ~/colcon_ws
+  ```
+  代わりに，launchへ`asset_root:=<ホスト上のexportのパス>`を渡してもよい．
+- アセットは`scripts/download_sim_assets.py`（Isaac向けにはv0.4.0以降）またはローカルの`export`を使う．
+- 本パッケージと同じ階層に`urdf2usd_ros`を置く（`URDF2USD_ROS`で変更可）．ランナーはその`utils/`をimportする．
+
+### ランナーの起動
+
+ランナーはホストで手動起動し，そのまま起動したままにする．ROS 2ブリッジと`isaacsim.ros2.sim_control`を有効にしたあと，待機状態になる．
+既定のドメインは69（シェルの`ROS_DOMAIN_ID`ではない），RMWはCycloneDDS，CycloneDDSのURIは`sobit_home/cyclonedds_local.xml`（ループバック）．
+
+```sh
+$ scripts/isaac_sim.sh [--headless | --viewer] [--gpu-physics] [--off GRAPH,...] [--domain 69] [--rmw rmw_cyclonedds_cpp] [--cyclonedds-uri file://…]
+$ scripts/isaac_sim.sh --world export/usd/rcw2026_arena.usda --robot export/usd/robots/sobit_home/sobit_home.usd --pose -6 1.5 0 0 --play
+```
+
+`--world`と`--robot`は，コンテナを使わずホストだけで動作を確認する場合に使う．待機状態になると`READY …`を表示する．
+`--viewer`はビューポートだけの最小ウィンドウにし（Stage／Property／Consoleなどのパネルを隠す），生成されたロボットにカメラを向ける．
+PhysXは既定でCPUで動く（MBPブロードフェーズ）．ロボット1台とドア数枚の規模ではGPUパイプラインの固定コストが支配的で，全センサ有効のGUIで`/clock`が22→41 Hzになった（RTX 3080 Ti）．GPUアーティキュレーションのスリープ停止も起きない．学習用途（多数のロボット，tensor API）では`--gpu-physics`でGPUダイナミクスに戻す．`--headless`では非表示ビューポートの描画も止める．
+
+| 変数 | 既定値 | 説明 |
+| --- | --- | --- |
+| `ISAACSIM_PYTHON` | （未設定） | `isaacsim`がインストールされたPython．`ISAACLAB_DIR`より優先される． |
+| `ISAACLAB_DIR` | `~/Documents/IsaacLab` | `.venv`を`uv run --no-sync`で使うIsaacLabのチェックアウト． |
+| `URDF2USD_ROS` | `../urdf2usd_ros` | `urdf2usd_ros`のチェックアウト． |
+
+### サービス一覧
+
+コンテナ内で`ros2 run sobits_gazebo_worlds isaac_sim_control.py <コマンド>`として実行する．
+終了コードは0が成功，1がサービスエラー，2がサービス利用不可．すべてのコマンドが`--timeout S`を受け付ける．
+
+| コマンド | 説明 |
+| --- | --- |
+| `wait` | シミュレータが応答するまで待つ． |
+| `state {play,pause,stop}` | シミュレーションの状態を設定する． |
+| `load-world URI [--if-different]` | USD worldを読み込む（先にシミュレーションを停止する）．`--if-different`は同じworldが既に読み込まれていればスキップする． |
+| `spawn NAME URI [--pose X Y Z YAW] [--namespace NS] [--allow-renaming] [--replace]` | USDエンティティを`/NAME`のprimとして生成する．`--replace`は既存の`NAME`を先に削除する． |
+| `delete NAME [--ignore-missing]` | `/NAME`のエンティティを削除する． |
+| `graphs-off [PATTERN ...]` | 以後生成するロボットで無効化するセンサグラフ（`ROS2_Lidar_lidar_back`）またはヘルパノード（`ROS2_Camera_head_camera/HelperDepth`）．引数なしで全て有効に戻す．`isaac_minimal.launch.py`は`enable_*`から決める． |
+| `reset` | サービスで生成したエンティティのみ削除する． |
+| `entities [--filter REGEX]` | エンティティのprimパスを一覧表示する．`--filter`はprimパスに対する正規表現． |
+
+`delete`と`reset`ではロボットを完全には片付けられない．センサのwriterとプロセス内のcontroller_managerがprimより長生きしてprimを書き戻すため，同名での再生成は失敗する．代わりにワールドを読み直す（`isaac_minimal.launch.py`はそうしている）．
+
+ランナーは，開いたすべてのステージにルートレイヤーで物理シーンがなければ物理シーンを追加し，`/clock`グラフも追加する．
+生成したロボットごとに，USDの隣の`<robot>_ros2_control.yaml`を指すように，焼き込まれた絶対パスの`controllerConfig`を書き換える．
+
+#### 性能メモ
+
+`rcw2026_arena`＋SOBIT HOME，全センサ，ヘッドレス，RTX 3080 Ti，20コアで計測（ステップ1/60 sでの`/clock` Hz，60が実時間）．
+GPU PhysX: 24．CPU PhysX（既定）: 49，さらに物理をメインスレッドに（`numThreads=0`，既定）: 53．
+RT2の`retrace=0.1`，テクスチャストリーミング無効，ヘルパの`frameSkipCount`（レンダプロダクトは毎フレーム描画され，配信だけ半減）は効果なし．
+非同期レンダリングはROSグラフが止まる．残るのはセンサ描画（レンダプロダクト5つで約12 ms/フレーム）なので，タスクに不要なものを
+`--off`や launch の`enable_*`で切るか，記述子の解像度を下げる．`--kit-arg=--/path=value`，`--cpu-threads N`，`--set GLOB:attr=value`は
+各自の実験用．
+
+ロボットの起動コマンドは，sobit_homeのREADMEの[Run on Isaac Sim](../sobit_home/README.md#run-on-isaac-sim)を参照すること．
+
 ## マイルストーン
 
 - [x] 固定家具をベースにしたランダムYCB配置

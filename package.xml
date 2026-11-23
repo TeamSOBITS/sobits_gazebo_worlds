@@ -3,9 +3,10 @@
 <package format="3">
   <name>sobits_gazebo_worlds</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="sobits@todo.todo">sobits</maintainer>
+  <description>Gazebo Harmonic worlds and furniture models for SOBITS robots (fixed and randomized arenas), with tools that export them to USD (Isaac Sim) and MJCF (MuJoCo).</description>
+  <maintainer email="kvalentincardenas@gmail.com">VALENTIN Keith</maintainer>
   <license>BSD-3-Clause</license>
+  <author email="team.sobits@gmail.com">Team SOBITS</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <depend>geometry_msgs</depend>
@@ -13,14 +14,18 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
+  <exec_depend>rcl_interfaces</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>ros_gz_interfaces</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>gz_human_sim</exec_depend>
   <exec_depend>tmc_wrs_gz_worlds</exec_depend>
+  <exec_depend>aws_small_house_world</exec_depend>
+  <exec_depend>xacro</exec_depend>
   <exec_depend>std_srvs</exec_depend>
   <exec_depend>sobits_interfaces</exec_depend>
+  <exec_depend>simulation_interfaces</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

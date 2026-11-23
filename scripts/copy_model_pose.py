@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
+import os
 import subprocess
+import sys
 
-from scripts.get_model_pose import get_model_pose_raw
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # sibling scripts
+from get_model_pose import get_model_pose_raw  # noqa: E402
 
 
 def get_model_pose_tag(target: str) -> str:

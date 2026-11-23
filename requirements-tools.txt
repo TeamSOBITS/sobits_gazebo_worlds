@@ -1,0 +1,16 @@
+# Python packages for the offline asset tools in scripts/ (export, validate, publish/download).
+# Running the Gazebo worlds needs none of these; ROS dependencies are in package.xml.
+# The tools run in different environments, see "Tool environments" in README.md.
+
+# download_sim_assets.py / publish_sim_assets.py (any Python, e.g. the ROS one)
+huggingface_hub>=0.24    # upload_large_folder; tested 1.16 and 1.18
+
+# validate_mjcf.py
+mujoco>=3.2              # tested 3.12
+numpy
+imageio
+
+# postprocess_usd.py, validate_usd.py, import_robot_assets.py and isaac_sim.py need pxr.
+# Use the IsaacLab venv (Isaac Sim 6.1); do not add usd-core there, it shadows Isaac's pxr.
+# Outside it, `pip install usd-core` provides pxr for postprocess/validate.
+# Optional: newton + warp-lang (validate_usd.py Newton load check), defusedxml (import_robot_assets.py).
