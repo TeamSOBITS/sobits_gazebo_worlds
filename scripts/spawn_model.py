@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import subprocess
 
 from geometry_msgs.msg import Pose
