@@ -25,19 +25,28 @@ STATES = {'stop': SimulationState.STATE_STOPPED,
           'play': SimulationState.STATE_PLAYING,
           'pause': SimulationState.STATE_PAUSED}
 NODE = None
+CLIENTS = {}
 
 
 class Unavailable(Exception):
-    pass
+    code = 2
 
 
 class Failed(Exception):
-    pass
+    code = 1
+
+
+def client_for(srv_type, name):
+    # One client per service: a new one would redo DDS discovery (delete() polls /get_entities).
+    key = (srv_type, name)
+    if key not in CLIENTS:
+        CLIENTS[key] = NODE.create_client(srv_type, name)
+    return CLIENTS[key]
 
 
 def call(srv_type, name, request, timeout):
     # Wait for the service, call it async and spin until the reply arrives.
-    client = NODE.create_client(srv_type, name)
+    client = client_for(srv_type, name)
     end = time.monotonic() + timeout
     while not client.wait_for_service(timeout_sec=0.5):
         if time.monotonic() > end:
@@ -57,17 +66,11 @@ def check(response, what, ok_codes=()):
     raise Failed(f'{what}: code {res.result}: {res.error_message}')
 
 
-def yaw_to_quat(yaw):
-    return 0.0, 0.0, math.sin(yaw / 2.0), math.cos(yaw / 2.0)
-
-
 def make_pose(x, y, z, yaw):
     pose = PoseStamped()
     pose.header.frame_id = 'world'
     pose.pose.position.x, pose.pose.position.y, pose.pose.position.z = x, y, z
-    q = yaw_to_quat(yaw)
-    (pose.pose.orientation.x, pose.pose.orientation.y,
-     pose.pose.orientation.z, pose.pose.orientation.w) = q
+    pose.pose.orientation.z, pose.pose.orientation.w = math.sin(yaw / 2.0), math.cos(yaw / 2.0)
     return pose
 
 
@@ -140,9 +143,9 @@ def cmd_load_world(a):
 
 def cmd_spawn(a):
     if a.replace:
-        delete(a.name, a.timeout, True, a.stop)
+        delete(a.name, a.timeout, ignore_missing=True, stop=a.stop)
     pose = make_pose(*a.pose)
-    client = NODE.create_client(SpawnEntities, '/spawn_entities')
+    client = client_for(SpawnEntities, '/spawn_entities')
     if client.wait_for_service(timeout_sec=min(5.0, a.timeout)):
         one = SpawnEntityMsg(name=a.name, allow_renaming=a.allow_renaming,
                              entity_namespace=a.namespace, initial_pose=pose)
@@ -245,12 +248,9 @@ def main():
     try:
         args.fn(args)
         return 0
-    except Unavailable as e:
+    except (Unavailable, Failed) as e:
         print(f'error: {e}', file=sys.stderr)
-        return 2
-    except Failed as e:
-        print(f'error: {e}', file=sys.stderr)
-        return 1
+        return e.code
     finally:
         NODE.destroy_node()
         rclpy.try_shutdown()
