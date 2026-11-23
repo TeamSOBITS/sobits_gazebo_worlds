@@ -53,6 +53,15 @@ def default_worlds():
     return names + ['empty']
 
 
+def world_stem(name):
+    """Output name of a world: no directory, no .world.xacro/.world/.sdf suffix."""
+    base = Path(name).name
+    for ext in ('.world.xacro', '.world', '.sdf'):
+        if base.endswith(ext):
+            return base[:-len(ext)]
+    return base
+
+
 def world_file(name):
     if name in EXTERNAL_WORLDS or os.path.isabs(name):
         return Path(resolve_world_path(name))
@@ -181,7 +190,7 @@ def convert(name, src, args, out, paths, env, results, model=False):
 
 def export_world(name, closed, args, out, paths, env, results):
     path = world_file(name)
-    tag = name + ('_closed' if closed else '')
+    tag = world_stem(name) + ('_closed' if closed else '')
     start = time.monotonic()
     xacro_args = {'closed': 'true'} if closed else {}
     expanded = Path(expand_world(str(path), xacro_args))
