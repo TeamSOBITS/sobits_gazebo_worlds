@@ -530,9 +530,9 @@ PhysXは既定でCPUで動く（MBPブロードフェーズ）．ロボット1�
 | `delete NAME [--ignore-missing]` | `/NAME`のエンティティを削除する． |
 | `graphs-off [PATTERN ...]` | 以後生成するロボットで無効化するセンサグラフ（`ROS2_Lidar_lidar_back`）またはヘルパノード（`ROS2_Camera_head_camera/HelperDepth`）．引数なしで全て有効に戻す．`isaac_minimal.launch.py`は`enable_*`から決める． |
 | `reset` | サービスで生成したエンティティのみ削除する． |
+| `entities [--filter REGEX]` | エンティティのprimパスを一覧表示する．`--filter`はprimパスに対する正規表現． |
 
 `delete`と`reset`ではロボットを完全には片付けられない．センサのwriterとプロセス内のcontroller_managerがprimより長生きしてprimを書き戻すため，同名での再生成は失敗する．代わりにワールドを読み直す（`isaac_minimal.launch.py`はそうしている）．
-| `entities [--filter REGEX]` | エンティティのprimパスを一覧表示する．`--filter`はprimパスに対する正規表現． |
 
 ランナーは，開いたすべてのステージにルートレイヤーで物理シーンがなければ物理シーンを追加し，`/clock`グラフも追加する．
 生成したロボットごとに，USDの隣の`<robot>_ros2_control.yaml`を指すように，焼き込まれた絶対パスの`controllerConfig`を書き換える．

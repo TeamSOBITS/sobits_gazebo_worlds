@@ -541,9 +541,9 @@ Exit codes: 0 ok, 1 service error, 2 service unavailable. Every command accepts 
 | `delete NAME [--ignore-missing]` | Delete the entity at `/NAME`. |
 | `graphs-off [PATTERN ...]` | Sensor graphs (`ROS2_Lidar_lidar_back`) or single helper nodes (`ROS2_Camera_head_camera/HelperDepth`) the runner deactivates on every robot spawned afterwards; no argument re-enables all. `isaac_minimal.launch.py` derives it from its `enable_*` flags. |
 | `reset` | Remove only service-spawned entities. |
+| `entities [--filter REGEX]` | List entity prim paths, filtered by a regex on the prim path. |
 
 `delete` and `reset` do not tear a robot down cleanly: its sensor writers and in-process controller_manager outlive the prim and keep re-authoring it, so a respawn under the same name fails. Reload the world instead (`isaac_minimal.launch.py` does).
-| `entities [--filter REGEX]` | List entity prim paths, filtered by a regex on the prim path. |
 
 The runner adds a physics scene to every opened stage that has none on its root layer, and a `/clock` graph.
 On each spawned robot it rewrites the baked absolute `controllerConfig` path to the `<robot>_ros2_control.yaml` next to the USD.
