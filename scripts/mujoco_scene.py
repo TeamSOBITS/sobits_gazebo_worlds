@@ -126,7 +126,7 @@ def build(world_path, robot_path, pose, name, keyframe):
     wb.extend(list(world.find("worldbody")))
     key = robot.find(f"keyframe/key[@name='{keyframe}']")
     if key is not None:
-        qpos = key.get("qpos").split()
+        qpos = key.get("qpos", "").split() or world_qpos0(rwb)  # ctrl-only key: the robot's default qpos
         if root_body.find("freejoint") is not None or any(j.get("type") == "free" for j in root_body.findall("joint")):
             qpos[:7] = root_pose
         qpos += world_qpos0(world.find("worldbody"))
