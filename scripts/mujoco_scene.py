@@ -15,7 +15,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
-ROBOT_FIRST = ("option", "visual", "equality", "actuator", "keyframe")  # one source: the robot
+ROBOT_FIRST = ("option", "visual", "equality", "actuator")  # one source: the robot (keyframe: build())
 MERGED = ("extension", "asset", "contact", "sensor", "tendon", "custom")  # extension: mujoco.plugin.lidar instances
 
 
@@ -48,12 +48,10 @@ def deg_ranges_to_rad(root):
     if comp is not None and comp.get("angle", "degree") == "radian":
         return
     for e in root.iter():
-        if e.tag in ("joint", "default") or e.get("range"):
-            if e.get("range"):
-                e.set("range", " ".join(f"{math.radians(float(v)):.9g}" for v in e.get("range").split()))
-        for attr in ("euler",):
-            if e.get(attr):
-                raise SystemExit(f"error: {attr} attributes in the world need a conversion this script lacks")
+        if e.get("range"):
+            e.set("range", " ".join(f"{math.radians(float(v)):.9g}" for v in e.get("range").split()))
+        if e.get("euler"):
+            raise SystemExit("error: euler attributes in the world need a conversion this script lacks")
 
 
 def build(world_path, robot_path, pose, name, keyframe):
@@ -68,7 +66,7 @@ def build(world_path, robot_path, pose, name, keyframe):
         comp.set(key, os.path.normpath(os.path.join(wdir, val)))
     for tag in ROBOT_FIRST:
         src = robot.find(tag)
-        if src is not None and tag != "keyframe":
+        if src is not None:
             scene.append(src)
     if world.find("default") is not None:
         scene.append(world.find("default"))
