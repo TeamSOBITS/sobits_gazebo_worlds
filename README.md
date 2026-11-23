@@ -57,7 +57,7 @@
 <!-- Repository overview -->
 ## Overview
 
-A repository bundling multiple Gazebo (ignition) world files.
+A repository bundling multiple Gazebo Harmonic world files.
 It is structured so that furniture can be freely customized.
 
 The following features are currently supported:
@@ -94,7 +94,7 @@ First prepare the following environment, then proceed to the installation step.
 | ------------- | ------------- |
 | Ubuntu | 24.04 (Noble Numbat) |
 | ROS | Jazzy |
-| Gazebo | ignition |
+| Gazebo | Harmonic |
 
 > [!NOTE]
 > For how to install `Ubuntu` and `ROS`, refer to the [SOBIT Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6).

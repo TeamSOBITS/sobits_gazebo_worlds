@@ -57,7 +57,7 @@
 <!--レポジトリの概要-->
 ## 概要
 
-ignition Gazeboのファイルを複数含んだリポジトリ．
+Gazebo Harmonicのワールドファイルを複数含んだリポジトリ．
 特に，家具を自由にカスタマイズできるような構成となっている．
 
 現在は以下の機能に対応している．
@@ -94,7 +94,7 @@ ignition Gazeboのファイルを複数含んだリポジトリ．
 | ------------- | ------------- |
 | Ubuntu | 24.04 (Noble Numbat) |
 | ROS | Jazzy |
-| Gazebo | ignition |
+| Gazebo | Harmonic |
 
 > [!NOTE]
 > `Ubuntu`や`ROS`のインストール方法に関しては，[SOBIT Manual](https://github.com/TeamSOBITS/sobits_manual#%E9%96%8B%E7%99%BA%E7%92%B0%E5%A2%83%E3%81%AB%E3%81%A4%E3%81%84%E3%81%A6)に参照してください．
