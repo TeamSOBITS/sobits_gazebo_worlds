@@ -44,8 +44,8 @@ def robot_names(export):
     return sorted(p.stem for p in (export / 'robots').glob('*.json'))
 
 
-def select_files(export, formats, robots=None):
-    """Files to upload; robots=None keeps all robots, else only those."""
+def upload_patterns(export, formats, robots=None):
+    """(allow, ignore) patterns of the upload; robots=None keeps all robots, else only those."""
     allow = (['%s/*' % f for f in formats]
              + ['sdf/*', 'robots/*.json', 'MANIFEST.json', 'README.md'])
     ignore = list(IGNORE)
@@ -53,6 +53,11 @@ def select_files(export, formats, robots=None):
         if robots is not None and r not in robots:
             ignore += ['usd/robots/%s/*' % r, 'mjcf/robots/%s/*' % r,
                        'robots/%s.json' % r]
+    return allow, ignore
+
+
+def select_files(export, allow, ignore):
+    """Files under export matching the upload patterns."""
     files = [p.relative_to(export).as_posix()
              for p in export.rglob('*') if p.is_file()]
     return sorted(filter_repo_objects(
@@ -114,7 +119,8 @@ def main(argv=None):
     if unknown:
         sys.exit('error: no export/robots/<name>.json for: %s'
                  % ', '.join(sorted(unknown)))
-    files = select_files(export, formats, args.robots)
+    allow, ignore = upload_patterns(export, formats, args.robots)
+    files = select_files(export, allow, ignore)
     if CARD.is_file() and 'README.md' not in files:
         files.append('README.md')  # dry-run: card is copied at upload
     manifest = build_manifest(export, files)
@@ -137,7 +143,7 @@ def main(argv=None):
                     private=args.private)
     api.upload_large_folder(
         repo_id=args.repo_id, repo_type='dataset', folder_path=export,
-        allow_patterns=files + ['MANIFEST.json'])
+        allow_patterns=allow, ignore_patterns=ignore)  # the same filter as select_files, not one pattern per file
     if args.tag:
         api.create_tag(args.repo_id, tag=args.tag, repo_type='dataset')
     print('uploaded: https://huggingface.co/datasets/%s' % args.repo_id)
