@@ -60,45 +60,40 @@ def isaac_version(usd):
 
 
 def get_mjcf_refs(mjcf):
-    """Parse MJCF file, extract referenced asset file paths."""
+    """Relative paths (from the MJCF's dir) of the files it references.
+
+    <compiler meshdir/texturedir/assetdir> prefix mesh/hfield/skin and texture files; assetdir is the
+    fallback for both. Absolute file= paths would not survive the copy, so they are an error.
+    """
+    root = ET.parse(mjcf).getroot()
+    comp = root.find('compiler')
+    get = (lambda k: comp.get(k)) if comp is not None else (lambda k: None)
+    asset = get('assetdir') or ''
+    dirs = {'mesh': get('meshdir') or asset, 'hfield': get('meshdir') or asset,
+            'skin': get('meshdir') or asset, 'texture': get('texturedir') or asset}
     refs = set()
-    try:
-        tree = ET.parse(mjcf)
-        root = tree.getroot()
-        # meshdir, texturedir, assetdir attributes
-        for attr in ('meshdir', 'texturedir', 'assetdir'):
-            v = root.get(attr)
-            if v:
-                refs.add(v)
-        # file="..." attributes in mesh, texture, hfield, skin, include
-        for elem in root.iter():
-            f = elem.get('file')
-            if f:
-                refs.add(f)
-    except Exception as e:
-        print(f'warning: failed to parse MJCF {mjcf}: {e}')
+    for elem in root.iter():
+        f = elem.get('file')
+        if not f:
+            continue
+        if Path(f).is_absolute():
+            sys.exit(f'error: absolute file path {f} in {mjcf}; make it relative to the MJCF or its meshdir')
+        refs.add(str(Path(dirs.get(elem.tag, '')) / f))
     return refs
 
 
 def copy_mjcf_with_refs(mjcf, dest, robot):
-    """Copy MJCF and only the files it references."""
+    """Copy MJCF and only the files it references (checked before dest is replaced)."""
+    refs = get_mjcf_refs(mjcf)
+    missing = [r for r in refs if not (mjcf.parent / r).is_file()]
+    if missing:
+        sys.exit(f'error: referenced file(s) missing: {", ".join(sorted(missing))} (from {mjcf})')
     shutil.rmtree(dest, ignore_errors=True)
     dest.mkdir(parents=True)
     shutil.copyfile(mjcf, dest / ('%s.xml' % robot))
-    refs = get_mjcf_refs(mjcf)
-    if not refs:
-        return  # all meshes inlined, just the XML
-    # Copy each referenced file preserving relative path
-    for ref in refs:
-        ref_path = mjcf.parent / ref
-        if not ref_path.exists():
-            sys.exit(f'error: referenced file missing: {ref} (from {mjcf})')
-        dest_ref = dest / ref
-        dest_ref.parent.mkdir(parents=True, exist_ok=True)
-        if ref_path.is_dir():
-            shutil.copytree(ref_path, dest_ref)
-        else:
-            shutil.copyfile(ref_path, dest_ref)
+    for ref in refs:  # keep the relative layout so meshdir/texturedir still resolve
+        (dest / ref).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(mjcf.parent / ref, dest / ref)
 
 
 def copy_usd(usd, pkg_dir, dest, robot):
