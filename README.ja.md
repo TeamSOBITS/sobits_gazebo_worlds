@@ -426,6 +426,9 @@ export/mjcf/<world>[_closed]/<world>.xml   （+ assets/）
 export/usd/models/<m>/<m>.usda, export/mjcf/models/<m>/<m>.xml   （--models指定時）
 ```
 
+このレイアウト（とデータセットID）は`scripts/sim_assets.py`（標準ライブラリのみ）に一元化されており，export・import・
+publish・downloadの各スクリプトが共有する．
+
 変換後，`pxr`が使える環境では`scripts/postprocess_usd.py`が`export/usd`に自動適用される（使えない場合はIsaacLab venvで
 手動実行）．全articulation root（ドア）に`physxArticulation:sleepThreshold = 0`を書き込む．PhysX 110.3／Isaac Sim 6.1は
 tensor APIのview（ros2_control，IMU，Isaac Lab）がある状態でarticulationがスリープするとGPUソルバが停止する

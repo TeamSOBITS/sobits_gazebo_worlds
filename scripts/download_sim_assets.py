@@ -13,14 +13,11 @@ from pathlib import Path
 
 from huggingface_hub import snapshot_download
 
-PKG = Path(__file__).resolve().parent.parent
-FORMATS = ('usd', 'mjcf', 'sdf')
+import sim_assets
 
 
 def robot_patterns(formats, robots):
-    pats = ['usd/robots/%s/*' % r for r in robots if 'usd' in formats]
-    pats += ['mjcf/robots/%s/*' % r for r in robots if 'mjcf' in formats]
-    return pats + ['robots/%s.json' % r for r in robots]
+    return [p for r in robots for p in sim_assets.robot_patterns(r, formats)]
 
 
 def patterns(formats, worlds, models, robots=()):
@@ -29,20 +26,17 @@ def patterns(formats, worlds, models, robots=()):
     --robots alone fetches only those robots (worlds/models are skipped).
     """
     if robots and not worlds and not models:
-        return ['MANIFEST.json'] + robot_patterns(formats, robots)
+        return [sim_assets.MANIFEST] + robot_patterns(formats, robots)
     if not worlds and not models:
-        return ['%s/*' % f for f in formats] + ['robots/*.json',
-                                                'MANIFEST.json']
-    pats = ['MANIFEST.json'] + robot_patterns(formats, robots)
+        return ['%s/*' % f for f in formats] + ['robots/*.json', sim_assets.MANIFEST]
+    pats = [sim_assets.MANIFEST] + robot_patterns(formats, robots)
     for fmt in formats:
         if fmt == 'usd' and worlds:  # shared textures of all world USDs
-            pats.append('usd/materials/*')
+            pats.append(sim_assets.MATERIALS + '/*')
         for w in worlds:  # mjcf assets live in mjcf/<w>/assets/
-            pats += {'usd': ['usd/%s*' % w],
-                     'mjcf': ['mjcf/%s/*' % w, 'mjcf/%s_closed/*' % w],
-                     'sdf': ['sdf/%s*' % w]}[fmt]
-        if fmt != 'sdf':
-            pats += ['%s/models/%s/*' % (fmt, m) for m in models]
+            pats += sim_assets.world_patterns(fmt, w)
+        for m in models:
+            pats += sim_assets.model_patterns(fmt, m)
     return pats
 
 
@@ -50,9 +44,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--repo-id', default='team-sobits/sobits_sim_assets')
+    ap.add_argument('--repo-id', default=sim_assets.REPO_ID)
     ap.add_argument('--revision', default='main')
-    ap.add_argument('--dest', type=Path, default=PKG / 'export')
+    ap.add_argument('--dest', type=Path, default=sim_assets.EXPORT_DIR)
     ap.add_argument('--formats', default='usd,mjcf,sdf',
                     help='comma list of usd,mjcf,sdf')
     ap.add_argument('--worlds', nargs='+', default=[], metavar='NAME')
@@ -65,7 +59,7 @@ def main(argv=None):
                     help='overwrite existing files')
     args = ap.parse_args(argv)
     formats = [f for f in args.formats.split(',') if f]
-    bad = [f for f in formats if f not in FORMATS]
+    bad = [f for f in formats if f not in sim_assets.FORMATS]
     if bad:
         ap.error('unknown format(s): %s' % ', '.join(bad))
 

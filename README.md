@@ -432,6 +432,9 @@ export/mjcf/<world>[_closed]/<world>.xml   (+ assets/)
 export/usd/models/<m>/<m>.usda, export/mjcf/models/<m>/<m>.xml   (with --models)
 ```
 
+The layout (and the dataset id) is defined once in `scripts/sim_assets.py` (standard library only), which the export,
+import, publish and download scripts share.
+
 After conversion the driver applies `scripts/postprocess_usd.py` to `export/usd` when `pxr` is importable;
 otherwise run it yourself with the IsaacLab venv. It authors `physxArticulation:sleepThreshold = 0` on every
 articulation root (doors): PhysX 110.3 / Isaac Sim 6.1 freezes the GPU articulation solver when an

@@ -13,7 +13,6 @@ import hashlib
 import json
 import re
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 try:
@@ -21,17 +20,10 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
-PKG = Path(__file__).resolve().parent.parent
-SRC = PKG.parent
+import sim_assets
+from sim_assets import git
 
-
-def git(repo, *cmd):
-    try:
-        return subprocess.run(
-            ['git', '-C', str(repo), *cmd], capture_output=True, text=True,
-            check=True).stdout.strip()
-    except (subprocess.CalledProcessError, OSError):
-        return None
+SRC = sim_assets.PKG.parent
 
 
 def find_descriptor(robot, description_dir):
@@ -137,7 +129,7 @@ def main(argv=None):
                     default=SRC / 'urdf2usd_ros' / 'output')
     ap.add_argument('--description-dir', type=Path,
                     help='robot description package (default: descriptor)')
-    ap.add_argument('--export-dir', type=Path, default=PKG / 'export')
+    ap.add_argument('--export-dir', type=Path, default=sim_assets.EXPORT_DIR)
     args = ap.parse_args(argv)
     robot, export = args.robot, args.export_dir.resolve()
     usd = (args.usd or args.source_dir / ('%s.usd' % robot)).resolve()
@@ -147,23 +139,23 @@ def main(argv=None):
 
     prov = {'robot_id': robot}
     if usd.is_file():
-        copy_usd(usd, usd.parent / usd.stem,
-                 export / 'usd' / 'robots' / robot, robot)
-        prov['usd'] = 'usd/robots/%s/%s' % (robot, usd.name)
+        rdir = sim_assets.robot_dir('usd', robot)
+        copy_usd(usd, usd.parent / usd.stem, export / rdir, robot)
+        prov['usd'] = (rdir / usd.name).as_posix()
         prov['isaac_sim'] = isaac_version(usd)
         print('usd:  %s' % prov['usd'])
         yaml = usd.parent / ('%s_ros2_control.yaml' % robot)
         if yaml.is_file():
-            shutil.copyfile(yaml, export / 'usd' / 'robots' / robot / yaml.name)
-            prov['ros2_control'] = 'usd/robots/%s/%s' % (robot, yaml.name)
+            shutil.copyfile(yaml, export / rdir / yaml.name)
+            prov['ros2_control'] = (rdir / yaml.name).as_posix()
             print('ros2_control: %s (the USD bakes the absolute source path; '
                   'retarget ControlManager.inputs:controllerConfig on other machines)' % prov['ros2_control'])
     else:
         print('warning: %s missing, USD skipped' % usd)
     if mjcf.is_file():
-        d = export / 'mjcf' / 'robots' / robot
-        copy_mjcf_with_refs(mjcf, d, robot)
-        prov['mjcf'] = 'mjcf/robots/%s/%s.xml' % (robot, robot)
+        rdir = sim_assets.robot_dir('mjcf', robot)
+        copy_mjcf_with_refs(mjcf, export / rdir, robot)
+        prov['mjcf'] = (rdir / ('%s.xml' % robot)).as_posix()
         print('mjcf: %s' % prov['mjcf'])
     else:
         print('warning: %s missing, MJCF skipped' % mjcf)
@@ -188,7 +180,7 @@ def main(argv=None):
                                             '--dirty')}
     prov['date'] = datetime.datetime.now().astimezone().isoformat(
         timespec='seconds')
-    out = export / 'robots' / ('%s.json' % robot)
+    out = export / sim_assets.robot_json(robot)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(prov, indent=2) + '\n')
     print('provenance: %s' % out)

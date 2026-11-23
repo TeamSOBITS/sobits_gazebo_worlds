@@ -9,25 +9,17 @@ import argparse
 import datetime
 import json
 import shutil
-import subprocess
 import sys
 from pathlib import Path
 
 from huggingface_hub import HfApi, get_token
 from huggingface_hub.utils import filter_repo_objects
 
-PKG = Path(__file__).resolve().parent.parent
-CARD = PKG / 'docs' / 'hf_dataset_card.md'
+import sim_assets
+from sim_assets import git
+
+CARD = sim_assets.PKG / 'docs' / 'hf_dataset_card.md'
 IGNORE = ['*_renders/*', '*.log', '*/__pycache__/*', '.cache/*']
-
-
-def git(repo, *cmd):
-    try:
-        return subprocess.run(
-            ['git', '-C', str(repo), *cmd], capture_output=True, text=True,
-            check=True).stdout.strip()
-    except (subprocess.CalledProcessError, OSError):
-        return None
 
 
 def driver_command(export):
@@ -47,12 +39,11 @@ def robot_names(export):
 def upload_patterns(export, formats, robots=None):
     """(allow, ignore) patterns of the upload; robots=None keeps all robots, else only those."""
     allow = (['%s/*' % f for f in formats]
-             + ['sdf/*', 'robots/*.json', 'MANIFEST.json', 'README.md'])
+             + ['sdf/*', 'robots/*.json', sim_assets.MANIFEST, 'README.md'])
     ignore = list(IGNORE)
     for r in robot_names(export):
         if robots is not None and r not in robots:
-            ignore += ['usd/robots/%s/*' % r, 'mjcf/robots/%s/*' % r,
-                       'robots/%s.json' % r]
+            ignore += sim_assets.robot_patterns(r)
     return allow, ignore
 
 
@@ -77,10 +68,10 @@ def build_manifest(export, files):
         'date': datetime.datetime.now().astimezone().isoformat(
             timespec='seconds'),
         'sobits_gazebo_worlds': {
-            'describe': git(PKG, 'describe', '--always', '--dirty'),
-            'sha': git(PKG, 'rev-parse', 'HEAD')},
-        'gz-usd': git(PKG.parent / 'gz-usd', 'rev-parse', 'HEAD'),
-        'gz-mujoco': git(PKG.parent / 'gz-mujoco', 'rev-parse', 'HEAD'),
+            'describe': git(sim_assets.PKG, 'describe', '--always', '--dirty'),
+            'sha': git(sim_assets.PKG, 'rev-parse', 'HEAD')},
+        'gz-usd': git(sim_assets.PKG.parent / 'gz-usd', 'rev-parse', 'HEAD'),
+        'gz-mujoco': git(sim_assets.PKG.parent / 'gz-mujoco', 'rev-parse', 'HEAD'),
         'command': driver_command(export),
         'worlds': len([f for f in files if f.startswith('sdf/')]),
         'models': len(models),
@@ -97,8 +88,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('--repo-id', default='team-sobits/sobits_sim_assets')
-    ap.add_argument('--export-dir', type=Path, default=PKG / 'export')
+    ap.add_argument('--repo-id', default=sim_assets.REPO_ID)
+    ap.add_argument('--export-dir', type=Path, default=sim_assets.EXPORT_DIR)
     ap.add_argument('--tag', '--revision', dest='tag',
                     help='create this tag after the upload')
     ap.add_argument('--private', action='store_true')
@@ -137,7 +128,7 @@ def main(argv=None):
     if not token:
         sys.exit('error: no Hugging Face token; set HF_TOKEN or run '
                  '`hf auth login`')
-    (export / 'MANIFEST.json').write_text(json.dumps(manifest, indent=2))
+    (export / sim_assets.MANIFEST).write_text(json.dumps(manifest, indent=2))
     api = HfApi(token=token)
     api.create_repo(args.repo_id, repo_type='dataset', exist_ok=True,
                     private=args.private)

@@ -30,9 +30,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from launch_utils import (  # noqa: E402
     EXTERNAL_WORLDS, build_gz_resource_path, expand_world, resolve_world_path)
+import sim_assets  # noqa: E402
 
-PKG = Path(__file__).resolve().parent.parent
-FORMATS = ('usd', 'mjcf')
+PKG = sim_assets.PKG
+FORMATS = sim_assets.CONVERTED
 LINTED = set()  # (model, link) pairs already reported
 
 
@@ -195,14 +196,7 @@ def run_jobs(jobs, n, dry):
 def convert(name, src, args, out, paths, env, results, model=False):
     """Queue src SDF -> each format under out; the job dicts are the result rows (filled by run_jobs)."""
     for fmt in args.formats:
-        if model:
-            usd_dir = out / 'usd' / 'models' / name
-            mjcf_dir = out / 'mjcf' / 'models' / name
-        else:
-            usd_dir = out / 'usd'
-            mjcf_dir = out / 'mjcf' / name
-        dst = (usd_dir / (name + '.usda') if fmt == 'usd'
-               else mjcf_dir / (name + '.xml'))
+        dst = out / (sim_assets.model_file if model else sim_assets.world_file)(fmt, name)
         cenv = env
         if fmt == 'usd' and os.environ.get('USD_PATH'):
             lib = os.path.join(os.environ['USD_PATH'], 'lib')
@@ -222,7 +216,7 @@ def export_world(name, closed, args, out, paths, env, results):
         print('error: xacro expansion failed for %s' % path, file=sys.stderr)
         results.append({'name': tag, 'fmt': 'sdf', 'ok': False, 'secs': time.monotonic() - start})
         return
-    sdf = out / 'sdf' / (tag + '.sdf')
+    sdf = out / sim_assets.world_file('sdf', tag)
     sdf.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(expanded, sdf)
     if expanded != path:
@@ -233,7 +227,7 @@ def export_world(name, closed, args, out, paths, env, results):
     convert(tag, sdf, args, out, paths, env, results)
     if args.keep_sdf and not args.dry_run:
         for fmt in args.formats:
-            d = out / fmt / (tag if fmt == 'mjcf' else '')
+            d = out / sim_assets.world_dir(fmt, tag)
             d.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(sdf, d / sdf.name)
 
@@ -300,7 +294,7 @@ def parse_args(argv):
                     'sdf2mjcf')
     ap.add_argument('--coacd-threshold', type=float, metavar='F',
                     help='forward --coacd-threshold F to sdf2mjcf')
-    ap.add_argument('--out', type=Path, default=PKG / 'export')
+    ap.add_argument('--out', type=Path, default=sim_assets.EXPORT_DIR)
     ap.add_argument('--dry-run', action='store_true',
                     help='print converter commands; only expand xacro')
     ap.add_argument('--jobs', '-j', type=int, default=min(4, os.cpu_count() or 1),
