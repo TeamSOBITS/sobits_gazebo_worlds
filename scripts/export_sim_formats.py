@@ -118,16 +118,11 @@ def lint_inertia(sdf, paths):
             check(model, False)
     for inc in root.iter('include'):
         uri = (inc.findtext('uri') or '').strip()
-        if not uri.startswith('model://'):
+        if not uri.startswith('model://') or is_static(inc):
             continue
-        for d in paths:
-            inc_sdf = model_sdf(d / uri[len('model://'):])
-            if inc_sdf is None:
-                continue
-            if inc.find('static') is not None and is_static(inc):
-                break
+        inc_sdf = next(filter(None, (model_sdf(d / uri[len('model://'):]) for d in paths)), None)
+        if inc_sdf is not None:
             lint_inertia(inc_sdf, paths)
-            break
 
 
 def converter_cmd(fmt, paths, src, dst, args):
@@ -240,7 +235,11 @@ def postprocess_usd(usd_dir):
         print('note: pxr not importable; run  python3 scripts/postprocess_usd.py %s  '
               'with the IsaacLab venv before validating or publishing' % usd_dir)
         return
-    n = sum(len((postprocess_usd.process(f) or [[]])[0]) for f in postprocess_usd.find_usd([usd_dir]))
+    n = 0
+    for f in postprocess_usd.find_usd([usd_dir]):
+        result = postprocess_usd.process(f)  # (sleep-disabled prims, floor, sky), None if unopenable
+        if result:
+            n += len(result[0])
     print('postprocess: articulation sleep disabled on %d prim(s)' % n)
 
 
