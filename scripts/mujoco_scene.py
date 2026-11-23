@@ -43,12 +43,15 @@ def world_qpos0(worldbody):
 
 
 def deg_ranges_to_rad(root):
-    """World files from gz export carry degree ranges; the scene compiles with angle="radian"."""
+    """World files from gz export carry degree ranges; the scene compiles with angle="radian".
+
+    MuJoCo reads only hinge/ball joint ranges as angles (type defaults to hinge); slide joints and tendons are metres.
+    """
     comp = root.find("compiler")
     if comp is not None and comp.get("angle", "degree") == "radian":
         return
     for e in root.iter():
-        if e.get("range"):
+        if e.tag == "joint" and e.get("range") and e.get("type", "hinge") in ("hinge", "ball"):
             e.set("range", " ".join(f"{math.radians(float(v)):.9g}" for v in e.get("range").split()))
         if e.get("euler"):
             raise SystemExit("error: euler attributes in the world need a conversion this script lacks")
