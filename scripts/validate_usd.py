@@ -13,21 +13,11 @@ from pathlib import Path
 
 from pxr import Gf, Usd, UsdGeom, UsdPhysics, UsdShade, UsdUtils
 
+from postprocess_usd import find_usd
+
 TYPES = ('Xform', 'Mesh', 'Cube', 'Cylinder', 'Sphere', 'Material',
          'Shader', 'DistantLight', 'SphereLight', 'DiskLight',
          'PhysicsScene')
-REVOLUTE_NEED_NO_DRIVE = ('rcw26_door', 'door_open')
-
-
-def find_usd(paths):
-    """Expand files/dirs into a sorted list of .usda/.usd/.usdc files."""
-    out = []
-    for p in map(Path, paths):
-        if p.is_dir():
-            out += sorted(p.rglob('*.usd[ac]')) + sorted(p.rglob('*.usd'))
-        else:
-            out.append(p)
-    return sorted(set(out))
 
 
 def sdf_for(path, sdf_dir):
@@ -63,8 +53,7 @@ def sdf_stats(sdf, search_dirs):
         if inc.find('static') is not None:
             st = _is_static(inc)
         else:
-            st = model_static(inc.findtext('uri') or '', search_dirs)
-            st = bool(st)
+            st = bool(model_static(inc.findtext('uri') or '', search_dirs))
         stat[inc.findtext('name')] = st
     return stat, [n for n in stat if n and '#' in n]
 
@@ -109,11 +98,10 @@ def check_file(path, sdf_dir=None):
 
     counts = dict.fromkeys(TYPES, 0)
     counts.update(RigidBody=0, Joint=0, Collision=0, Articulation=0)
-    prims = [p for p in stage.Traverse()]
+    prims = list(stage.Traverse())
     layer_dir = Path(stage.GetRootLayer().realPath).parent
     collision_bad, mesh_bad, tex_bad, mat_bad, joint_bad = [], [], [], [], []
     rb_models = set()
-    rb_top = rb_models
     for p in prims:
         t = p.GetTypeName()
         if t in counts:
@@ -130,7 +118,6 @@ def check_file(path, sdf_dir=None):
             counts['RigidBody'] += 1
             parts = p.GetPath().pathString.split('/')
             rb_models.add(parts[2] if len(parts) > 2 else p.GetName())
-            rb_top.add(parts[2] if len(parts) > 2 else p.GetName())
         if p.HasAPI(UsdPhysics.CollisionAPI):
             counts['Collision'] += 1
             if not _is_collision_scope(p):
@@ -345,15 +332,8 @@ def main(argv=None):
     files = find_usd(a.paths)
     sdf_dir = a.sdf_dir
     if sdf_dir is None:
-        for p in map(Path, a.paths):
-            c = (p if p.is_dir() else p.parent).parent / 'sdf'
-            if c.is_dir():
-                sdf_dir = c
-                break
-            c = (p if p.is_dir() else p.parent) / 'sdf'
-            if c.is_dir():
-                sdf_dir = c
-                break
+        bases = [p if p.is_dir() else p.parent for p in map(Path, a.paths)]
+        sdf_dir = next((c for b in bases for c in (b.parent / 'sdf', b / 'sdf') if c.is_dir()), None)
     results = []
     for f in files:
         r = check_file(f, sdf_dir)
