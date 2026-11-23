@@ -113,18 +113,28 @@ def prepare_stage(stage, cpu_physics=False, physics_hz=None, scene_attrs=()):
         if physics_hz:
             p.CreateAttribute("physxScene:timeStepsPerSecond", Sdf.ValueTypeNames.UInt).Set(int(physics_hz))
             print(f"stage: {physics_hz:g} physics steps/s on {p.GetPath()}", flush=True)
-    text_types = (Sdf.ValueTypeNames.Bool, Sdf.ValueTypeNames.Token, Sdf.ValueTypeNames.String)
+    T = Sdf.ValueTypeNames
+    text_types = (T.Bool, T.Token, T.String)
+    int_types = (T.Int, T.UInt, T.Int64, T.UInt64, T.UChar)
     for spec in scene_attrs:
-        # true/false -> Bool, digits -> Float, else Token; existing attrs keep their type.
+        # true/false -> Bool, numbers (also negative) -> Float, else Token; existing attrs keep their type.
         name, _, raw = spec.partition("=")
         value = {"true": True, "false": False}.get(raw.lower(), raw)
-        if raw.replace(".", "", 1).isdigit():
-            kind = Sdf.ValueTypeNames.Float
+        try:
+            number = float(raw)
+        except ValueError:
+            number = None
+        if number is not None:
+            kind = T.Float
         else:
-            kind = Sdf.ValueTypeNames.Bool if isinstance(value, bool) else Sdf.ValueTypeNames.Token
+            kind = T.Bool if isinstance(value, bool) else T.Token
         for p in active:
             attr = p.GetAttribute(name) or p.CreateAttribute(name, kind)
-            attr.Set(value if attr.GetTypeName() in text_types else float(raw))
+            t = attr.GetTypeName()
+            if t in text_types or number is None:
+                attr.Set(value)
+            else:
+                attr.Set(int(number) if t in int_types else number)
             print(f"stage: {name}={attr.Get()} on {p.GetPath()}", flush=True)
     if not stage.GetPrimAtPath(CLOCK_PATH):
         isaac_world.add_clock_graph(stage, CLOCK_PATH, use_domain_id_env=True)
