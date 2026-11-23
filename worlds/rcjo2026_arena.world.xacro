@@ -137,7 +137,7 @@
     <!--                                                                     -->
     <!-- Layout changes vs rcjo2025_arena:                                   -->
     <!--   - Removed: counter, kachaka_shelf_left, kachaka_shelf_right       -->
-    <!--   - Added:   washing_machine + laundry_basket + pile_of_clothes     -->
+    <!--   - Added:   washing_machine + laundry_basket (empty)               -->
     <!--              in the freed kachaka-shelf area (x≈1.4, y=-3.5)       -->
     <!--   - Folding table = existing long_table (x=2.0, y=-0.5)            -->
     <!-- ═══════════════════════════════════════════════════════════════════ -->
@@ -187,44 +187,6 @@
       <pose relative_to=''>2.3 -3.2 0.0 0.0 0.0 0.0</pose>
     </include>
 
-    <!-- Pile of clothes inside the basket (z=0.15 above basket floor).
-         model.sdf has roll=1.5708 (X-flip) and scale=0.4 to fit the interior. -->
-    <include>
-      <name>pile_of_clothes</name>
-      <uri>model://pile_of_clothes</uri>
-      <static>1</static>
-      <pose relative_to=''>2.3 -3.2 0.15 0.0 0.0 0.0</pose>
-    </include>
-    <!-- Laundry cloth in drum — rigid box proxy for fabric (Gazebo cloth not supported).
-         Washing machine is at (1.375, -3.5, 0.0) yaw=π/2, so the drum door faces world +Y.
-         This places the proxy inside the drum: same X as washer, 0.2 m toward room along
-         the drum axis (Y=-3.3), at the drum interior height (Z=0.55).
-         Name MUST be "laundry_in_drum" — stubs_node publishes TF "laundry_in_drum_0". -->
-    <model name="laundry_in_drum">
-      <static>false</static>
-      <pose>1.375 -3.5 0.55 0 0 0</pose>
-      <link name="link">
-        <inertial>
-          <mass>0.3</mass>
-          <inertia>
-            <ixx>0.001</ixx><ixy>0</ixy><ixz>0</ixz>
-            <iyy>0.001</iyy><iyz>0</iyz>
-            <izz>0.001</izz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <geometry><box><size>0.15 0.10 0.05</size></box></geometry>
-        </collision>
-        <visual name="visual">
-          <geometry><box><size>0.15 0.10 0.05</size></box></geometry>
-          <material>
-            <ambient>0.2 0.4 0.8 1</ambient>
-            <diffuse>0.2 0.4 0.8 1</diffuse>
-            <specular>0.05 0.05 0.05 1</specular>
-          </material>
-        </visual>
-      </link>
-    </model>
     <!-- Living Room / Laundry Area -->
 
 
