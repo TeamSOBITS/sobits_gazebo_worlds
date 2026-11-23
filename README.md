@@ -424,6 +424,8 @@ everything). Narrow the export with:
 ```
 
 `--models` without names exports every model; unknown names are an error.
+MJCF conversions run in parallel (`--jobs N`, default up to 4); USD conversions always run one at a time because all
+world USDs write the shared `usd/materials/`.
 
 ```
 export/sdf/<world>[_closed].sdf            expanded SDF

@@ -418,6 +418,7 @@ python3 scripts/export_sim_formats.py --closed both --models --out export
 ```
 
 `--models`のみ指定で全モデル．存在しない名前はエラー．
+MJCF変換は並列実行（`--jobs N`，既定は最大4）．全ワールドのUSDが共有の`usd/materials/`に書き込むため，USD変換は常に1つずつ実行する．
 
 ```
 export/sdf/<world>[_closed].sdf            展開済みSDF
