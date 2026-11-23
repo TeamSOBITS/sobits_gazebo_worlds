@@ -9,6 +9,7 @@ Launch sequence (exit codes: 0 ok, 1 service error, 2 service unavailable):
 import argparse
 import math
 import os
+import re
 import sys
 import time
 
@@ -102,7 +103,7 @@ def set_state(name, t):
 
 def entity_exists(path, t):
     req = GetEntities.Request()
-    req.filters.filter = '^' + path + '$'
+    req.filters.filter = '^' + re.escape(path) + '$'
     return path in check(call(GetEntities, '/get_entities', req, t), 'get_entities').entities
 
 
